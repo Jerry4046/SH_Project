@@ -47,9 +47,9 @@
                         <td>
                             <select name="productCode" class="form-select form-select-sm" required>
                                 <option value="">선택</option>
-                                <option value="P1001">P1001</option>
-                                <option value="P1002">P1002</option>
-                                <option value="P1003">P1003</option>
+                                <c:forEach var="code" items="${productCodes}">
+                                <option value="${code.fullCode}">${code.fullCode}</option>
+                                </c:forEach>
                             </select>
                         </td>
                         <td><input type="text" name="pdName" class="form-control form-control-sm" required></td>

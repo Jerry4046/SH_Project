@@ -36,17 +36,8 @@ public class ProductService implements ProductServiceImpl {
     public List<Product> getAllProducts() {
         log.info("상품 목록 조회 시작");
 
-        // 상품 목록을 가져옴
-        List<Product> products = productRepository.findAll();
-
-        // 각 상품의 가격 목록을 updatedAt 기준으로 내림차순으로 정렬
-        for (Product product : products) {
-            List<Price> prices = product.getPrices();
-            if (prices != null && !prices.isEmpty()) {
-                // 가격 목록을 최신 수정일 기준으로 내림차순 정렬
-                prices.sort((p1, p2) -> p2.getUpdatedAt().compareTo(p1.getUpdatedAt())); // 내림차순 정렬
-            }
-        }
+        // 상품과 해당 가격 목록을 함께 조회
+        List<Product> products = productRepository.findAllWithPrices();
 
         // 가격 목록에서 최신 가격만 남기고, 중복된 상품은 그대로 출력
         log.info("상품 목록 조회 완료, 상품 수: {}", products.size());

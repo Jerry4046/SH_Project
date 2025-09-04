@@ -3,6 +3,8 @@ package com.project.SH.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import java.util.Comparator;
+
 
 import java.util.List;
 
@@ -46,8 +48,13 @@ public class Product {
     public Double getPrice() {
         if (prices != null && !prices.isEmpty()) {
             log.info("가장 최근 가격: {}", prices.get(prices.size() - 1).getPrice());
-            return prices.get(prices.size() - 1).getPrice();
+            return prices.stream()
+                    .max(Comparator.comparing(Price::getPriceId))
+                    .map(Price::getPrice)
+                    .orElse(0.0);
+
         }
+
         log.warn("가격이 없습니다.");
         return 0.0;  // 가격이 없으면 0 반환
     }

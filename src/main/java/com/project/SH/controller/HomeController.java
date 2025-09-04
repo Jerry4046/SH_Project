@@ -32,3 +32,4 @@ public class HomeController {
         return "home"; // 해당 페이지로 이동
     }
 }
+

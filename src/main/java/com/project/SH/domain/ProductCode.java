@@ -1,0 +1,54 @@
+package com.project.SH.domain;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "product_code_tb")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProductCode {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "company_code", nullable = false, length = 10)
+    private String companyCode;
+
+    @Column(name = "type_code", nullable = false, length = 10)
+    private String typeCode;
+
+    @Column(name = "category_code", nullable = false, length = 10)
+    private String categoryCode;
+
+    @Column(name = "product_number", nullable = false, length = 20)
+    private String productNumber;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @Transient
+    public String getFullCode() {
+        return String.join("_", companyCode, typeCode, categoryCode, productNumber);
+    }
+}
