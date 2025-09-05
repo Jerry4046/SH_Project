@@ -34,16 +34,30 @@ public class ProductController {
                                   RedirectAttributes redirectAttributes) {
         log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
         try {
-            // 현재 로그인된 사용자 정보를 받아옴
-            ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode);
-            product.setProductCode(code.getProductCode());
-            log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
-
-            // 상품 등록
+            if (userDetails == null || userDetails.getUser() == null) {
+                redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
+                return "redirect:/login";
+            }
             Long createdBySeq = userDetails.getUser().getSeq();
             log.info("현재 로그인된 사용자 번호: {}", createdBySeq);
 
-            // 가격 등록
+            // 1) 상품코드 생성
+            ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode);
+            product.setProductCode(code.getProductCode());
+
+            // 2) 재고 입력 값 정규화 (NULL 방지)
+            Integer ppb = product.getPiecesPerBox() == null ? 1 : product.getPiecesPerBox();
+            Integer box = product.getBoxQty() == null ? 0 : product.getBoxQty();
+            Integer loose = product.getLooseQty() == null ? 0 : product.getLooseQty();
+            product.setPiecesPerBox(ppb);
+            product.setBoxQty(box);
+            product.setLooseQty(loose);
+            // total_qty는 생성 컬럼이므로 set하지 않습니다.
+
+            // 3) 가장 중요: account_seq 채우기
+            product.setAccountSeq(createdBySeq);
+
+            // 4) 저장 (한 번만!)
             productService.registerProduct(product, price, createdBySeq);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
@@ -52,8 +66,9 @@ public class ProductController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             log.error("상품 등록 실패, 에러: {}", e.getMessage());
         }
-        return "redirect:/product";  // 목록 페이지로 리다이렉트
+        return "redirect:/inventory";
     }
+
 
     @GetMapping("/inventory")
     public String showProductList(Model model) {

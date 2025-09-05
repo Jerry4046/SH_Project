@@ -24,7 +24,7 @@ public class PriceService implements PriceServiceImpl {
                 Price priceRecord = new Price();
                 priceRecord.setProduct(product);
                 priceRecord.setPrice(price);
-                priceRecord.setAccountSeq(accountSeq);
+                priceRecord.setAccountSeq(accountSeq);  // 수정자 SEQ 설정
                 priceRecord.setDescription("상품 등록 시 가격");
                 priceRepository.save(priceRecord);
 

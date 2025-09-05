@@ -30,5 +30,5 @@ public class Price {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(name = "account_seq", nullable = false)
-    private Long accountSeq;  // 수정자 번호
+    private Long accountSeq;  // 수정자 회원 SEQ
 }

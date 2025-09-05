@@ -33,14 +33,13 @@
                     <thead class="table-light">
                         <tr>
                             <th>상품코드</th>
-                            <th>아이템코드</th>
-                            <th>스펙</th>
+                            <th>품목코드</th>
                             <th>상품명</th>
-                            <th>유닛이름</th>
-                            <th>Pieces/Box</th>
+                            <th>규격</th>
+                            <th>박스당 수량</th>
                             <th>총재고</th>
-                            <th>최소재고</th>
                             <th>단가</th>
+                            <th>최소재고</th>
                             <th>사용여부</th>
                             <th></th>
                         </tr>
@@ -62,14 +61,13 @@
                                 </select>
                             </div>
                         </td>
-                        <td><input type="text" name="itemCode" class="form-control form-control-sm" required></td>
-                        <td><input type="text" name="spec" class="form-control form-control-sm" required></td>
+                        <td><input type="text" name="itemCode" class="form-control form-control-sm"></td>
                         <td><input type="text" name="pdName" class="form-control form-control-sm" required></td>
-                        <td><input type="text" name="unitName" class="form-control form-control-sm" required></td>
-                        <td><input type="number" name="piecesPerBox" class="form-control form-control-sm" required></td>
-                        <td><input type="number" name="totalQty" class="form-control form-control-sm" required></td>
-                        <td><input type="number" name="minStockQuantity" class="form-control form-control-sm" value="0" required></td>
-                        <td><input type="number" name="price" class="form-control form-control-sm" required></td>
+						<td><input type="text" name="spec" class="form-control form-control-sm" required></td>
+                        <td><input type="number" name="piecesPerBox" class="form-control form-control-sm" min="1" value="1" required></td>
+                        <td><input type="number" name="totalQty" class="form-control form-control-sm" min="0" value="0" required></td>
+						<td><input type="number" name="price" class="form-control form-control-sm" required></td>
+						<td><input type="number" name="minStockQuantity" class="form-control form-control-sm" min="0" value="0" required></td>
                         <td>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="active" value="true" checked>
@@ -91,13 +89,12 @@
                         <tr class="${product.active ? '' : 'text-muted'}">
                             <td>${product.productCode}</td>
                             <td>${product.itemCode}</td>
-                            <td>${product.spec}</td>
                             <td>${product.pdName}</td>
-                            <td>${product.unitName}</td>
+                            <td>${product.spec}</td>
                             <td>${product.piecesPerBox}</td>
                             <td>${product.totalQty}</td>
-                            <td>${product.minStockQuantity}</td>
                             <td>${product.getPrice()}</td>
+                            <td>${product.minStockQuantity}</td>
                             <td>
                                 <c:choose>
                                     <c:when test="${product.active}">
@@ -127,7 +124,7 @@
             // 등록행은 필터에서 제외
             if (row.id === "registerRow") return;
 
-            const nameCell = row.cells[3]; // 상품명
+            const nameCell = row.cells[2]; // 상품명
             const codeCell = row.cells[0]; // 상품코드
 
             if (!nameCell || !codeCell) return;
