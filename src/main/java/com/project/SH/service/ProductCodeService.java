@@ -21,11 +21,14 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     @Override
     public ProductCode createProductCode(String companyCode, String typeCode, String categoryCode) {
         int nextNumber = productCodeRepository.findMaxProductNumber() + 1;
+        String formattedNumber = String.format("%04d", nextNumber);
+        String fullCode = String.join("_", companyCode, typeCode, categoryCode, formattedNumber);
         ProductCode code = ProductCode.builder()
                 .companyCode(companyCode)
                 .typeCode(typeCode)
                 .categoryCode(categoryCode)
-                .productNumber(nextNumber)
+                .productNumber(formattedNumber)
+                .productCode(fullCode)
                 .build();
         return productCodeRepository.save(code);
     }

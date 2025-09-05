@@ -9,12 +9,13 @@ public class CodeNameMapper {
     );
 
     private static final Map<String, String> TYPE_NAMES = Map.of(
-            "0001", "종이"
-
+            "0001", "종이",
+            "0002", "비닐"
     );
 
     private static final Map<String, String> CATEGORY_NAMES = Map.of(
-            "0001", "띠지"
+            "0001", "띠지",
+            "0002", "띠지"
     );
 
     public static Map<String, String> getCompanyNames() {

@@ -32,16 +32,19 @@ public class ProductController {
                                   @RequestParam String categoryCode,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
+        log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
         try {
             // 현재 로그인된 사용자 정보를 받아옴
             ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode);
-            product.setProductCode(code.getFullCode());
+            product.setProductCode(code.getProductCode());
             log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
 
-            String createdByUuid = userDetails.getUser().getUuid();
-            log.info("현재 로그인된 사용자 UUID: {}", createdByUuid);
+            // 상품 등록
+            Long createdBySeq = userDetails.getUser().getSeq();
+            log.info("현재 로그인된 사용자 번호: {}", createdBySeq);
 
-            productService.registerProduct(product, price, createdByUuid);
+            // 가격 등록
+            productService.registerProduct(product, price, createdBySeq);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
             log.info("상품 등록 성공, 상품 코드: {}", product.getProductCode());
@@ -49,7 +52,7 @@ public class ProductController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             log.error("상품 등록 실패, 에러: {}", e.getMessage());
         }
-        return "redirect:/inventory";  // 목록 페이지로 리다이렉트
+        return "redirect:/product";  // 목록 페이지로 리다이렉트
     }
 
     @GetMapping("/inventory")

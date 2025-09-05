@@ -28,22 +28,27 @@
 
     <!-- 테이블 -->
     <div class="table-responsive">
-        <table class="table table-hover align-middle text-center">
-            <thead class="table-light">
-                <tr>
-                    <th>상품코드</th>
-                    <th>상품명</th>
-                    <th>단가</th>
-                    <th>재고</th>
-                    <th>사용여부</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="productTable">
+            <form id="registerForm" action="${pageContext.request.contextPath}/product/register" method="post">
+                <table class="table table-hover align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>상품코드</th>
+                            <th>아이템코드</th>
+                            <th>스펙</th>
+                            <th>상품명</th>
+                            <th>유닛이름</th>
+                            <th>Pieces/Box</th>
+                            <th>총재고</th>
+                            <th>최소재고</th>
+                            <th>단가</th>
+                            <th>사용여부</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTable">
 
-                <!-- ✅ 등록 입력 행 (기본은 숨김) -->
-                <tr id="registerRow" style="display:none;">
-                    <form id="registerForm" action="${pageContext.request.contextPath}/product/register" method="post">
+                        <!-- ✅ 등록 입력 행 (기본은 숨김) -->
+                        <tr id="registerRow" style="display:none;">
                         <td>
                             <div class="d-flex gap-1">
                                 <select id="companyCode" name="companyCode" class="form-select form-select-sm" required>
@@ -57,9 +62,14 @@
                                 </select>
                             </div>
                         </td>
+                        <td><input type="text" name="itemCode" class="form-control form-control-sm" required></td>
+                        <td><input type="text" name="spec" class="form-control form-control-sm" required></td>
                         <td><input type="text" name="pdName" class="form-control form-control-sm" required></td>
-                        <td><input type="number" name="price" class="form-control form-control-sm" required></td>  <!-- 가격 입력란 추가 -->
-                        <td><input type="number" class="form-control form-control-sm" value="0" readonly></td>
+                        <td><input type="text" name="unitName" class="form-control form-control-sm" required></td>
+                        <td><input type="number" name="piecesPerBox" class="form-control form-control-sm" required></td>
+                        <td><input type="number" name="totalQty" class="form-control form-control-sm" required></td>
+                        <td><input type="number" name="minStockQuantity" class="form-control form-control-sm" value="0" required></td>
+                        <td><input type="number" name="price" class="form-control form-control-sm" required></td>
                         <td>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="active" value="true" checked>
@@ -74,31 +84,36 @@
                             <button type="submit" class="btn btn-sm btn-success">저장</button>
                             <button type="button" class="btn btn-sm btn-secondary" onclick="toggleRegisterRow()">취소</button>
                         </td>
-                    </form>
-                </tr>
 
-                <!-- ✅ 기존 상품 목록 -->
-                <c:forEach var="product" items="${productList}">
-                    <tr class="${product.active ? '' : 'text-muted'}">
-                        <td>${product.productCode}</td>
-                        <td>${product.pdName}</td>
-                        <td>${product.getPrice()}</td>
-                        <td>${product.stockQuantity}</td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${product.active}">
-                                    <span class="badge bg-success">사용중</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="badge bg-secondary">미사용</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td></td>
                     </tr>
-                </c:forEach>
-            </tbody>
-        </table>
+                    <!-- ✅ 기존 상품 목록 -->
+                    <c:forEach var="product" items="${productList}">
+                        <tr class="${product.active ? '' : 'text-muted'}">
+                            <td>${product.productCode}</td>
+                            <td>${product.itemCode}</td>
+                            <td>${product.spec}</td>
+                            <td>${product.pdName}</td>
+                            <td>${product.unitName}</td>
+                            <td>${product.piecesPerBox}</td>
+                            <td>${product.totalQty}</td>
+                            <td>${product.minStockQuantity}</td>
+                            <td>${product.getPrice()}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${product.active}">
+                                        <span class="badge bg-success">사용중</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="badge bg-secondary">미사용</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
+        </form>
     </div>
 </div>
 
@@ -112,7 +127,7 @@
             // 등록행은 필터에서 제외
             if (row.id === "registerRow") return;
 
-            const nameCell = row.cells[1]; // 상품명
+            const nameCell = row.cells[3]; // 상품명
             const codeCell = row.cells[0]; // 상품코드
 
             if (!nameCell || !codeCell) return;

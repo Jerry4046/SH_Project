@@ -27,8 +27,11 @@ public class ProductCode {
     @Column(name = "category_code", nullable = false, length = 4)
     private String categoryCode;
 
-    @Column(name = "product_number", nullable = false)
-    private Integer productNumber;
+    @Column(name = "product_number", nullable = false, length = 4)
+    private String productNumber;
+
+    @Column(name = "product_code", nullable = false, unique = true, length = 20)
+    private String productCode;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -48,13 +51,7 @@ public class ProductCode {
     }
 
     @Transient
-    public String getFullCode() {
-        String number = String.format("%04d", productNumber);
-        return String.join("_", companyCode, typeCode, categoryCode, number);
-    }
-
-    @Transient
     public String getFormattedNumber() {
-        return String.format("%04d", productNumber);
+        return productNumber;
     }
 }

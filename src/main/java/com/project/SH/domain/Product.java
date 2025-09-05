@@ -3,10 +3,8 @@ package com.project.SH.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.Comparator;
-
-
-
 import java.util.List;
 
 @Entity
@@ -26,20 +24,41 @@ public class Product {
     @Column(nullable = false, unique = true, length = 20)
     private String productCode;
 
-    @Column(name = "pd_name", nullable = false, length = 50)
+    @Column(name = "item_code", nullable = false, length = 20)
+    private String itemCode;
+
+    @Column(nullable = false, length = 50)
+    private String spec;
+
+    @Column(name = "pd_name", nullable = false, length = 100)
     private String pdName;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "unit_name", nullable = false, length = 20)
+    private String unitName;
 
-    @Column(nullable = false)
-    private Integer stockQuantity = 0;
+    @Column(name = "pieces_per_box", nullable = false)
+    private Integer piecesPerBox;
 
-    @Column(nullable = false)
+    @Column(name = "box_qty", nullable = false)
+    private Integer boxQty;
+
+    @Column(name = "loose_qty", nullable = false)
+    private Integer looseQty;
+
+    @Column(name = "total_qty", nullable = false)
+    private Integer totalQty;
+
+    @Column(name = "min_stock_quantity", nullable = false)
     private Integer minStockQuantity = 0;
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    @Column(name = "created_at", updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
 
     // Price 테이블과 관계 설정
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
@@ -52,10 +71,19 @@ public class Product {
                     .max(Comparator.comparing(Price::getPriceId))
                     .map(Price::getPrice)
                     .orElse(0.0);
-
         }
-
         log.warn("가격이 없습니다.");
         return 0.0;  // 가격이 없으면 0 반환
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = java.time.LocalDateTime.now();
+        this.updatedAt = java.time.LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = java.time.LocalDateTime.now();
     }
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface ProductServiceImpl {
 
-    void registerProduct(Product product, Double price, String accountUuid);
+    void registerProduct(Product product, Double price, Long accountSeq);
     List<Product> getAllProducts();
 
 }
