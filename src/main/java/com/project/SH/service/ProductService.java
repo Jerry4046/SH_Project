@@ -21,26 +21,26 @@ public class ProductService implements ProductServiceImpl {
     private final PriceService priceService;
 
     @Transactional
-    public void registerProduct(Product product, String accountUuid) {
-        log.info("상품 등록 시작, 상품 코드: {}", product.getProductCode());
+        public void registerProduct(Product product, Double price, String accountUuid) {
+            log.info("상품 등록 시작, 상품 코드: {}", product.getProductCode());
 
-        // 상품 정보를 먼저 저장
-        productRepository.save(product);
-        log.info("상품 등록 완료, 상품 코드: {}", product.getProductCode());
+            // 상품 정보를 먼저 저장
+            productRepository.save(product);
+            log.info("상품 등록 완료, 상품 코드: {}", product.getProductCode());
 
-        // 가격 등록
-        priceService.registerPrice(product, product.getPrice(), accountUuid);
-        log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
+            // 가격 등록
+            priceService.registerPrice(product, price, accountUuid);
+            log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
+        }
+
+        public List<Product> getAllProducts() {
+            log.info("상품 목록 조회 시작");
+
+            // 상품과 해당 가격 목록을 함께 조회
+            List<Product> products = productRepository.findAllWithPrices();
+
+
+            log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
+            return products;
+        }
     }
-
-    public List<Product> getAllProducts() {
-        log.info("상품 목록 조회 시작");
-
-        // 상품과 해당 가격 목록을 함께 조회
-        List<Product> products = productRepository.findAllWithPrices();
-
-        // 가격 목록에서 최신 가격만 남기고, 중복된 상품은 그대로 출력
-        log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
-        return products;
-    }
-}

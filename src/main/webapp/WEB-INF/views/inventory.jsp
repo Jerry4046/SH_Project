@@ -45,12 +45,17 @@
                 <tr id="registerRow" style="display:none;">
                     <form id="registerForm" action="${pageContext.request.contextPath}/product/register" method="post">
                         <td>
-                            <select name="productCode" class="form-select form-select-sm" required>
-                                <option value="">선택</option>
-                                <c:forEach var="code" items="${productCodes}">
-                                <option value="${code.fullCode}">${code.fullCode}</option>
-                                </c:forEach>
-                            </select>
+                            <div class="d-flex gap-1">
+                                <select id="companyCode" name="companyCode" class="form-select form-select-sm" required>
+                                    <option value="">회사</option>
+                                </select>
+                                <select id="typeCode" name="typeCode" class="form-select form-select-sm" style="display:none;" required>
+                                    <option value="">종류</option>
+                                </select>
+                                <select id="categoryCode" name="categoryCode" class="form-select form-select-sm" style="display:none;" required>
+                                    <option value="">분류</option>
+                                </select>
+                            </div>
                         </td>
                         <td><input type="text" name="pdName" class="form-control form-control-sm" required></td>
                         <td><input type="number" name="price" class="form-control form-control-sm" required></td>  <!-- 가격 입력란 추가 -->
@@ -127,6 +132,85 @@
         const row = document.getElementById("registerRow");
         row.style.display = row.style.display === "none" ? "" : "none";
     }
+
+
+    const productCodes = [
+        <c:forEach var="code" items="${productCodes}">
+        {company:'${code.companyCode}', type:'${code.typeCode}', category:'${code.categoryCode}'},
+        </c:forEach>
+    ];
+
+    const companyNames = {
+        <c:forEach var="entry" items="${companyNames}">
+        '${entry.key}': '${entry.value}',
+        </c:forEach>
+    };
+
+    const typeNames = {
+        <c:forEach var="entry" items="${typeNames}">
+        '${entry.key}': '${entry.value}',
+        </c:forEach>
+    };
+
+    const categoryNames = {
+        <c:forEach var="entry" items="${categoryNames}">
+        '${entry.key}': '${entry.value}',
+        </c:forEach>
+    };
+
+    const companySelect = document.getElementById('companyCode');
+    const typeSelect = document.getElementById('typeCode');
+    const categorySelect = document.getElementById('categoryCode');
+
+    const companies = new Set(productCodes.map(c => c.company));
+    companies.forEach(comp => {
+        const option = document.createElement('option');
+        option.value = comp;
+        option.textContent = companyNames[comp] || comp;
+        companySelect.appendChild(option);
+    });
+
+    companySelect.addEventListener('change', () => {
+        const selectedCompany = companySelect.value;
+        typeSelect.innerHTML = '<option value="">종류</option>';
+        categorySelect.innerHTML = '<option value="">분류</option>';
+        categorySelect.style.display = 'none';
+        if (selectedCompany) {
+            const types = new Set();
+            productCodes.filter(c => c.company === selectedCompany)
+                .forEach(c => types.add(c.type));
+            types.forEach(t => {
+                const option = document.createElement('option');
+                option.value = t;
+                option.textContent = typeNames[t] || t;
+                typeSelect.appendChild(option);
+            });
+            typeSelect.style.display = '';
+        } else {
+            typeSelect.style.display = 'none';
+        }
+    });
+
+    typeSelect.addEventListener('change', () => {
+        const selectedCompany = companySelect.value;
+        const selectedType = typeSelect.value;
+        categorySelect.innerHTML = '<option value="">분류</option>';
+        if (selectedType) {
+            const categories = new Set();
+            productCodes.filter(c => c.company === selectedCompany && c.type === selectedType)
+                .forEach(c => categories.add(c.category));
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = categoryNames[cat] || cat;
+                categorySelect.appendChild(option);
+            });
+            categorySelect.style.display = '';
+        } else {
+            categorySelect.style.display = 'none';
+        }
+    });
+
 </script>
 
 </body>

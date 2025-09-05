@@ -18,17 +18,17 @@ public class ProductCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "company_code", nullable = false, length = 10)
+    @Column(name = "company_code", nullable = false, length = 4)
     private String companyCode;
 
-    @Column(name = "type_code", nullable = false, length = 10)
+    @Column(name = "type_code", nullable = false, length = 4)
     private String typeCode;
 
-    @Column(name = "category_code", nullable = false, length = 10)
+    @Column(name = "category_code", nullable = false, length = 4)
     private String categoryCode;
 
-    @Column(name = "product_number", nullable = false, length = 20)
-    private String productNumber;
+    @Column(name = "product_number", nullable = false)
+    private Integer productNumber;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -49,6 +49,12 @@ public class ProductCode {
 
     @Transient
     public String getFullCode() {
-        return String.join("_", companyCode, typeCode, categoryCode, productNumber);
+        String number = String.format("%04d", productNumber);
+        return String.join("_", companyCode, typeCode, categoryCode, number);
+    }
+
+    @Transient
+    public String getFormattedNumber() {
+        return String.format("%04d", productNumber);
     }
 }

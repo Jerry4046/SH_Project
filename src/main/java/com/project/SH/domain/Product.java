@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 
 
+
 import java.util.List;
 
 @Entity
@@ -47,7 +48,6 @@ public class Product {
     // getPrice() 메서드를 통해 Price 테이블에서 가격을 반환
     public Double getPrice() {
         if (prices != null && !prices.isEmpty()) {
-            log.info("가장 최근 가격: {}", prices.get(prices.size() - 1).getPrice());
             return prices.stream()
                     .max(Comparator.comparing(Price::getPriceId))
                     .map(Price::getPrice)

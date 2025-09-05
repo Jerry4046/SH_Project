@@ -5,9 +5,7 @@ import java.util.List;
 
 public interface ProductServiceImpl {
 
-    void registerProduct(Product product, String accountUuid);  // accountUuid를 인자로 추가
+    void registerProduct(Product product, Double price, String accountUuid);
     List<Product> getAllProducts();
 
 }
-
-

@@ -17,4 +17,16 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     public List<ProductCode> getAllProductCodes() {
         return productCodeRepository.findAll();
     }
+
+    @Override
+    public ProductCode createProductCode(String companyCode, String typeCode, String categoryCode) {
+        int nextNumber = productCodeRepository.findMaxProductNumber() + 1;
+        ProductCode code = ProductCode.builder()
+                .companyCode(companyCode)
+                .typeCode(typeCode)
+                .categoryCode(categoryCode)
+                .productNumber(nextNumber)
+                .build();
+        return productCodeRepository.save(code);
+    }
 }

@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface ProductCodeServiceImpl {
     List<ProductCode> getAllProductCodes();
+
+    ProductCode createProductCode(String companyCode, String typeCode, String categoryCode);
 }

@@ -3,9 +3,9 @@ package com.project.SH.controller;
 import com.project.SH.config.CustomUserDetails;
 import com.project.SH.domain.Product;
 import com.project.SH.domain.ProductCode;
-import com.project.SH.service.PriceService;
 import com.project.SH.service.ProductCodeService;
 import com.project.SH.service.ProductService;
+import com.project.SH.util.CodeNameMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;  // SLF4J 로그 추가
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,31 +22,32 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final PriceService priceService;
     private final ProductCodeService productCodeService;
 
     @PostMapping("/product/register")
     public String registerProduct(@ModelAttribute Product product,
                                   @RequestParam Double price,
+                                  @RequestParam String companyCode,
+                                  @RequestParam String typeCode,
+                                  @RequestParam String categoryCode,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
-        log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
         try {
             // 현재 로그인된 사용자 정보를 받아옴
+            ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode);
+            product.setProductCode(code.getFullCode());
+            log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
+
             String createdByUuid = userDetails.getUser().getUuid();
             log.info("현재 로그인된 사용자 UUID: {}", createdByUuid);
 
-            // 상품 등록
-            productService.registerProduct(product, createdByUuid);
-
-            // 가격 등록
-            priceService.registerPrice(product, price, createdByUuid);
+            productService.registerProduct(product, price, createdByUuid);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
             log.info("상품 등록 성공, 상품 코드: {}", product.getProductCode());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            log.error("상품 등록 실패, 상품 코드: {}, 에러: {}", product.getProductCode(), e.getMessage());
+            log.error("상품 등록 실패, 에러: {}", e.getMessage());
         }
         return "redirect:/inventory";  // 목록 페이지로 리다이렉트
     }
@@ -58,6 +59,9 @@ public class ProductController {
         model.addAttribute("productList", products);
         List<ProductCode> codes = productCodeService.getAllProductCodes();
         model.addAttribute("productCodes", codes);
+        model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
+        model.addAttribute("typeNames", CodeNameMapper.getTypeNames());
+        model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
         log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
         return "inventory";  // /WEB-INF/views/inventory.jsp
     }
@@ -66,6 +70,11 @@ public class ProductController {
     public String showProductCodes(Model model) {
         List<ProductCode> codes = productCodeService.getAllProductCodes();
         model.addAttribute("productCodes", codes);
+        model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
+        model.addAttribute("typeNames", CodeNameMapper.getTypeNames());
+        model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
+        List<Product> products = productService.getAllProducts();
+        model.addAttribute("productList", products);
         return "product";
     }
 }

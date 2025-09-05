@@ -12,9 +12,31 @@
     <select name="productCode" class="form-select mt-3">
         <option value="">선택</option>
         <c:forEach var="code" items="${productCodes}">
-            <option value="${code.fullCode}">${code.fullCode}</option>
+            <option value="${code.fullCode}">
+                ${companyNames[code.companyCode]}_${typeNames[code.typeCode]}_${categoryNames[code.categoryCode]}_${code.formattedNumber}
+            </option>
         </c:forEach>
     </select>
+
+    <h3 class="mt-4">상품 목록</h3>
+    <table class="table table-hover mt-2">
+        <thead>
+        <tr>
+            <th>상품코드</th>
+            <th>상품명</th>
+            <th>단가</th>
+        </tr>
+        </thead>
+        <tbody>
+        <c:forEach var="product" items="${productList}">
+            <tr>
+                <td>${product.productCode}</td>
+                <td>${product.pdName}</td>
+                <td>${product.getPrice()}</td>
+            </tr>
+        </c:forEach>
+        </tbody>
+    </table>
 </div>
 </body>
 </html>
