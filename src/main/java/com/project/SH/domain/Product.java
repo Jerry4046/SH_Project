@@ -43,7 +43,7 @@ public class Product {
     @Column(name = "loose_qty", nullable = false)
     private Integer looseQty = 0;
 
-    @Column(name = "total_qty", insertable = false, updatable = false)
+    @Column(name = "total_qty")
     private Integer totalQty;
 
     @Column(name = "min_stock_quantity", nullable = false)

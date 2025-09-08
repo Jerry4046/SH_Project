@@ -32,7 +32,7 @@ public class ProductController {
                                   @RequestParam String categoryCode,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
-        log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}", product.getProductCode(), product.getPdName());
+        log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}, 총재고: {}", product.getProductCode(), product.getPdName(), product.getTotalQty());
         try {
             if (userDetails == null || userDetails.getUser() == null) {
                 redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
@@ -61,7 +61,7 @@ public class ProductController {
             productService.registerProduct(product, price, createdBySeq);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
-            log.info("상품 등록 성공, 상품 코드: {}", product.getProductCode());
+            log.info("상품 등록 성공, 상품 코드: {}, 총재고: {}", product.getProductCode(), product.getTotalQty());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             log.error("상품 등록 실패, 에러: {}", e.getMessage());

@@ -33,8 +33,6 @@ public class ProductService implements ProductServiceImpl {
             productRepository.save(product);
             log.info("상품 등록 완료, 상품 코드: {}", product.getProductCode());
 
-
-
             // 가격 등록
             priceService.registerPrice(product, price, accountSeq);
             log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
