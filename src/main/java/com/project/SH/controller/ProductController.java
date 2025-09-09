@@ -24,6 +24,14 @@ public class ProductController {
     private final ProductService productService;
     private final ProductCodeService productCodeService;
 
+    @GetMapping("/product/register")
+    public String showRegisterForm(Model model) {
+        model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
+        model.addAttribute("typeNames", CodeNameMapper.getTypeNames());
+        model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
+        return "productdetail";
+    }
+
     @PostMapping("/product/register")
     public String registerProduct(@ModelAttribute Product product,
                                   @RequestParam Double price,

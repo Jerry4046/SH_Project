@@ -15,8 +15,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>제품 목록</h2>
         <div class="d-flex gap-2">
-            <a href="/product/detail" class="btn btn-outline-primary" onclick="toggleRegisterRow()">상세</a>
-            <a href="#" class="btn btn-outline-primary" onclick="toggleRegisterRow()">등록</a>
+            <a href="${pageContext.request.contextPath}/product/register" class="btn btn-outline-primary">등록</a>
             <a href="/product/edit" class="btn btn-outline-warning">수정</a>
             <a href="/product/delete" class="btn btn-outline-danger" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
         </div>

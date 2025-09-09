@@ -15,7 +15,7 @@ public class CodeNameMapper {
 
     private static final Map<String, String> CATEGORY_NAMES = Map.of(
             "0001", "띠지",
-            "0002", "띠지"
+            "0002", "지함"
     );
 
     public static Map<String, String> getCompanyNames() {
