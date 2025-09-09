@@ -41,6 +41,14 @@
                     </select>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label">아이템 코드</label>
+                    <input type="text" name="itemCode" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">규격</label>
+                    <input type="text" name="spec" class="form-control" required>
+                </div>
+                <div class="mb-3">
                     <label class="form-label">상품명</label>
                     <input type="text" name="pdName" class="form-control" required>
                 </div>
