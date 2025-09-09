@@ -32,6 +32,7 @@ public class ProductController {
         return "productdetail";
     }
 
+
     @PostMapping("/product/register")
     public String registerProduct(@ModelAttribute Product product,
                                   @RequestParam Double price,
@@ -109,5 +110,12 @@ public class ProductController {
         Product product = productService.getProductByCode(productCode);
         model.addAttribute("product", product);
         return "productdetail";
+    }
+
+    @GetMapping("/product/details")
+    public String showAllProductDetails(Model model) {
+        List<Product> products = productService.getAllProducts();
+        model.addAttribute("productList", products);
+        return "productdetailall";
     }
 }
