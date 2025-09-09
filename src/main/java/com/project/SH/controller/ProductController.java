@@ -95,4 +95,11 @@ public class ProductController {
         model.addAttribute("productList", products);
         return "product";
     }
+
+    @GetMapping("/product/detail/{productCode}")
+    public String showProductDetail(@PathVariable String productCode, Model model) {
+        Product product = productService.getProductByCode(productCode);
+        model.addAttribute("product", product);
+        return "productdetail";
+    }
 }

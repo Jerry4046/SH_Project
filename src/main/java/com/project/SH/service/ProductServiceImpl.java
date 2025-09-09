@@ -7,5 +7,6 @@ public interface ProductServiceImpl {
 
     void registerProduct(Product product, Double price, Long accountSeq);
     List<Product> getAllProducts();
+    Product getProductByCode(String productCode);
 
 }
