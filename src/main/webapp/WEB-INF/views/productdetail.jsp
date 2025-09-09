@@ -88,7 +88,7 @@
                 <table class="table table-hover align-middle text-center">
                     <thead class="table-light">
                     <tr>
-                        <th>사용자Seq</th>
+                        <th>등록자</th>
                         <th>상품코드</th>
                         <th>제품코드</th>
                         <th>규격</th>
@@ -105,16 +105,16 @@
                     </thead>
                     <tbody>
                     <tr class="${product.active ? '' : 'text-muted'}">
-                        <td>${product.accountSeq}</td>
+                        <td><c:out value="${product.user.name}"/></td>
                         <td>${product.productCode}</td>
                         <td>${product.itemCode}</td>
                         <td>${product.spec}</td>
                         <td>${product.pdName}</td>
-                        <td>${product.piecesPerBox}</td>
-                        <td>${product.totalQty / product.piecesPerBox}</td>
-                        <td>${product.totalQty % product.piecesPerBox}</td>
-                        <td>${product.totalQty}</td>
-                        <td>${product.minStockQuantity}</td>
+                        <td>${product.stock.piecesPerBox}</td>
+                        <td>${product.stock.boxQty} BOX</td>
+                        <td>${product.stock.looseQty} 장</td>
+                        <td>${product.stock.totalQty} 장</td>
+                        <td>${product.minStockQuantity} 장</td>
                         <td>
                             <c:choose>
                                 <c:when test="${product.active}">

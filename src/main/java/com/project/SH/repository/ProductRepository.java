@@ -5,6 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findAll(Sort sort);
 
-    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.prices")
-    List<Product> findAllWithPrices();
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.prices LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user")
+    List<Product> findAllWithPricesAndStock();
+
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user WHERE p.productCode = :productCode")
+    Product findByProductCodeWithStock(@Param("productCode") String productCode);
 }

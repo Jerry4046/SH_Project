@@ -8,6 +8,11 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * 상품 기본 정보만을 담당하는 엔티티.
+ * 재고 관련 정보는 {@link Stock} 엔티티로 분리되었다.
+ */
+
 @Entity
 @Table(name = "product_tb")
 @Getter
@@ -25,7 +30,7 @@ public class Product {
     @Column(nullable = false, unique = true, length = 20)
     private String productCode;
 
-    @Column(name = "item_code", nullable = false, length = 20)
+    @Column(name = "item_code", nullable = false, length = 10)
     private String itemCode;
 
     @Column(nullable = false, length = 50)
@@ -33,18 +38,6 @@ public class Product {
 
     @Column(name = "pd_name", nullable = false, length = 100)
     private String pdName;
-
-    @Column(name = "pieces_per_box", nullable = false)
-    private Integer piecesPerBox = 1;
-
-    @Column(name = "box_qty", nullable = false)
-    private Integer boxQty = 0;
-
-    @Column(name = "loose_qty", nullable = false)
-    private Integer looseQty = 0;
-
-    @Column(name = "total_qty")
-    private Integer totalQty;
 
     @Column(name = "min_stock_quantity", nullable = false)
     private Integer minStockQuantity = 0;
@@ -57,6 +50,10 @@ public class Product {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Stock 테이블과 1:1 관계 설정
+    @OneToOne(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Stock stock;
 
     // Price 테이블과 관계 설정
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
@@ -76,6 +73,11 @@ public class Product {
 
     @Column(name = "account_seq", nullable = false)
     private Long accountSeq;
+
+    // 등록자 정보 연동 (account_seq -> User)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_seq", insertable = false, updatable = false)
+    private User user;
 
     @PrePersist
     protected void onCreate() {

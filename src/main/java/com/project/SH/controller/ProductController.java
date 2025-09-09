@@ -39,9 +39,11 @@ public class ProductController {
                                   @RequestParam String companyCode,
                                   @RequestParam String typeCode,
                                   @RequestParam String categoryCode,
+                                  @RequestParam Integer piecesPerBox,
+                                  @RequestParam Integer totalQty,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
-        log.info("상품 등록 시작, 상품 코드: {}, 상품명: {}, 총재고: {}", product.getProductCode(), product.getPdName(), product.getTotalQty());
+        log.info("상품 등록 시작(ProductController), 상품명: {}, 단가: {}, 상품코드: {} ", product.getPdName(), product.getPrice(), product.getProductCode());
         try {
             if (userDetails == null || userDetails.getUser() == null) {
                 redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
@@ -54,23 +56,15 @@ public class ProductController {
             ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode);
             product.setProductCode(code.getProductCode());
 
-            // 2) 재고 입력 값 정규화 (NULL 방지)
-            Integer ppb = product.getPiecesPerBox() == null ? 1 : product.getPiecesPerBox();
-            Integer box = product.getBoxQty() == null ? 0 : product.getBoxQty();
-            Integer loose = product.getLooseQty() == null ? 0 : product.getLooseQty();
-            product.setPiecesPerBox(ppb);
-            product.setBoxQty(box);
-            product.setLooseQty(loose);
-            // total_qty는 생성 컬럼이므로 set하지 않습니다.
-
-            // 3) 가장 중요: account_seq 채우기
+            // 2) account_seq 채우기
             product.setAccountSeq(createdBySeq);
 
-            // 4) 저장 (한 번만!)
-            productService.registerProduct(product, price, createdBySeq);
+
+            // 3) 저장
+            productService.registerProduct(product, price, piecesPerBox, totalQty, createdBySeq);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
-            log.info("상품 등록 성공, 상품 코드: {}, 총재고: {}", product.getProductCode(), product.getTotalQty());
+            log.info("상품 등록 성공, 상품 코드: {}", product.getProductCode());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             log.error("상품 등록 실패, 에러: {}", e.getMessage());

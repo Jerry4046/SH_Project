@@ -29,47 +29,47 @@
 
     <!-- 테이블 -->
     <div class="table-responsive">
-            <table class="table table-hover align-middle text-center">
-                        <thead class="table-light">
-                            <tr>
-                                <th>상품명</th>
-                                <th>박스당 수량</th>
-                                <th>박스재고</th>
-                                <th>낱개</th>
-                                <th>총재고</th>
-                                <th>단가</th>
-                                <th>최소재고</th>
-                                <th>사용여부</th>
-                                <th>상세</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productTable">
-                            <c:forEach var="product" items="${productList}">
-                                <tr class="${product.active ? '' : 'text-muted'}">
-                                    <td>${product.pdName}</td>
-                                    <td>${product.piecesPerBox}</td>
-                                    <td>${product.totalQty / product.piecesPerBox}</td>
-                                    <td>${product.totalQty % product.piecesPerBox}</td>
-                                    <td>${product.totalQty}</td>
-                                    <td>${product.getPrice()}</td>
-                                    <td>${product.minStockQuantity}</td>
-                                    <td>
-                                        <c:choose>
-                                            <c:when test="${product.active}">
-                                                <span class="badge bg-success">사용중</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-secondary">미사용</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td>
-                                        <a href="${pageContext.request.contextPath}/product/detail/${product.productCode}" class="btn btn-sm btn-outline-primary">상세</a>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                        </tbody>
-                    </table>
+       <table class="table table-hover align-middle text-center">
+            <thead class="table-light">
+            <tr>
+                <th>상품명</th>
+                <th>박스당 수량</th>
+                <th>박스재고</th>
+                <th>낱개</th>
+                <th>총재고</th>
+                <th>단가</th>
+                <th>최소재고</th>
+                <th>사용여부</th>
+                <th>상세</th>
+            </tr>
+            </thead>
+            <tbody id="productTable">
+            <c:forEach var="product" items="${productList}">
+                <tr class="${product.active ? '' : 'text-muted'}">
+                    <td>${product.pdName}</td>
+                    <td>${product.stock.piecesPerBox}</td>
+                    <td>${product.stock.boxQty} BOX</td>
+                    <td>${product.stock.looseQty} 장</td>
+                    <td>${product.stock.totalQty} 장</td>
+                    <td>${product.getPrice()} 원</td>
+                    <td>${product.minStockQuantity}장</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${product.active}">
+                                <span class="badge bg-success">사용중</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge bg-secondary">미사용</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <a href="${pageContext.request.contextPath}/product/detail/${product.productCode}" class="btn btn-sm btn-outline-primary">상세</a>
+                    </td>
+                </tr>
+            </c:forEach>
+            </tbody>
+        </tabl
             </div>
     </div>
 

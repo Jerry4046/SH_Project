@@ -76,8 +76,8 @@
                     <td>${product.spec}</td>
                     <td>${product.pdName}</td>
                     <td>${product.unitName}</td>
-                    <td>${product.piecesPerBox}</td>
-                    <td>${product.totalQty}</td>
+                    <td>${product.stock.piecesPerBox}</td>
+                    <td>${product.stock.totalQty}</td>
                     <td>${product.minStockQuantity}</td>
                     <td>${product.getPrice()}</td>
                     <td>
