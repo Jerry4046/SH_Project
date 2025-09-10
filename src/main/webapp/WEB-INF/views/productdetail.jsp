@@ -85,58 +85,64 @@
             </form>
         </c:when>
         <c:otherwise>
-            <h2>제품 상세 정보</h2>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle text-center">
-                    <thead class="table-light">
-                    <tr>
-                        <th>등록자</th>
-                        <th>상품코드</th>
-                        <th>제품코드</th>
-                        <th>규격</th>
-                        <th>제품이름</th>
-                        <th>박스당 수량</th>
-                        <th>박스재고</th>
-                        <th>낱개</th>
-                        <th>총재고</th>
-                        <th>최소재고</th>
-                        <th>사용상태</th>
-                        <th>단가</th>
-                        <th>생성일자</th>
-                        <th>업데이트 일자</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr class="${product.active ? '' : 'text-muted'}">
-                        <td><c:out value="${product.user.name}"/></td>
-                        <td>${product.productCode}</td>
-                        <td>${product.itemCode}</td>
-                        <td>${product.spec}</td>
-                        <td>${product.pdName}</td>
-                        <td><c:out value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}"/> 장</td>
-                        <td><c:out value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}"/> BOX</td>
-                        <td><c:out value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}"/> 장</td>
-                        <td><c:out value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}"/> 장</td>
-                        <td>${product.minStockQuantity} 장</td>
-                        <td>${product.getPrice()} 원</td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${product.active}">
-                                    <span class="badge bg-success">사용중</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="badge bg-secondary">미사용</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
+                        <h2>제품 상세 정보</h2>
+                        <button type="button" class="btn btn-warning mb-2" onclick="toggleDetailEdit()">수정</button>
+                        <form action="${pageContext.request.contextPath}/product/update" method="post" id="detailForm">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center">
+                                <thead class="table-light">
+                                <tr>
+                                    <th class="edit-col" style="display:none;"></th>
+                                    <th>등록자</th>
+                                    <th>상품코드</th>
+                                    <th>제품코드</th>
+                                    <th>규격</th>
+                                    <th>제품이름</th>
+                                    <th>박스당 수량</th>
+                                    <th>박스재고</th>
+                                    <th>낱개</th>
+                                    <th>총재고</th>
+                                    <th>최소재고</th>
+                                    <th>사용상태</th>
+                                    <th>단가</th>
+                                    <th>생성일자</th>
+                                    <th>업데이트 일자</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr class="${product.active ? '' : 'text-muted'}">
+                                    <td class="edit-col" style="display:none;">
+                                        <input type="checkbox" onchange="toggleDetailRow(this)">
+                                    </td>
+                                    <td><c:out value="${product.user.name}"/></td>
+                                    <td><input type="text" name="productCode" value="${product.productCode}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="text" name="itemCode" value="${product.itemCode}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="text" name="spec" value="${product.spec}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="text" name="pdName" value="${product.pdName}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="number" name="piecesPerBox" value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="number" name="boxQty" value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="number" name="looseQty" value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="number" name="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" class="form-control form-control-sm" disabled></td>
+                                    <td><input type="number" name="minStockQuantity" value="${product.minStockQuantity}" class="form-control form-control-sm" disabled></td>
+                                    <td>
+                                        <select name="active" class="form-select form-select-sm" disabled>
+                                            <option value="true" ${product.active ? 'selected' : ''}>사용</option>
+                                            <option value="false" ${!product.active ? 'selected' : ''}>미사용</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" step="0.01" name="price" value="${product.getPrice()}" class="form-control form-control-sm" disabled></td>
                             <td>${product.formattedCreatedAt}</td>
                             <td>${product.formattedUpdatedAt}</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </c:otherwise>
-    </c:choose>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <input type="hidden" name="originalCode" value="${product.productCode}">
+                <input type="text" name="reason" class="form-control mt-2 save-btn" placeholder="사유" style="display:none" required>
+                <button type="submit" class="btn btn-success mt-2 save-btn" style="display:none">저장</button>
+                </form>
+            </c:otherwise>
+        </c:choose>
 </div>
 
 <script>
@@ -144,7 +150,7 @@
     const typeSelect = document.getElementById('typeCode');
     const categorySelect = document.getElementById('categoryCode');
 
-    function updateTypeCategory() {
+  function updateTypeCategory() {
         if (!companySelect || !typeSelect || !categorySelect) return;
 
         if (!companySelect.value) {
@@ -168,10 +174,34 @@
     if (companySelect) {
         companySelect.addEventListener('change', updateTypeCategory);
     }
-    if (typeSelect) {
-        typeSelect.addEventListener('change', updateTypeCategory);
-    }
-    updateTypeCategory();
+
+  if (typeSelect) {
+      typeSelect.addEventListener('change', updateTypeCategory);
+  }
+  updateTypeCategory();
+
+  let detailEditMode = false;
+  function toggleDetailEdit() {
+      detailEditMode = !detailEditMode;
+      document.querySelectorAll('.edit-col').forEach(c => c.style.display = detailEditMode ? '' : 'none');
+      const checkbox = document.querySelector('#detailForm .edit-col input[type="checkbox"]');
+      if (checkbox) {
+          checkbox.checked = false;
+          toggleDetailRow(checkbox);
+      }
+  }
+
+  function toggleDetailRow(cb) {
+      const row = cb.closest('tr');
+      const spans = row.querySelectorAll('.value');
+      const edits = row.querySelectorAll('.edit-field');
+      spans.forEach(s => s.style.display = cb.checked ? 'none' : '');
+      edits.forEach(e => {
+          e.style.display = cb.checked ? '' : 'none';
+          e.disabled = !cb.checked;
+      });
+      document.querySelectorAll('#detailForm .save-btn').forEach(b => b.style.display = cb.checked ? '' : 'none');
+  }
 </script>
 
 </body>

@@ -95,6 +95,7 @@ public class ProductController {
 
     @GetMapping("/product")
     public String showProductCodes(Model model) {
+        log.info("상품코드 및 목록 페이지 조회 시작");
         List<ProductCode> codes = productCodeService.getAllProductCodes();
         model.addAttribute("productCodes", codes);
         model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
@@ -102,12 +103,14 @@ public class ProductController {
         model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
         List<Product> products = productService.getAllProducts();
         model.addAttribute("productList", products);
+        log.info("상품코드 및 목록 페이지 조회 완료, 코드 수: {}, 상품 수: {}", codes.size(), products.size());
         return "product";
     }
 
 
     @GetMapping("/product/detail/{productCode}")
     public String showProductDetail(@PathVariable String productCode, Model model) {
+        log.info("단일 상품 상세 조회, 상품 코드: {}", productCode);
         Product product = productService.getProductByCode(productCode);
         model.addAttribute("product", product);
         return "productdetail";
@@ -115,6 +118,7 @@ public class ProductController {
 
     @GetMapping("/product/details")
     public String showAllProductDetails(@RequestParam(required = false) String keyword, Model model) {
+        log.info("상품 상세 목록 조회 시작, 검색어: {}", keyword);
         List<Product> products;
         if (keyword != null && !keyword.isBlank()) {
             products = productService.searchProducts(keyword);
@@ -123,7 +127,44 @@ public class ProductController {
         }
         model.addAttribute("productList", products);
         model.addAttribute("keyword", keyword);
+        log.info("상품 상세 목록 조회 완료, 상품 수: {}", products.size());
         return "productdetailall";
+    }
+
+    @PostMapping("/product/update")
+    public String updateProduct(@RequestParam("originalCode") String originalCode,
+                                @ModelAttribute Product updatedProduct,
+                                @RequestParam(required = false) Integer piecesPerBox,
+                                @RequestParam(required = false) Integer boxQty,
+                                @RequestParam(required = false) Integer looseQty,
+                                @RequestParam(required = false) Integer totalQty,
+                                @RequestParam(required = false) Double price,
+                                @RequestParam String reason,
+                                @AuthenticationPrincipal CustomUserDetails userDetails,
+                                RedirectAttributes redirectAttributes) {
+        if (userDetails == null || userDetails.getUser() == null) {
+            redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        Long seq = userDetails.getUser().getSeq();
+        log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalCode, isAdmin, seq);
+        log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}", piecesPerBox, boxQty, looseQty, totalQty, price);
+        if (totalQty == null && piecesPerBox != null && boxQty != null) {
+            int loose = looseQty != null ? looseQty : 0;
+            totalQty = boxQty * piecesPerBox + loose;
+            log.debug("총 재고 계산, boxQty: {}, looseQty: {}, piecesPerBox: {}, totalQty: {}", boxQty, looseQty, piecesPerBox, totalQty);
+        }
+        try {
+            productService.updateProduct(originalCode, updatedProduct, piecesPerBox, totalQty, price, seq, reason, isAdmin);
+            redirectAttributes.addFlashAttribute("message", "수정 완료");
+            log.info("상품 수정 완료, 코드: {}", originalCode);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            log.error("상품 수정 실패, 코드: {}, 에러: {}", originalCode, e.getMessage());
+        }
+        return "redirect:/inventory";
     }
 
     public class ProductRow {

@@ -9,4 +9,8 @@ public interface ProductServiceImpl {
     List<Product> getAllProducts();
     Product getProductByCode(String productCode);
 
+    void updateProduct(String originalProductCode, Product updatedProduct,
+                       Integer piecesPerBox, Integer totalQty, Double price,
+                       Long accountSeq, String reason, boolean isAdmin);
+
 }
