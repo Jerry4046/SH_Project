@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <html>
 <head>
     <title>제품 상세</title>
@@ -99,6 +100,7 @@
                         <th>총재고</th>
                         <th>최소재고</th>
                         <th>사용상태</th>
+                        <th>단가</th>
                         <th>생성일자</th>
                         <th>업데이트 일자</th>
                     </tr>
@@ -110,11 +112,12 @@
                         <td>${product.itemCode}</td>
                         <td>${product.spec}</td>
                         <td>${product.pdName}</td>
-                        <td>${product.stock.piecesPerBox}</td>
-                        <td>${product.stock.boxQty} BOX</td>
-                        <td>${product.stock.looseQty} 장</td>
-                        <td>${product.stock.totalQty} 장</td>
+                        <td><c:out value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}"/> 장</td>
+                        <td><c:out value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}"/> BOX</td>
+                        <td><c:out value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}"/> 장</td>
+                        <td><c:out value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}"/> 장</td>
                         <td>${product.minStockQuantity} 장</td>
+                        <td>${product.getPrice()} 원</td>
                         <td>
                             <c:choose>
                                 <c:when test="${product.active}">
@@ -125,8 +128,8 @@
                                 </c:otherwise>
                             </c:choose>
                         </td>
-                        <td>${product.createdAt}</td>
-                        <td>${product.updatedAt}</td>
+                            <td>${product.formattedCreatedAt}</td>
+                            <td>${product.formattedUpdatedAt}</td>
                     </tr>
                     </tbody>
                 </table>

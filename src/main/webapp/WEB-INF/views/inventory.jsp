@@ -47,10 +47,10 @@
             <c:forEach var="product" items="${productList}">
                 <tr class="${product.active ? '' : 'text-muted'}">
                     <td>${product.pdName}</td>
-                    <td>${product.stock.piecesPerBox}</td>
-                    <td>${product.stock.boxQty} BOX</td>
-                    <td>${product.stock.looseQty} 장</td>
-                    <td>${product.stock.totalQty} 장</td>
+                    <td><c:out value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}"/> 장</td>
+                    <td><c:out value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}"/> BOX</td>
+                    <td><c:out value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}"/> 장</td>
+                    <td><c:out value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}"/> 장</td>
                     <td>${product.getPrice()} 원</td>
                     <td>${product.minStockQuantity}장</td>
                     <td>

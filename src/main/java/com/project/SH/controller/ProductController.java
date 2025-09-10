@@ -14,7 +14,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
+
+
 
 @Controller
 @RequiredArgsConstructor
@@ -99,6 +105,7 @@ public class ProductController {
         return "product";
     }
 
+
     @GetMapping("/product/detail/{productCode}")
     public String showProductDetail(@PathVariable String productCode, Model model) {
         Product product = productService.getProductByCode(productCode);
@@ -107,9 +114,23 @@ public class ProductController {
     }
 
     @GetMapping("/product/details")
-    public String showAllProductDetails(Model model) {
-        List<Product> products = productService.getAllProducts();
+    public String showAllProductDetails(@RequestParam(required = false) String keyword, Model model) {
+        List<Product> products;
+        if (keyword != null && !keyword.isBlank()) {
+            products = productService.searchProducts(keyword);
+        } else {
+            products = productService.getAllProducts();
+        }
         model.addAttribute("productList", products);
+        model.addAttribute("keyword", keyword);
         return "productdetailall";
+    }
+
+    public class ProductRow {
+        private LocalDateTime createdAt;
+        public String getCreatedAtStr() {
+            return createdAt == null ? "" :
+                    createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        }
     }
 }

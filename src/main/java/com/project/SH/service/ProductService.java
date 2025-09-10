@@ -42,7 +42,7 @@ public class ProductService implements ProductServiceImpl {
             stockRepository.save(stock);
             log.info("상품 코드: {}에 재고 등록 완료", product.getProductCode());
 
-            // 가격 등록
+
         // 재고 변동 기록 저장
         StockHistory history = StockHistory.builder()
                 .product(product)
@@ -53,24 +53,27 @@ public class ProductService implements ProductServiceImpl {
         stockHistoryRepository.save(history);
         log.info("상품 코드: {}의 초기 재고 이력 저장", product.getProductCode());
 
-
             // 가격 등록
             priceService.registerPrice(product, price, accountSeq);
             log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
         }
 
         public List<Product> getAllProducts() {
-            log.info("상품 목록 조회 시작");
+        log.info("상품 목록 조회 시작");
 
-            // 상품과 해당 가격 목록을 함께 조회
-            List<Product> products = productRepository.findAllWithPricesAndStock();
+        // 상품과 해당 가격 목록을 함께 조회
+        List<Product> products = productRepository.findAllWithPricesAndStock();
 
         log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
         return products;
 }
 
-public Product getProductByCode(String productCode) {
-    log.info("단일 상품 조회, 상품 코드: {}", productCode);
-    return productRepository.findByProductCodeWithStock(productCode);
-}
+    public Product getProductByCode(String productCode) {
+        log.info("단일 상품 조회, 상품 코드: {}", productCode);
+        return productRepository.findByProductCodeWithStock(productCode);
+    }
+    public List<Product> searchProducts(String keyword) {
+        log.info("상품 검색, 키워드: {}", keyword);
+        return productRepository.searchAllByKeyword(keyword);
+    }
 }

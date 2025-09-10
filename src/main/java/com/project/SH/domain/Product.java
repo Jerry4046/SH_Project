@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 
@@ -79,14 +80,20 @@ public class Product {
     @JoinColumn(name = "account_seq", insertable = false, updatable = false)
     private User user;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    //날짜 포멧
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd H:mm");
+
+
+    public String getFormattedCreatedAt() {
+        return createdAt != null ? createdAt.format(FORMATTER) : "";
+    }
+
+    public String getFormattedUpdatedAt() {
+        return updatedAt != null ? updatedAt.format(FORMATTER) : "";
     }
 }
