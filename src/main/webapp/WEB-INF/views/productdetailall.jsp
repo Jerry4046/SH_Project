@@ -75,15 +75,17 @@
         const rows = document.querySelectorAll("#productTable tr");
 
         rows.forEach(row => {
-            const codeCell = row.cells[1];
+            const productCodeCell = row.cells[1];
+            const itemCodeCell = row.cells[2];
             const nameCell = row.cells[4];
-            if (!codeCell || !nameCell) return;
+            if (!productCodeCell || !nameCell) return;
 
-            const code = codeCell.textContent.toLowerCase();
+            const productCode = productCodeCell.textContent.toLowerCase();
+            const itemCode = itemCodeCell ? itemCodeCell.textContent.toLowerCase() : "";
             const name = nameCell.textContent.toLowerCase();
 
-            row.style.display = (code.includes(input) || name.includes(input)) ? "" : "none";
-        });
+            row.style.display = (productCode.includes(input) || itemCode.includes(input) || name.includes(input)) ? "" : "none";
+            });
     }
 
     document.getElementById("searchInput").addEventListener("input", filterTable);

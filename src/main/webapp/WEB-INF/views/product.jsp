@@ -37,10 +37,10 @@
                         <select id="companyCode" name="companyCode" class="form-select form-select-sm" required>
                             <option value="">회사</option>
                         </select>
-                        <select id="typeCode" name="typeCode" class="form-select form-select-sm" style="display:none;" required>
+                        <select id="typeCode" name="typeCode" class="form-select form-select-sm" required disabled>
                             <option value="">종류</option>
                         </select>
-                        <select id="categoryCode" name="categoryCode" class="form-select form-select-sm" style="display:none;" required>
+                        <select id="categoryCode" name="categoryCode" class="form-select form-select-sm" required disabled>
                             <option value="">분류</option>
                         </select>
                     </div>
@@ -97,7 +97,15 @@
 <script>
     function toggleRegisterRow() {
         const row = document.getElementById('registerRow');
-        row.style.display = row.style.display === 'none' ? '' : 'none';
+        const show = row.style.display === 'none';
+        row.style.display = show ? '' : 'none';
+        if (show) {
+            companySelect.value = '';
+            typeSelect.innerHTML = '<option value="">종류</option>';
+            typeSelect.disabled = true;
+            categorySelect.innerHTML = '<option value="">분류</option>';
+            categorySelect.disabled = true;
+        }
     }
 
     const productCodes = [
@@ -106,41 +114,29 @@
         </c:forEach>
     ];
 
-    const companyNames = {
-        <c:forEach var="entry" items="${companyNames}">
-        '${entry.key}': '${entry.value}',
-        </c:forEach>
-    };
+        const categoryNames = {
+            <c:forEach var="entry" items="${categoryNames}">
+            '${entry.key}': '${entry.value}',
+            </c:forEach>
+        };
 
-    const typeNames = {
-        <c:forEach var="entry" items="${typeNames}">
-        '${entry.key}': '${entry.value}',
-        </c:forEach>
-    };
+        const companySelect = document.getElementById('companyCode');
+        const typeSelect = document.getElementById('typeCode');
+        const categorySelect = document.getElementById('categoryCode');
 
-    const categoryNames = {
-        <c:forEach var="entry" items="${categoryNames}">
-        '${entry.key}': '${entry.value}',
-        </c:forEach>
-    };
-
-    const companySelect = document.getElementById('companyCode');
-    const typeSelect = document.getElementById('typeCode');
-    const categorySelect = document.getElementById('categoryCode');
-
-    const companies = new Set(productCodes.map(c => c.company));
-    companies.forEach(comp => {
-        const option = document.createElement('option');
-        option.value = comp;
-        option.textContent = companyNames[comp] || comp;
-        companySelect.appendChild(option);
-    });
+        const companies = new Set(productCodes.map(c => c.company));
+        companies.forEach(comp => {
+            const option = document.createElement('option');
+            option.value = comp;
+            option.textContent = companyNames[comp] || comp;
+            companySelect.appendChild(option);
+        });
 
     companySelect.addEventListener('change', () => {
         const selectedCompany = companySelect.value;
         typeSelect.innerHTML = '<option value="">종류</option>';
         categorySelect.innerHTML = '<option value="">분류</option>';
-        categorySelect.style.display = 'none';
+        categorySelect.disabled = true;
         if (selectedCompany) {
             const types = new Set();
             productCodes.filter(c => c.company === selectedCompany)
@@ -151,9 +147,9 @@
                 option.textContent = typeNames[t] || t;
                 typeSelect.appendChild(option);
             });
-            typeSelect.style.display = '';
+            typeSelect.disabled = false;
         } else {
-            typeSelect.style.display = 'none';
+            typeSelect.disabled = true;
         }
     });
 
@@ -171,9 +167,9 @@
                 option.textContent = categoryNames[cat] || cat;
                 categorySelect.appendChild(option);
             });
-            categorySelect.style.display = '';
+            categorySelect.disabled = false;
         } else {
-            categorySelect.style.display = 'none';
+            categorySelect.disabled = true;
         }
     });
 </script>

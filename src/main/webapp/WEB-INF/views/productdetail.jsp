@@ -80,7 +80,8 @@
                         <label class="form-check-label">미사용</label>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">등록</button>
+                <button type="submit" class="btn btn-primary me-2">등록</button>
+                <a href="${pageContext.request.contextPath}/inventory" class="btn btn-secondary">취소</a>
             </form>
         </c:when>
         <c:otherwise>
@@ -145,21 +146,32 @@
 
     function updateTypeCategory() {
         if (!companySelect || !typeSelect || !categorySelect) return;
+
         if (!companySelect.value) {
             typeSelect.value = '';
             categorySelect.value = '';
             typeSelect.disabled = true;
             categorySelect.disabled = true;
+            return;
+        }
+
+        typeSelect.disabled = false;
+
+        if (!typeSelect.value) {
+            categorySelect.value = '';
+            categorySelect.disabled = true;
         } else {
-            typeSelect.disabled = false;
             categorySelect.disabled = false;
         }
     }
 
     if (companySelect) {
         companySelect.addEventListener('change', updateTypeCategory);
-        updateTypeCategory();
     }
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateTypeCategory);
+    }
+    updateTypeCategory();
 </script>
 
 </body>
