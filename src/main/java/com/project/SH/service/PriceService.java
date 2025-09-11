@@ -24,10 +24,12 @@ public class PriceService implements PriceServiceImpl {
             log.info("가격 기록 처리, 상품 코드: {}, 가격: {}, 수정자 번호: {}", product.getProductCode(), price, accountSeq);
             Optional<Price> existingOpt = priceRepository.findTopByProductOrderByCreatedAtAsc(product);
             Price priceRecord;
+            LocalDateTime originalCreatedAt = null;
             if (existingOpt.isPresent()) {
                 priceRecord = existingOpt.get();
                 log.info("기존 가격 업데이트, 기존: {} -> 새: {}", priceRecord.getPrice(), price);
                 priceRecord.setPrice(price);
+                originalCreatedAt = priceRecord.getCreatedAt();
                 priceRecord.setAccountSeq(accountSeq);
                 priceRecord.setDescription(description);
                 priceRecord.setUpdatedAt(LocalDateTime.now());
@@ -40,7 +42,8 @@ public class PriceService implements PriceServiceImpl {
                 priceRecord.setDescription(description);
             }
             priceRepository.save(priceRecord);
-            log.info("가격 기록 저장 완료, 상품 코드: {}", product.getProductCode());
+            log.info("가격 기록 저장 완료, 상품 코드: {}, 생성일자: {}, 수정일자: {}", product.getProductCode(),
+                    originalCreatedAt != null ? originalCreatedAt : priceRecord.getCreatedAt(), priceRecord.getUpdatedAt());
         } catch (Exception e) {
             log.error("가격 기록 실패, 상품 코드: {}, 에러: {}", product.getProductCode(), e.getMessage());
             throw new RuntimeException("가격 등록 실패", e);

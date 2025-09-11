@@ -151,10 +151,10 @@ public class ProductController {
         Long seq = userDetails.getUser().getSeq();
         log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalCode, isAdmin, seq);
         log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}", piecesPerBox, boxQty, looseQty, totalQty, price);
-        if (totalQty == null && piecesPerBox != null && boxQty != null) {
+        if (piecesPerBox != null && boxQty != null) {
             int loose = looseQty != null ? looseQty : 0;
             totalQty = boxQty * piecesPerBox + loose;
-            log.debug("총 재고 계산, boxQty: {}, looseQty: {}, piecesPerBox: {}, totalQty: {}", boxQty, looseQty, piecesPerBox, totalQty);
+            log.info("총재고 계산 완료 - boxQty: {}, looseQty: {}, piecesPerBox: {}, 계산된 totalQty: {}", boxQty, looseQty, piecesPerBox, totalQty);
         }
         try {
             productService.updateProduct(originalCode, updatedProduct, piecesPerBox, totalQty, price, seq, reason, isAdmin);

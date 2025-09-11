@@ -172,6 +172,7 @@ public class ProductService implements ProductServiceImpl {
         productRepository.save(product);
         if (stock != null) {
             stockRepository.save(stock);
+            log.info("총재고 저장 완료, 상품 코드: {}, 현재 총재고: {}", product.getProductCode(), stock.getTotalQty());
         }
         log.info("상품 수정 서비스 완료, 최종 코드: {}", product.getProductCode());
     }

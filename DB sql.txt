@@ -1,0 +1,142 @@
+CREATE TABLE `account_tb` (
+	`seq` INT(11) NOT NULL AUTO_INCREMENT,
+	`uuid` VARCHAR(50) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`name` VARCHAR(10) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`password` VARCHAR(100) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`grade` VARCHAR(3) NULL DEFAULT 'N' COLLATE 'utf8mb3_general_ci',
+	`situation` INT(11) NULL DEFAULT '0',
+	PRIMARY KEY (`seq`) USING BTREE,
+	UNIQUE INDEX `uuid` (`uuid`) USING BTREE
+)
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=5
+;
+
+CREATE TABLE `client_tb` (
+	`client_id` INT(11) NOT NULL AUTO_INCREMENT,
+	`client_code` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`client_name` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci',
+	PRIMARY KEY (`client_id`) USING BTREE,
+	UNIQUE INDEX `client_code` (`client_code`) USING BTREE
+)
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=2
+;
+
+CREATE TABLE `price_tb` (
+	`price_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`account_seq` INT(11) NOT NULL COMMENT 'FK -> account_tb.seq',
+	`product_id` BIGINT(20) NOT NULL COMMENT 'FK -> product_tb.product_id',
+	`price` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
+	`currency` CHAR(3) NULL DEFAULT 'KRW' COMMENT '통화(필요시)' COLLATE 'utf8mb3_general_ci',
+	`description` TEXT NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`created_at` DATETIME NOT NULL DEFAULT current_timestamp(),
+	`updated_at` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`price_id`) USING BTREE,
+	INDEX `ix_price_product` (`product_id`) USING BTREE,
+	INDEX `ix_price_account_seq` (`account_seq`) USING BTREE,
+	CONSTRAINT `fk_price_account_seq` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT `fk_price_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE CASCADE ON DELETE CASCADE
+)
+COMMENT='제품 단가 이력'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=12
+;
+
+CREATE TABLE `product_change_history_tb` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`product_id` BIGINT(20) NOT NULL,
+	`field_name` VARCHAR(50) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`old_value` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`new_value` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`reason` VARCHAR(255) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`changed_by` INT(11) NOT NULL,
+	`changed_at` DATETIME NULL DEFAULT current_timestamp(),
+	PRIMARY KEY (`id`) USING BTREE,
+	INDEX `product_id` (`product_id`) USING BTREE,
+	CONSTRAINT `product_change_history_tb_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=5
+;
+
+CREATE TABLE `product_code_tb` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`company_code` CHAR(4) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`type_code` CHAR(4) NOT NULL DEFAULT '0000' COLLATE 'utf8mb3_general_ci',
+	`category_code` CHAR(4) NOT NULL DEFAULT '0000' COLLATE 'utf8mb3_general_ci',
+	`product_number` CHAR(4) NOT NULL DEFAULT '0000' COLLATE 'utf8mb3_general_ci',
+	`product_code` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+	`updated_at` TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`id`) USING BTREE,
+	UNIQUE INDEX `product_code` (`product_code`) USING BTREE
+)
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=21
+;
+
+CREATE TABLE `product_tb` (
+	`product_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`account_seq` INT(11) NOT NULL,
+	`product_code` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`item_code` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`spec` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`pd_name` VARCHAR(100) NOT NULL COLLATE 'utf8mb3_general_ci',
+	`pieces_per_box` INT(11) NOT NULL DEFAULT '1',
+	`box_qty` INT(11) NOT NULL DEFAULT '0',
+	`loose_qty` INT(11) NOT NULL DEFAULT '0',
+	`total_qty` INT(11) AS (`box_qty` * `pieces_per_box` + `loose_qty`) stored,
+	`min_stock_quantity` INT(11) NOT NULL DEFAULT '0',
+	`active` TINYINT(1) NOT NULL DEFAULT '1',
+	`created_at` DATETIME NOT NULL DEFAULT current_timestamp(),
+	`updated_at` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`product_id`) USING BTREE,
+	UNIQUE INDEX `uq_accountseq_product_code` (`account_seq`, `product_code`) USING BTREE,
+	INDEX `ix_product_account_seq` (`account_seq`) USING BTREE,
+	CONSTRAINT `fk_product_account_seq` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE CASCADE ON DELETE RESTRICT
+)
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=11
+;
+
+CREATE TABLE `stock_history_tb` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`product_id` BIGINT(20) NOT NULL,
+	`old_total_qty` INT(11) NOT NULL,
+	`change_qty` INT(11) NOT NULL,
+	`new_total_qty` INT(11) NOT NULL,
+	`created_at` DATETIME NOT NULL DEFAULT current_timestamp(),
+	PRIMARY KEY (`id`) USING BTREE,
+	INDEX `fk_history_product` (`product_id`) USING BTREE,
+	CONSTRAINT `fk_history_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE CASCADE ON DELETE CASCADE
+)
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=2
+;
+
+CREATE TABLE `stock_tb` (
+	`product_id` BIGINT(20) NOT NULL COMMENT '상품 FK',
+	`pieces_per_box` INT(11) NOT NULL DEFAULT '1' COMMENT '박스당 개수',
+	`total_qty` INT(11) NOT NULL DEFAULT '0' COMMENT '총 재고 (1개 단위, 직접 입력)',
+	`box_qty` INT(11) AS (floor(`total_qty` / nullif(`pieces_per_box`,0))) stored COMMENT '박스 수량',
+	`loose_qty` INT(11) AS (`total_qty` MOD nullif(`pieces_per_box`,0)) stored COMMENT '낱개 수량',
+	`created_at` DATETIME NOT NULL DEFAULT current_timestamp() COMMENT '생성일자',
+	`updated_at` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일자',
+	PRIMARY KEY (`product_id`) USING BTREE,
+	CONSTRAINT `fk_stock_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT `CONSTRAINT_1` CHECK (`pieces_per_box` > 0),
+	CONSTRAINT `CONSTRAINT_2` CHECK (`total_qty` >= 0)
+)
+COMMENT='상품 재고'
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
+
