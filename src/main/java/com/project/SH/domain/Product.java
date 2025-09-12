@@ -26,31 +26,43 @@ public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long productId;
+    @Column(name = "product_id")
+    private Long product_id;
 
-    @Column(nullable = false, unique = true, length = 20)
-    private String productCode;
+    @Column(nullable = false)
+    private Long registrant_seq;
 
-    @Column(name = "item_code", nullable = false, length = 10)
-    private String itemCode;
+    @Column(nullable = false)
+    private Long product_code;
 
-    @Column(nullable = false, length = 50)
-    private String spec;
+    @Column(nullable = false, length = 100)
+    private String item_code;
+
+    @Column(nullable = false, length = 100)
+    private String product_name;
 
     @Column(name = "pd_name", nullable = false, length = 100)
     private String pdName;
+    @Column(length = 255)
+    private String description;
 
     @Column(name = "min_stock_quantity", nullable = false)
     private Integer minStockQuantity = 0;
+    @Column(length = 255)
+    private String change_reason;
 
     @Column(nullable = false)
     private Boolean active = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+    @Column(updatable = false)
+    private LocalDateTime created_at;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @Column
+    private LocalDateTime updated_at;
 
     // Stock 테이블과 1:1 관계 설정
     @OneToOne(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -76,13 +88,16 @@ public class Product {
     private Long accountSeq;
 
     // 등록자 정보 연동 (account_seq -> User)
+    // 등록자 정보 연동 (registrant_seq -> User)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_seq", insertable = false, updatable = false)
+    @JoinColumn(name = "registrant_seq", insertable = false, updatable = false)
     private User user;
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+        this.updated_at = LocalDateTime.now();
     }
 
     //날짜 포멧
@@ -91,9 +106,11 @@ public class Product {
 
     public String getFormattedCreatedAt() {
         return createdAt != null ? createdAt.format(FORMATTER) : "";
+        return created_at != null ? created_at.format(FORMATTER) : "";
     }
 
     public String getFormattedUpdatedAt() {
         return updatedAt != null ? updatedAt.format(FORMATTER) : "";
+        return updated_at != null ? updated_at.format(FORMATTER) : "";
     }
 }

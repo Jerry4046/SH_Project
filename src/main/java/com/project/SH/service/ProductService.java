@@ -31,6 +31,12 @@ public class ProductService implements ProductServiceImpl {
     public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer totalQty, Long accountSeq) {
         log.info("상품 등록 서비스 호출, 상품 코드: {}", product.getProductCode());
 
+        // 중복 상품코드 검증
+        if (productRepository.existsByProductCode(product.getProductCode())) {
+            log.error("상품 등록 실패 - 중복된 코드: {}", product.getProductCode());
+            throw new IllegalStateException("Duplicate product code: " + product.getProductCode());
+        }
+
         // 상품 정보를 먼저 저장
         productRepository.save(product);
         log.info("상품 기본 정보 저장 완료, 상품 코드: {}", product.getProductCode());
@@ -40,7 +46,7 @@ public class ProductService implements ProductServiceImpl {
         if (totalQty == null) totalQty = 0;
         Stock stock = Stock.builder()
                 .product(product)
-                .piecesPerBox(piecesPerBox)
+                .piecesPerPack(piecesPerBox)
                 .totalQty(totalQty)
                 .build();
         stockRepository.save(stock);
@@ -58,7 +64,7 @@ public class ProductService implements ProductServiceImpl {
         log.info("상품 코드: {}의 초기 재고 이력 저장", product.getProductCode());
 
             // 가격 등록
-        priceService.registerPrice(product, price, accountSeq, "상품 등록 시 가격");
+        priceService.registerPrice(product, price, accountSeq);
             log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
         }
 
@@ -118,14 +124,6 @@ public class ProductService implements ProductServiceImpl {
             product.setPdName(updatedProduct.getPdName());
         }
 
-        if (updatedProduct.getMinStockQuantity() != null &&
-                !updatedProduct.getMinStockQuantity().equals(product.getMinStockQuantity())) {
-            log.info("최소재고 변경: {} -> {}", product.getMinStockQuantity(), updatedProduct.getMinStockQuantity());
-            saveHistory(product, "minStockQuantity",
-                    String.valueOf(product.getMinStockQuantity()),
-                    String.valueOf(updatedProduct.getMinStockQuantity()), reason, accountSeq);
-            product.setMinStockQuantity(updatedProduct.getMinStockQuantity());
-        }
 
         if (updatedProduct.getActive() != null &&
                 !updatedProduct.getActive().equals(product.getActive())) {
@@ -137,11 +135,11 @@ public class ProductService implements ProductServiceImpl {
 
         Stock stock = product.getStock();
         if (stock != null) {
-            if (piecesPerBox != null && !piecesPerBox.equals(stock.getPiecesPerBox())) {
-                log.info("박스당 수량 변경: {} -> {}", stock.getPiecesPerBox(), piecesPerBox);
-                saveHistory(product, "piecesPerBox", String.valueOf(stock.getPiecesPerBox()),
+            if (piecesPerBox != null && !piecesPerBox.equals(stock.getPiecesPerPack())) {
+                log.info("박스당 수량 변경: {} -> {}", stock.getPiecesPerPack(), piecesPerBox);
+                saveHistory(product, "piecesPerBox", String.valueOf(stock.getPiecesPerPack()),
                         String.valueOf(piecesPerBox), reason, accountSeq);
-                stock.setPiecesPerBox(piecesPerBox);
+                stock.setPiecesPerPack(piecesPerBox);
             }
 
             if (totalQty != null && !totalQty.equals(stock.getTotalQty())) {
@@ -166,7 +164,7 @@ public class ProductService implements ProductServiceImpl {
             log.info("단가 변경: {} -> {}", product.getPrice(), price);
             saveHistory(product, "price", String.valueOf(product.getPrice()),
                     String.valueOf(price), reason, accountSeq);
-            priceService.registerPrice(product, price, accountSeq, reason);;
+            priceService.registerPrice(product, price, accountSeq);
         }
 
         productRepository.save(product);
