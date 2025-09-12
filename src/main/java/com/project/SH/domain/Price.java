@@ -14,7 +14,7 @@ public class Price {
     private Long priceId;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_price_product"))
     private Product product;
 
     @Column(nullable = false)
@@ -24,7 +24,7 @@ public class Price {
     private String currency = "KRW";
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String reason;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

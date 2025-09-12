@@ -5,7 +5,6 @@ import com.project.SH.domain.Product;
 import com.project.SH.domain.ProductCode;
 import com.project.SH.service.ProductCodeService;
 import com.project.SH.service.ProductService;
-import com.project.SH.util.CodeNameMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;  // SLF4J 로그 추가
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 
 
@@ -32,9 +29,9 @@ public class ProductController {
 
     @GetMapping("/product/register")
     public String showRegisterForm(Model model) {
-        model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
-        model.addAttribute("typeNames", CodeNameMapper.getTypeNames());
-        model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
+        model.addAttribute("companyNames", productCodeService.getCompanyNameMap());
+        model.addAttribute("typeNames", productCodeService.getTypeNameMap());
+        model.addAttribute("categoryNames", productCodeService.getCategoryNameMap());
         return "productdetail";
     }
 
@@ -84,11 +81,6 @@ public class ProductController {
         log.info("상품 목록 조회 시작");
         List<Product> products = productService.getAllProducts();
         model.addAttribute("productList", products);
-        List<ProductCode> codes = productCodeService.getAllProductCodes();
-        model.addAttribute("productCodes", codes);
-        model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
-        model.addAttribute("typeNames", CodeNameMapper.getTypeNames());
-        model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
         log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
         return "inventory";  // /WEB-INF/views/inventory.jsp
     }
@@ -97,10 +89,6 @@ public class ProductController {
     public String showProductCodes(Model model) {
         log.info("상품코드 및 목록 페이지 조회 시작");
         List<ProductCode> codes = productCodeService.getAllProductCodes();
-        model.addAttribute("productCodes", codes);
-        model.addAttribute("companyNames", CodeNameMapper.getCompanyNames());
-        model.addAttribute("typeNames", CodeNameMapper.getTypeNames());
-        model.addAttribute("categoryNames", CodeNameMapper.getCategoryNames());
         List<Product> products = productService.getAllProducts();
         model.addAttribute("productList", products);
         log.info("상품코드 및 목록 페이지 조회 완료, 코드 수: {}, 상품 수: {}", codes.size(), products.size());

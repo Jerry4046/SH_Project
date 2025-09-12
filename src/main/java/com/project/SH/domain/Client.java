@@ -6,30 +6,36 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "product_code_tb",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"company_initial", "type_code", "category_code"}))
+@Table(name = "client_tb", indexes = {
+        @Index(name = "idx_client_company_initial", columnList = "company_initial"),
+        @Index(name = "idx_client_branch_name", columnList = "branch_name")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductCode {
+public class Client {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "client_id")
+    private Long clientId;
 
-    @Column(name = "company_initial", nullable = false, length = 4)
+    @Column(name = "company_initial", nullable = false, length = 20)
     private String companyInitial;
 
-    @Column(name = "type_code", nullable = false, length = 4)
-    private String typeCode;
+    @Column(name = "company_name", nullable = false, length = 100)
+    private String companyName;
 
-    @Column(name = "category_code", nullable = false, length = 4)
-    private String categoryCode;
+    @Column(name = "branch_name", nullable = false, length = 100)
+    private String branchName;
 
-    @Column(name = "description", nullable = true, length = 255)
-    private String description;
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 50)
+    private String ceo;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -46,10 +52,5 @@ public class ProductCode {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    @Transient
-    public String getProductCode() {
-        return String.join("_", companyInitial, typeCode, categoryCode);
     }
 }

@@ -12,8 +12,8 @@
     <select name="productCode" class="form-select mt-3">
         <option value="">선택</option>
         <c:forEach var="code" items="${productCodes}">
-            <option value="${code.fullCode}">
-                ${companyNames[code.companyCode]}_${typeNames[code.typeCode]}_${categoryNames[code.categoryCode]}_${code.formattedNumber}
+            <option value="${code.productCode}">
+                            ${companyNames[code.companyInitial]}_${typeNames[code.typeCode]}_${categoryNames[code.categoryCode]}
             </option>
         </c:forEach>
     </select>

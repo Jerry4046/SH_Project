@@ -99,52 +99,35 @@
         const row = document.getElementById('registerRow');
         const show = row.style.display === 'none';
         row.style.display = show ? '' : 'none';
-        if (show) {
-            companySelect.value = '';
-            typeSelect.innerHTML = '<option value="">종류</option>';
-            typeSelect.disabled = true;
-            categorySelect.innerHTML = '<option value="">분류</option>';
-            categorySelect.disabled = true;
-        }
-    }
 
-    const productCodes = [
-        <c:forEach var="code" items="${productCodes}">
-        {company:'${code.companyCode}', type:'${code.typeCode}', category:'${code.categoryCode}'},
-        </c:forEach>
-    ];
-
-        const categoryNames = {
-            <c:forEach var="entry" items="${categoryNames}">
-            '${entry.key}': '${entry.value}',
-            </c:forEach>
-        };
-
+        const ctx = '${pageContext.request.contextPath}';
         const companySelect = document.getElementById('companyCode');
         const typeSelect = document.getElementById('typeCode');
         const categorySelect = document.getElementById('categoryCode');
 
-        const companies = new Set(productCodes.map(c => c.company));
-        companies.forEach(comp => {
-            const option = document.createElement('option');
-            option.value = comp;
-            option.textContent = companyNames[comp] || comp;
-            companySelect.appendChild(option);
-        });
+        async function loadCompanies() {
+            const res = await fetch(`${ctx}/api/product-codes/companies`);
+            const data = await res.json();
+            data.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.companyInitial;
+                option.textContent = c.description || c.companyInitial;
+                companySelect.appendChild(option);
+            });
+        }
 
-    companySelect.addEventListener('change', () => {
+    companySelect.addEventListener('change', async () => {
         const selectedCompany = companySelect.value;
         typeSelect.innerHTML = '<option value="">종류</option>';
         categorySelect.innerHTML = '<option value="">분류</option>';
         categorySelect.disabled = true;
         if (selectedCompany) {
-            const types = new Set();
-            productCodes.filter(c => c.company === selectedCompany)
-                .forEach(c => types.add(c.type));
-            types.forEach(t => {
+                const res = await fetch(`${ctx}/api/product-codes/types?companyInitial=${selectedCompany}`);
+                const data = await res.json();
+                data.forEach(t => {
                 const option = document.createElement('option');
-                option.value = t;
-                option.textContent = typeNames[t] || t;
+                option.value = t.typeCode;
+                option.textContent = t.description || t.typeCode;
                 typeSelect.appendChild(option);
             });
             typeSelect.disabled = false;
@@ -153,17 +136,16 @@
         }
     });
 
-    typeSelect.addEventListener('change', () => {
+    typeSelect.addEventListener('change', async () => {
         const selectedCompany = companySelect.value;
         const selectedType = typeSelect.value;
         categorySelect.innerHTML = '<option value="">분류</option>';
         if (selectedType) {
-            const categories = new Set();
-            productCodes.filter(c => c.company === selectedCompany && c.type === selectedType)
-                .forEach(c => categories.add(c.category));
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
+                const res = await fetch(`${ctx}/api/product-codes/categories?companyInitial=${selectedCompany}&typeCode=${selectedType}`);
+                const data = await res.json();
+                data.forEach(cat => {
+                option.value = cat.categoryCode;
+                option.textContent = cat.description || cat.categoryCode;
                 option.textContent = categoryNames[cat] || cat;
                 categorySelect.appendChild(option);
             });
@@ -172,6 +154,8 @@
             categorySelect.disabled = true;
         }
     });
+
+    loadCompanies();
 </script>
 </body>
 </html>
