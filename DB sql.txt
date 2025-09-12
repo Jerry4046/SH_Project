@@ -1,207 +1,250 @@
 CREATE TABLE `account_tb` (
-    `seq` INT(11) NOT NULL AUTO_INCREMENT COMMENT '계정 고유번호',
-    `uuid` VARCHAR(50) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '로그인 ID',
-    `name` VARCHAR(10) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '사용자 이름',
-    `password` VARCHAR(100) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '비밀번호',
-    `grade` VARCHAR(3) NULL DEFAULT 'N' COLLATE 'utf8mb3_general_ci' COMMENT '등급',
-    `situation` INT(11) NULL DEFAULT '0' COMMENT '상태 코드',
-    PRIMARY KEY (`seq`) USING BTREE,
-    UNIQUE INDEX `uuid` (`uuid`) USING BTREE
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='계정 정보';
-
+	`seq` INT(11) NOT NULL AUTO_INCREMENT COMMENT '계정 고유번호',
+	`uuid` VARCHAR(50) NOT NULL COMMENT '로그인 ID' COLLATE 'utf8mb3_general_ci',
+	`name` VARCHAR(10) NOT NULL COMMENT '사용자 이름' COLLATE 'utf8mb3_general_ci',
+	`password` VARCHAR(100) NOT NULL COMMENT '비밀번호' COLLATE 'utf8mb3_general_ci',
+	`grade` VARCHAR(3) NULL DEFAULT 'N' COMMENT '등급' COLLATE 'utf8mb3_general_ci',
+	`situation` INT(11) NULL DEFAULT '0' COMMENT '상태 코드',
+	PRIMARY KEY (`seq`) USING BTREE,
+	UNIQUE INDEX `uuid` (`uuid`) USING BTREE
+)
+COMMENT='계정 정보'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=5
+;
+CREATE TABLE `category_code` (
+	`category_code` VARCHAR(10) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`category_name` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	PRIMARY KEY (`category_code`) USING BTREE
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `client_tb` (
-    `client_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '고객사 ID',
-    `company_initial` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '회사 이니셜',
-    `contact_name` VARCHAR(50) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '담당자 이름',
-    `branch_name` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '지점명',
-    `dealer_name` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '대리점명',
-    `address` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '주소',
-    `contact_phone` VARCHAR(30) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '담당자 전화번호',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
-    `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-    PRIMARY KEY (`client_id`) USING BTREE,
-    INDEX `idx_client_initial` (`company_initial`) USING BTREE,
-    INDEX `idx_branch_name` (`branch_name`) USING BTREE
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='고객사 정보';
-
+	`client_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '고객사 ID',
+	`company_initial` VARCHAR(20) NOT NULL COMMENT '회사 이니셜' COLLATE 'utf8mb3_general_ci',
+	`contact_name` VARCHAR(50) NOT NULL COMMENT '담당자 이름' COLLATE 'utf8mb3_general_ci',
+	`branch_name` VARCHAR(50) NULL DEFAULT NULL COMMENT '지점명' COLLATE 'utf8mb3_general_ci',
+	`dealer_name` VARCHAR(50) NULL DEFAULT NULL COMMENT '대리점명' COLLATE 'utf8mb3_general_ci',
+	`address` VARCHAR(255) NULL DEFAULT NULL COMMENT '주소' COLLATE 'utf8mb3_general_ci',
+	`contact_phone` VARCHAR(30) NULL DEFAULT NULL COMMENT '담당자 전화번호' COLLATE 'utf8mb3_general_ci',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
+	`updated_at` DATETIME NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일시',
+	PRIMARY KEY (`client_id`) USING BTREE,
+	INDEX `idx_client_initial` (`company_initial`) USING BTREE,
+	INDEX `idx_branch_name` (`branch_name`) USING BTREE
+)
+COMMENT='고객사 정보'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
+CREATE TABLE `company_code` (
+	`company_code` VARCHAR(10) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`company_name` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	PRIMARY KEY (`company_code`) USING BTREE
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `disposal_tb` (
-    `disposal_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '폐기 기록 ID',
-    `product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
-    `qty` INT(11) NOT NULL COMMENT '폐기 수량',
-    `reason` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '폐기 사유',
-    `disposed_at` DATETIME NOT NULL COMMENT '폐기 일시',
-    `account_seq` INT(11) NULL DEFAULT NULL COMMENT '처리한 계정 ID',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성일시',
-    PRIMARY KEY (`disposal_id`) USING BTREE,
-    INDEX `fk_disposal_product` (`product_id`) USING BTREE,
-    INDEX `fk_disposal_account` (`account_seq`) USING BTREE,
-    CONSTRAINT `fk_disposal_account` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    CONSTRAINT `fk_disposal_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='제품 폐기 이력';
-
+	`disposal_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '폐기 기록 ID',
+	`product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
+	`qty` INT(11) NOT NULL COMMENT '폐기 수량',
+	`reason` VARCHAR(255) NULL DEFAULT NULL COMMENT '폐기 사유' COLLATE 'utf8mb3_general_ci',
+	`disposed_at` DATETIME NOT NULL COMMENT '폐기 일시',
+	`account_seq` INT(11) NULL DEFAULT NULL COMMENT '처리한 계정 ID',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '기록 생성일시',
+	PRIMARY KEY (`disposal_id`) USING BTREE,
+	INDEX `fk_disposal_product` (`product_id`) USING BTREE,
+	INDEX `fk_disposal_account` (`account_seq`) USING BTREE,
+	CONSTRAINT `fk_disposal_account` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_disposal_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='제품 폐기 이력'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `inventory_movement_tb` (
-    `movement_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '입출고 ID',
-    `product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
-    `type` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '입출고 유형',
-    `qty` INT(11) NOT NULL COMMENT '수량',
-    `related_order_id` BIGINT(20) NULL DEFAULT NULL COMMENT '관련 주문 ID',
-    `account_seq` INT(11) NULL DEFAULT NULL COMMENT '처리한 계정 ID',
-    `remark` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '비고',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성일시',
-    PRIMARY KEY (`movement_id`) USING BTREE,
-    INDEX `fk_inventory_product` (`product_id`) USING BTREE,
-    INDEX `fk_inventory_order` (`related_order_id`) USING BTREE,
-    INDEX `fk_inventory_account` (`account_seq`) USING BTREE,
-    CONSTRAINT `fk_inventory_account` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    CONSTRAINT `fk_inventory_order` FOREIGN KEY (`related_order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    CONSTRAINT `fk_inventory_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='재고 입출고 기록';
-
+	`movement_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '입출고 ID',
+	`product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
+	`type` VARCHAR(20) NOT NULL COMMENT '입출고 유형' COLLATE 'utf8mb3_general_ci',
+	`qty` INT(11) NOT NULL COMMENT '수량',
+	`related_order_id` BIGINT(20) NULL DEFAULT NULL COMMENT '관련 주문 ID',
+	`account_seq` INT(11) NULL DEFAULT NULL COMMENT '처리한 계정 ID',
+	`remark` VARCHAR(255) NULL DEFAULT NULL COMMENT '비고' COLLATE 'utf8mb3_general_ci',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '기록 생성일시',
+	PRIMARY KEY (`movement_id`) USING BTREE,
+	INDEX `fk_inventory_product` (`product_id`) USING BTREE,
+	INDEX `fk_inventory_order` (`related_order_id`) USING BTREE,
+	INDEX `fk_inventory_account` (`account_seq`) USING BTREE,
+	CONSTRAINT `fk_inventory_account` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_inventory_order` FOREIGN KEY (`related_order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_inventory_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='재고 입출고 기록'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `invoice_tb` (
-    `invoice_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '송장 ID',
-    `order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
-    `status` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '송장 상태',
-    `invoice_number` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '송장 번호',
-    `printed_at` DATETIME NULL DEFAULT NULL COMMENT '출력 일시',
-    `shipped_at` DATETIME NULL DEFAULT NULL COMMENT '출고 일시',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
-    PRIMARY KEY (`invoice_id`) USING BTREE,
-    INDEX `fk_invoice_order` (`order_id`) USING BTREE,
-    CONSTRAINT `fk_invoice_order` FOREIGN KEY (`order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='송장 정보';
-
+	`invoice_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '송장 ID',
+	`order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
+	`status` VARCHAR(20) NOT NULL COMMENT '송장 상태' COLLATE 'utf8mb3_general_ci',
+	`invoice_number` VARCHAR(50) NULL DEFAULT NULL COMMENT '송장 번호' COLLATE 'utf8mb3_general_ci',
+	`printed_at` DATETIME NULL DEFAULT NULL COMMENT '출력 일시',
+	`shipped_at` DATETIME NULL DEFAULT NULL COMMENT '출고 일시',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
+	PRIMARY KEY (`invoice_id`) USING BTREE,
+	INDEX `fk_invoice_order` (`order_id`) USING BTREE,
+	CONSTRAINT `fk_invoice_order` FOREIGN KEY (`order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='송장 정보'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `order_item_tb` (
-    `order_item_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '주문 품목 ID',
-    `order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
-    `product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
-    `qty` INT(11) NOT NULL COMMENT '주문 수량',
-    `unit_price` DECIMAL(15,2) NOT NULL COMMENT '단가',
-    PRIMARY KEY (`order_item_id`) USING BTREE,
-    INDEX `fk_order_item_order` (`order_id`) USING BTREE,
-    INDEX `fk_order_item_product` (`product_id`) USING BTREE,
-    CONSTRAINT `fk_order_item_order` FOREIGN KEY (`order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    CONSTRAINT `fk_order_item_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='주문 상세 품목';
-
+	`order_item_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '주문 품목 ID',
+	`order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
+	`product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
+	`qty` INT(11) NOT NULL COMMENT '주문 수량',
+	`unit_price` DECIMAL(15,2) NOT NULL COMMENT '단가',
+	PRIMARY KEY (`order_item_id`) USING BTREE,
+	INDEX `fk_order_item_order` (`order_id`) USING BTREE,
+	INDEX `fk_order_item_product` (`product_id`) USING BTREE,
+	CONSTRAINT `fk_order_item_order` FOREIGN KEY (`order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_order_item_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='주문 상세 품목'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `order_tb` (
-    `order_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '주문 ID',
-    `client_id` BIGINT(20) NOT NULL COMMENT '고객사 ID',
-    `order_date` DATETIME NOT NULL COMMENT '주문 일자',
-    `status` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '주문 상태',
-    `total_amount` DECIMAL(15,2) NULL DEFAULT '0.00' COMMENT '총 금액',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
-    `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-    PRIMARY KEY (`order_id`) USING BTREE,
-    INDEX `fk_order_client` (`client_id`) USING BTREE,
-    CONSTRAINT `fk_order_client` FOREIGN KEY (`client_id`) REFERENCES `client_tb` (`client_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='주문 정보';
-
+	`order_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '주문 ID',
+	`client_id` BIGINT(20) NOT NULL COMMENT '고객사 ID',
+	`order_date` DATETIME NOT NULL COMMENT '주문 일자',
+	`status` VARCHAR(20) NOT NULL COMMENT '주문 상태' COLLATE 'utf8mb3_general_ci',
+	`total_amount` DECIMAL(15,2) NULL DEFAULT '0.00' COMMENT '총 금액',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
+	`updated_at` DATETIME NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일시',
+	PRIMARY KEY (`order_id`) USING BTREE,
+	INDEX `fk_order_client` (`client_id`) USING BTREE,
+	CONSTRAINT `fk_order_client` FOREIGN KEY (`client_id`) REFERENCES `client_tb` (`client_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='주문 정보'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `price_tb` (
-    `price_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '가격 이력 ID',
-    `product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
-    `price` DECIMAL(18,2) NOT NULL COMMENT '가격',
-    `currency` VARCHAR(3) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '통화',
-    `reason` TEXT NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '변경 사유',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
-    `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-    `account_seq` INT(11) NOT NULL COMMENT '변경한 계정 ID',
-    PRIMARY KEY (`price_id`) USING BTREE,
-    INDEX `ix_price_product` (`product_id`) USING BTREE,
-    INDEX `ix_price_account` (`account_seq`) USING BTREE,
-    CONSTRAINT `fk_price__account` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    CONSTRAINT `fk_price__product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='제품 가격 이력';
-
+	`price_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '가격 이력 ID',
+	`product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
+	`price` DECIMAL(18,2) NOT NULL COMMENT '가격',
+	`currency` VARCHAR(3) NULL DEFAULT NULL COMMENT '통화' COLLATE 'utf8mb3_general_ci',
+	`reason` TEXT NULL DEFAULT NULL COMMENT '변경 사유' COLLATE 'utf8mb3_general_ci',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
+	`updated_at` DATETIME NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일시',
+	`account_seq` INT(11) NOT NULL COMMENT '변경한 계정 ID',
+	PRIMARY KEY (`price_id`) USING BTREE,
+	INDEX `ix_price_product` (`product_id`) USING BTREE,
+	INDEX `ix_price_account` (`account_seq`) USING BTREE,
+	CONSTRAINT `fk_price__account` FOREIGN KEY (`account_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_price__product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='제품 가격 이력'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `product_code_tb` (
-    `code_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '분류 코드 ID',
-    `company_initial` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '회사 이니셜',
-    `type_code` VARCHAR(50) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '타입 코드',
-    `category_code` VARCHAR(50) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '카테고리 코드',
-    `description` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '설명',
-    PRIMARY KEY (`code_id`) USING BTREE,
-    UNIQUE INDEX `uk_product_code` (`company_initial`, `type_code`, `category_code`) USING BTREE
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='제품 분류 코드';
-
+	`product_code_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`company_code` VARCHAR(10) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`type_code` VARCHAR(10) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`category_code` VARCHAR(10) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`description` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_general_ci',
+	PRIMARY KEY (`product_code_id`) USING BTREE,
+	UNIQUE INDEX `uk_product_classification` (`company_code`, `type_code`, `category_code`) USING BTREE,
+	INDEX `fk_pc_type` (`type_code`) USING BTREE,
+	INDEX `fk_pc_category` (`category_code`) USING BTREE,
+	CONSTRAINT `fk_pc_category` FOREIGN KEY (`category_code`) REFERENCES `category_code` (`category_code`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_pc_company` FOREIGN KEY (`company_code`) REFERENCES `company_code` (`company_code`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_pc_type` FOREIGN KEY (`type_code`) REFERENCES `type_code` (`type_code`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `product_tb` (
-    `product_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '제품 ID',
-    `registrant_seq` INT(11) NOT NULL COMMENT '등록자 계정 ID',
-    `product_code` BIGINT(20) NOT NULL COMMENT '분류 코드 ID',
-    `item_code` VARCHAR(100) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '아이템 코드',
-    `product_name` VARCHAR(100) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '제품명',
-    `description` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '제품 설명',
-    `change_reason` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '변경 사유',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
-    `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-    PRIMARY KEY (`product_id`) USING BTREE,
-    UNIQUE INDEX `uk_product_item_code` (`item_code`) USING BTREE,
-    INDEX `fk_product_registrant` (`registrant_seq`) USING BTREE,
-    INDEX `fk_product_code` (`product_code`) USING BTREE,
-    CONSTRAINT `fk_product_registrant` FOREIGN KEY (`registrant_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    CONSTRAINT `fk_product_code` FOREIGN KEY (`product_code`) REFERENCES `product_code_tb` (`code_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='제품 정보';
-
+	`product_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '제품 ID',
+	`registrant_seq` INT(11) NOT NULL COMMENT '등록자 계정 ID',
+	`product_code` BIGINT(20) NOT NULL COMMENT '분류 코드 ID',
+	`item_code` VARCHAR(100) NOT NULL COMMENT '아이템 코드' COLLATE 'utf8mb3_general_ci',
+	`product_name` VARCHAR(100) NOT NULL COMMENT '제품명' COLLATE 'utf8mb3_general_ci',
+	`description` VARCHAR(255) NULL DEFAULT NULL COMMENT '제품 설명' COLLATE 'utf8mb3_general_ci',
+	`change_reason` VARCHAR(255) NULL DEFAULT NULL COMMENT '변경 사유' COLLATE 'utf8mb3_general_ci',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
+	`updated_at` DATETIME NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일시',
+	PRIMARY KEY (`product_id`) USING BTREE,
+	UNIQUE INDEX `uk_product_item_code` (`item_code`) USING BTREE,
+	INDEX `fk_product_registrant` (`registrant_seq`) USING BTREE,
+	INDEX `fk_product_code` (`product_code`) USING BTREE,
+	CONSTRAINT `fk_product_code` FOREIGN KEY (`product_code`) REFERENCES `product_code_tb` (`code_id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	CONSTRAINT `fk_product_registrant` FOREIGN KEY (`registrant_seq`) REFERENCES `account_tb` (`seq`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='제품 정보'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `sales_tb` (
-    `sale_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '매출 ID',
-    `order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
-    `sale_date` DATETIME NOT NULL COMMENT '매출 일자',
-    `amount` DECIMAL(15,2) NOT NULL COMMENT '매출액',
-    `tax` DECIMAL(15,2) NULL DEFAULT '0.00' COMMENT '세금',
-    `discount` DECIMAL(15,2) NULL DEFAULT '0.00' COMMENT '할인',
-    `final_amount` DECIMAL(15,2) NOT NULL COMMENT '최종 금액',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성일시',
-    PRIMARY KEY (`sale_id`) USING BTREE,
-    INDEX `fk_sales_order` (`order_id`) USING BTREE,
-    CONSTRAINT `fk_sales_order` FOREIGN KEY (`order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='매출 기록';
-
+	`sale_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '매출 ID',
+	`order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
+	`sale_date` DATETIME NOT NULL COMMENT '매출 일자',
+	`amount` DECIMAL(15,2) NOT NULL COMMENT '매출액',
+	`tax` DECIMAL(15,2) NULL DEFAULT '0.00' COMMENT '세금',
+	`discount` DECIMAL(15,2) NULL DEFAULT '0.00' COMMENT '할인',
+	`final_amount` DECIMAL(15,2) NOT NULL COMMENT '최종 금액',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '기록 생성일시',
+	PRIMARY KEY (`sale_id`) USING BTREE,
+	INDEX `fk_sales_order` (`order_id`) USING BTREE,
+	CONSTRAINT `fk_sales_order` FOREIGN KEY (`order_id`) REFERENCES `order_tb` (`order_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='매출 기록'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `stock_history_tb` (
-    `history_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '재고 이력 ID',
-    `product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
-    `change_type` VARCHAR(20) NOT NULL COLLATE 'utf8mb3_general_ci' COMMENT '변경 유형',
-    `change_qty` INT(11) NOT NULL COMMENT '변경 수량',
-    `old_total_qty` INT(11) NOT NULL COMMENT '변경 전 총수량',
-    `new_total_qty` INT(11) NOT NULL COMMENT '변경 후 총수량',
-    `reason` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci' COMMENT '변경 사유',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성일시',
-    PRIMARY KEY (`history_id`) USING BTREE,
-    INDEX `fk_stock_history_product` (`product_id`) USING BTREE,
-    CONSTRAINT `fk_stock_history_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='재고 변경 이력';
-
+	`history_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '재고 이력 ID',
+	`product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
+	`change_type` VARCHAR(20) NOT NULL COMMENT '변경 유형' COLLATE 'utf8mb3_general_ci',
+	`change_qty` INT(11) NOT NULL COMMENT '변경 수량',
+	`old_total_qty` INT(11) NOT NULL COMMENT '변경 전 총수량',
+	`new_total_qty` INT(11) NOT NULL COMMENT '변경 후 총수량',
+	`reason` VARCHAR(255) NULL DEFAULT NULL COMMENT '변경 사유' COLLATE 'utf8mb3_general_ci',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '기록 생성일시',
+	PRIMARY KEY (`history_id`) USING BTREE,
+	INDEX `fk_stock_history_product` (`product_id`) USING BTREE,
+	CONSTRAINT `fk_stock_history_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='재고 변경 이력'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
 CREATE TABLE `stock_tb` (
-    `product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
-    `pieces_per_pack` INT(11) NOT NULL COMMENT '묶음당 개수',
-    `total_qty` INT(11) NOT NULL COMMENT '총 재고 수량',
-    `pack_qty` INT(11) NOT NULL COMMENT '묶음 수량',
-    `single_qty` INT(11) NOT NULL COMMENT '낱개 수량',
-    `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
-    `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
-    PRIMARY KEY (`product_id`) USING BTREE,
-    CONSTRAINT `fk_stock_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
-) COLLATE='utf8mb3_general_ci'
- ENGINE=InnoDB
- COMMENT='현재 재고';
+	`product_id` BIGINT(20) NOT NULL COMMENT '제품 ID',
+	`pieces_per_pack` INT(11) NOT NULL COMMENT '묶음당 개수',
+	`total_qty` INT(11) NOT NULL COMMENT '총 재고 수량',
+	`pack_qty` INT(11) NOT NULL COMMENT '묶음 수량',
+	`single_qty` INT(11) NOT NULL COMMENT '낱개 수량',
+	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
+	`updated_at` DATETIME NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일시',
+	PRIMARY KEY (`product_id`) USING BTREE,
+	CONSTRAINT `fk_stock_product` FOREIGN KEY (`product_id`) REFERENCES `product_tb` (`product_id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+COMMENT='현재 재고'
+COLLATE='utf8mb3_general_ci'
+ENGINE=InnoDB
+;
+CREATE TABLE `type_code` (
+	`type_code` VARCHAR(10) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`type_name` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	PRIMARY KEY (`type_code`) USING BTREE
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
