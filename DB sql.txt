@@ -180,8 +180,8 @@ CREATE TABLE `product_tb` (
 	`change_reason` VARCHAR(255) NULL DEFAULT NULL COMMENT '변경 사유' COLLATE 'utf8mb3_general_ci',
 	`created_at` DATETIME NULL DEFAULT current_timestamp() COMMENT '생성일시',
 	`updated_at` DATETIME NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT '수정일시',
+	`active` INT(2) NOT NULL COMMENT '상태',
 	PRIMARY KEY (`product_id`) USING BTREE,
-	UNIQUE INDEX `uk_product_item_code` (`item_code`) USING BTREE,
 	INDEX `fk_product_registrant` (`registrant_seq`) USING BTREE,
 	INDEX `fk_product_code` (`product_code`) USING BTREE,
 	CONSTRAINT `fk_product_code` FOREIGN KEY (`product_code`) REFERENCES `product_code_tb` (`code_id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -191,6 +191,7 @@ COMMENT='제품 정보'
 COLLATE='utf8mb3_general_ci'
 ENGINE=InnoDB
 ;
+
 CREATE TABLE `sales_tb` (
 	`sale_id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '매출 ID',
 	`order_id` BIGINT(20) NOT NULL COMMENT '주문 ID',
