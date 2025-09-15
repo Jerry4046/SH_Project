@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface PriceRepository extends JpaRepository<Price, Long> {
 
     // 상품 ID로 최신 가격 정보를 조회하는 메서드
-    Optional<Price> findFirstByProductOrderByCreated_atDesc(Product product);
+    Optional<Price> findFirstByProductOrderByCreatedAtDesc(Product product);
 }

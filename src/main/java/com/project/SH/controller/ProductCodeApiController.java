@@ -3,10 +3,7 @@ package com.project.SH.controller;
 import com.project.SH.domain.ProductCode;
 import com.project.SH.service.ProductCodeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,13 +20,21 @@ public class ProductCodeApiController {
     }
 
     @GetMapping("/types")
-    public List<ProductCode> getTypes(@RequestParam String companyInitial) {
-        return productCodeService.getTypesByCompanyInitial(companyInitial);
+    public List<ProductCode> getTypes(@RequestParam String companyCode) {
+        return productCodeService.getTypesByCompanyCode(companyCode);
     }
 
     @GetMapping("/categories")
-    public List<ProductCode> getCategories(@RequestParam String companyInitial,
+    public List<ProductCode> getCategories(@RequestParam String companyCode,
                                            @RequestParam String typeCode) {
-        return productCodeService.getCategoriesByCompanyInitialAndTypeCode(companyInitial, typeCode);
+        return productCodeService.getCategoriesByCompanyCodeAndTypeCode(companyCode, typeCode);
+    }
+
+    @PostMapping
+    public ProductCode createCode(@RequestParam String companyCode,
+                                  @RequestParam String typeCode,
+                                  @RequestParam String categoryCode,
+                                  @RequestParam(required = false) String description) {
+        return productCodeService.createProductCode(companyCode, typeCode, categoryCode, description);
     }
 }

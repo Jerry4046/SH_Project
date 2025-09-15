@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product_code_tb",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"company_initial", "type_code", "category_code"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"company_code", "type_code", "category_code"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,10 +17,11 @@ public class ProductCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_code_id")
     private Long id;
 
-    @Column(name = "company_initial", nullable = false, length = 4)
-    private String companyInitial;
+    @Column(name = "company_code", nullable = false, length = 4)
+    private String companyCode;
 
     @Column(name = "type_code", nullable = false, length = 4)
     private String typeCode;
@@ -31,25 +32,8 @@ public class ProductCode {
     @Column(name = "description", nullable = true, length = 255)
     private String description;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
     @Transient
     public String getProductCode() {
-        return String.join("_", companyInitial, typeCode, categoryCode);
+        return String.join("_", companyCode, typeCode, categoryCode);
     }
 }

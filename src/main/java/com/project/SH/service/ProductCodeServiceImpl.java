@@ -3,16 +3,17 @@ package com.project.SH.service;
 import com.project.SH.domain.ProductCode;
 import java.util.List;
 
+
 public interface ProductCodeServiceImpl {
     List<ProductCode> getAllProductCodes();
 
-    ProductCode createProductCode(String companyCode, String typeCode, String categoryCode);
+    ProductCode createProductCode(String companyCode, String typeCode, String categoryCode, String description);
 
     List<ProductCode> getCompanies();
 
-    List<ProductCode> getTypesByCompanyInitial(String companyInitial);
+    List<ProductCode> getTypesByCompanyCode(String companyCode);
 
-    List<ProductCode> getCategoriesByCompanyInitialAndTypeCode(String companyInitial, String typeCode);
+    List<ProductCode> getCategoriesByCompanyCodeAndTypeCode(String companyCode, String typeCode);
 
     java.util.Map<String, String> getCompanyNameMap();
 

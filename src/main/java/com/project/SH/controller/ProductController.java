@@ -56,7 +56,7 @@ public class ProductController {
             log.info("현재 로그인된 사용자 번호: {}", createdBySeq);
 
             // 1) 상품코드 생성
-            ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode);
+            ProductCode code = productCodeService.createProductCode(companyCode, typeCode, categoryCode, null);
             product.setProductCode(code.getProductCode());
 
             // 2) account_seq 채우기

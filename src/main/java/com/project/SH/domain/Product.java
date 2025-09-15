@@ -46,6 +46,9 @@ public class Product {
     @Column(name = "pieces_per_box", nullable = false)
     private Integer pieces_per_box = 1;
 
+    @Column(name = "min_stock_quantity", nullable = false)
+    private Integer min_stock_quantity = 0;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -119,6 +122,9 @@ public class Product {
 
     public String getPdName() { return pd_name; }
     public void setPdName(String pd_name) { this.pd_name = pd_name; }
+
+    public Integer getMinStockQuantity() { return min_stock_quantity; }
+    public void setMinStockQuantity(Integer min_stock_quantity) { this.min_stock_quantity = min_stock_quantity; }
 
     public Integer getPiecesPerBox() { return pieces_per_box; }
     public void setPiecesPerBox(Integer pieces_per_box) { this.pieces_per_box = pieces_per_box; }

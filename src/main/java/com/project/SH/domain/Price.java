@@ -31,14 +31,14 @@ public class Price {
     private String reason;
 
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(name = "ended_at")
-    private LocalDateTime ended_at;
+    private LocalDateTime endedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.created_at = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     // 기존 camelCase 접근자를 위한 메서드들
@@ -48,9 +48,9 @@ public class Price {
     public Long getAccountSeq() { return account_seq; }
     public void setAccountSeq(Long account_seq) { this.account_seq = account_seq; }
 
-    public LocalDateTime getCreatedAt() { return created_at; }
-    public void setCreatedAt(LocalDateTime created_at) { this.created_at = created_at; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime created_at) { this.createdAt = created_at; }
 
-    public LocalDateTime getEndedAt() { return ended_at; }
-    public void setEndedAt(LocalDateTime ended_at) { this.ended_at = ended_at; }
+    public LocalDateTime getEndedAt() { return endedAt; }
+    public void setEndedAt(LocalDateTime ended_at) { this.endedAt = ended_at; }
 }

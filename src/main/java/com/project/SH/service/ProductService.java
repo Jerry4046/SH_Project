@@ -39,6 +39,7 @@ public class ProductService implements ProductServiceImpl {
 
         if (piecesPerBox == null) piecesPerBox = 1;
         if (totalQty == null) totalQty = 0;
+        if (product.getMinStockQuantity() == null) product.setMinStockQuantity(0);
 
         // 상품 정보 저장
         product.setPiecesPerBox(piecesPerBox);
@@ -138,6 +139,14 @@ public class ProductService implements ProductServiceImpl {
             saveHistory(product, "active", String.valueOf(product.getActive()),
                     String.valueOf(updatedProduct.getActive()), reason, accountSeq);
             product.setActive(updatedProduct.getActive());
+        }
+
+        if (updatedProduct.getMinStockQuantity() != null &&
+                !updatedProduct.getMinStockQuantity().equals(product.getMinStockQuantity())) {
+            log.info("최소재고 변경: {} -> {}", product.getMinStockQuantity(), updatedProduct.getMinStockQuantity());
+            saveHistory(product, "min_stock_quantity", String.valueOf(product.getMinStockQuantity()),
+                    String.valueOf(updatedProduct.getMinStockQuantity()), reason, accountSeq);
+            product.setMinStockQuantity(updatedProduct.getMinStockQuantity());
         }
 
         Stock stock = product.getStock();

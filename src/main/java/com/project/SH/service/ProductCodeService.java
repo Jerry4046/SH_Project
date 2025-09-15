@@ -1,6 +1,8 @@
 package com.project.SH.service;
 
+import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.ProductCode;
+import com.project.SH.repository.CompanyCodeRepository;
 import com.project.SH.repository.ProductCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import java.util.Map;
 public class ProductCodeService implements ProductCodeServiceImpl {
 
     private final ProductCodeRepository productCodeRepository;
+    private final CompanyCodeRepository companyCodeRepository;
 
     @Override
     public List<ProductCode> getAllProductCodes() {
@@ -22,13 +25,20 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     }
 
     @Override
-    public ProductCode createProductCode(String companyCode, String typeCode, String categoryCode) {
+    public ProductCode createProductCode(String companyCode, String typeCode, String categoryCode, String description) {
+        companyCodeRepository.findById(companyCode)
+                .orElseGet(() -> companyCodeRepository.save(CompanyCode.builder()
+                        .companyCode(companyCode)
+                        .companyName(description != null ? description : companyCode)
+                        .build()));
+
         return productCodeRepository
-                .findByCompanyInitialAndTypeCodeAndCategoryCode(companyCode, typeCode, categoryCode)
+                .findByCompanyCodeAndTypeCodeAndCategoryCode(companyCode, typeCode, categoryCode)
                 .orElseGet(() -> productCodeRepository.save(ProductCode.builder()
-                        .companyInitial(companyCode)
+                        .companyCode(companyCode)
                         .typeCode(typeCode)
                         .categoryCode(categoryCode)
+                        .description(description)
                         .build()));
     }
 
@@ -38,13 +48,13 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     }
 
     @Override
-    public List<ProductCode> getTypesByCompanyInitial(String companyInitial) {
-        return productCodeRepository.findByCompanyInitialAndCategoryCode(companyInitial, "0000");
+    public List<ProductCode> getTypesByCompanyCode(String companyCode) {
+        return productCodeRepository.findByCompanyCodeAndCategoryCode(companyCode, "0000");
     }
 
     @Override
-    public List<ProductCode> getCategoriesByCompanyInitialAndTypeCode(String companyInitial, String typeCode) {
-        return productCodeRepository.findByCompanyInitialAndTypeCodeAndCategoryCodeNot(companyInitial, typeCode, "0000");
+    public List<ProductCode> getCategoriesByCompanyCodeAndTypeCode(String companyCode, String typeCode) {
+        return productCodeRepository.findByCompanyCodeAndTypeCodeAndCategoryCodeNot(companyCode, typeCode, "0000");
     }
 
     @Override
@@ -52,7 +62,7 @@ public class ProductCodeService implements ProductCodeServiceImpl {
         List<ProductCode> companies = getCompanies();
         Map<String, String> map = new LinkedHashMap<>();
         for (ProductCode c : companies) {
-            map.putIfAbsent(c.getCompanyInitial(), c.getDescription());
+            map.putIfAbsent(c.getCompanyCode(), c.getDescription());
         }
         return map;
     }

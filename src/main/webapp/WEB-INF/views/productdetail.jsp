@@ -12,77 +12,134 @@
 <div class="container mt-5">
     <c:choose>
         <c:when test="${empty product}">
-            <h2>제품 등록</h2>
-            <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3">
-                <div class="mb-3">
-                    <label class="form-label">회사</label>
-                    <select name="companyCode" id="companyCode" class="form-select" required>
-                        <option value="">선택하세요</option>
-                        <c:forEach var="entry" items="${companyNames}">
-                            <option value="${entry.key}">${entry.value}</option>
-                        </c:forEach>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">유형</label>
-                    <select name="typeCode" id="typeCode" class="form-select" disabled>
-                        <option value="">선택하세요</option>
-                        <c:forEach var="entry" items="${typeNames}">
-                            <option value="${entry.key}">${entry.value}</option>
-                        </c:forEach>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">카테고리</label>
-                    <select name="categoryCode" id="categoryCode" class="form-select" disabled>
-                        <option value="">선택하세요</option>
-                        <c:forEach var="entry" items="${categoryNames}">
-                            <option value="${entry.key}">${entry.value}</option>
-                        </c:forEach>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">아이템 코드</label>
-                    <input type="text" name="itemCode" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">규격</label>
-                    <input type="text" name="spec" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">상품명</label>
-                    <input type="text" name="pdName" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">박스당 수량</label>
-                    <input type="number" name="piecesPerBox" class="form-control" min="1" value="1" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">총재고</label>
-                    <input type="number" name="totalQty" class="form-control" min="0" value="0" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">단가</label>
-                    <input type="number" name="price" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">최소재고</label>
-                    <input type="number" name="minStockQuantity" class="form-control" min="0" value="0" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">사용여부</label>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="active" value="true" checked>
-                        <label class="form-check-label">사용</label>
+<h2>등록</h2>
+            <div class="btn-group mb-3">
+                <button type="button" class="btn btn-outline-primary active" id="codeTabBtn">제품코드</button>
+                <button type="button" class="btn btn-outline-primary" id="productTabBtn">제품</button>
+            </div>
+
+            <div id="codeForm">
+                <form id="codeRegisterForm">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">회사 이름</label>
+                            <input list="companyNameOptions" id="codeCompanyName" class="form-control">
+                            <datalist id="companyNameOptions"></datalist>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">회사 코드</label>
+                            <input id="codeCompany" class="form-control" disabled>
+                        </div>
+                        <div class="col-auto d-flex align-items-end">
+                            <button type="button" class="btn btn-secondary" id="companyPartialBtn">부분등록</button>
+                        </div>
                     </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="active" value="false">
-                        <label class="form-check-label">미사용</label>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">타입 이름</label>
+                            <input list="typeNameOptions" id="codeTypeName" class="form-control" disabled>
+                            <datalist id="typeNameOptions"></datalist>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">타입 코드</label>
+                            <input id="codeType" class="form-control" disabled>
+                        </div>
+                        <div class="col-auto d-flex align-items-end">
+                            <button type="button" class="btn btn-secondary" id="typePartialBtn" disabled>부분등록</button>
+                        </div>
                     </div>
-                </div>
-                <button type="submit" class="btn btn-primary me-2">등록</button>
-                <a href="${pageContext.request.contextPath}/inventory" class="btn btn-secondary">취소</a>
-            </form>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">카테고리 이름</label>
+                            <input list="categoryNameOptions" id="codeCategoryName" class="form-control" disabled>
+                            <datalist id="categoryNameOptions"></datalist>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">카테고리 코드</label>
+                            <input id="codeCategory" class="form-control" disabled>
+                        </div>
+                        <div class="col-auto d-flex align-items-end">
+                            <button type="button" class="btn btn-secondary" id="categoryPartialBtn" disabled>부분등록</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary w-100" id="fullRegisterBtn">전체등록</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="productForm" style="display:none;">
+                <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3">
+                    <div class="mb-3">
+                        <label class="form-label">회사</label>
+                        <select name="companyCode" id="companyCode" class="form-select" required>
+                            <option value="">선택하세요</option>
+                            <c:forEach var="entry" items="${companyNames}">
+                                <option value="${entry.key}">${entry.value}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">유형</label>
+                        <select name="typeCode" id="typeCode" class="form-select" disabled>
+                            <option value="">선택하세요</option>
+                            <c:forEach var="entry" items="${typeNames}">
+                                <option value="${entry.key}">${entry.value}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">카테고리</label>
+                        <select name="categoryCode" id="categoryCode" class="form-select" disabled>
+                            <option value="">선택하세요</option>
+                            <c:forEach var="entry" items="${categoryNames}">
+                                <option value="${entry.key}">${entry.value}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">아이템 코드</label>
+                        <input type="text" name="itemCode" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">규격</label>
+                        <input type="text" name="spec" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">상품명</label>
+                        <input type="text" name="pdName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">박스당 수량</label>
+                        <input type="number" name="piecesPerBox" class="form-control" min="1" value="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">총재고</label>
+                        <input type="number" name="totalQty" class="form-control" min="0" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">단가</label>
+                        <input type="number" name="price" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">최소재고</label>
+                        <input type="number" name="minStockQuantity" class="form-control" min="0" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">사용여부</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="active" value="true" checked>
+                            <label class="form-check-label">사용</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="active" value="false">
+                            <label class="form-check-label">미사용</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-2">등록</button>
+                    <a href="${pageContext.request.contextPath}/inventory" class="btn btn-secondary">취소</a>
+                </form>
+            </div>
         </c:when>
         <c:otherwise>
                         <h2>제품 상세 정보</h2>
@@ -108,19 +165,7 @@
                                     <th>생성일자</th>
                                     <th>업데이트 일자</th>
                                 </tr>
-                                </thead>
-                                <tbody>
-                                <tr class="${product.active ? '' : 'text-muted'}">
-                                    <td class="edit-col" style="display:none;">
-                                        <input type="checkbox" onchange="toggleDetailRow(this)">
-                                    </td>
-                                    <td><c:out value="${product.user.name}"/></td>
-                                    <td><input type="text" name="productCode" value="${product.productCode}" class="form-control form-control-sm" disabled></td>
-                                    <td><input type="text" name="itemCode" value="${product.itemCode}" class="form-control form-control-sm" disabled></td>
-                                    <td><input type="text" name="spec" value="${product.spec}" class="form-control form-control-sm" disabled></td>
-                                    <td><input type="text" name="pdName" value="${product.pdName}" class="form-control form-control-sm" disabled></td>
-                                    <td><input type="number" name="piecesPerBox" value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}" class="form-control form-control-sm" disabled></td>
-                                    <td><input type="number" name="boxQty" value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}" class="form-control form-control-sm" disabled></td>
+@@ -124,85 +181,326 @@
                                     <td><input type="number" name="looseQty" value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}" class="form-control form-control-sm" disabled></td>
                                     <td><input type="number" name="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" class="form-control form-control-sm" disabled></td>
                                     <td><input type="number" name="minStockQuantity" value="${product.minStockQuantity}" class="form-control form-control-sm" disabled></td>
@@ -146,11 +191,251 @@
 </div>
 
 <script>
+    const ctx = '${pageContext.request.contextPath}';
+
+    // ----- 제품 코드 등록 폼 -----
+    const codeTabBtn = document.getElementById('codeTabBtn');
+    const productTabBtn = document.getElementById('productTabBtn');
+    const codeFormDiv = document.getElementById('codeForm');
+    const productFormDiv = document.getElementById('productForm');
+
+    codeTabBtn.addEventListener('click', () => {
+        codeFormDiv.style.display = '';
+        productFormDiv.style.display = 'none';
+        codeTabBtn.classList.add('active');
+        productTabBtn.classList.remove('active');
+    });
+
+    productTabBtn.addEventListener('click', () => {
+        codeFormDiv.style.display = 'none';
+        productFormDiv.style.display = '';
+        productTabBtn.classList.add('active');
+        codeTabBtn.classList.remove('active');
+    });
+
+    const codeCompanyName = document.getElementById('codeCompanyName');
+    const codeCompany = document.getElementById('codeCompany');
+    const codeTypeName = document.getElementById('codeTypeName');
+    const codeType = document.getElementById('codeType');
+    const codeCategoryName = document.getElementById('codeCategoryName');
+    const codeCategory = document.getElementById('codeCategory');
+    const companyNameOptions = document.getElementById('companyNameOptions');
+    const typeNameOptions = document.getElementById('typeNameOptions');
+    const categoryNameOptions = document.getElementById('categoryNameOptions');
+    const companyPartialBtn = document.getElementById('companyPartialBtn');
+    const typePartialBtn = document.getElementById('typePartialBtn');
+    const categoryPartialBtn = document.getElementById('categoryPartialBtn');
+
+    function loadCompanies() {
+        fetch(`${ctx}/api/product-codes/companies`)
+            .then(r => r.json())
+            .then(data => {
+                companyNameOptions.innerHTML = '';
+                data.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.description;
+                    opt.dataset.code = c.companyCode;
+                    companyNameOptions.appendChild(opt);
+                });
+            });
+    }
+
+    function loadTypes(company) {
+        fetch(`${ctx}/api/product-codes/types?companyCode=${company}`)
+            .then(r => r.json())
+            .then(data => {
+                typeNameOptions.innerHTML = '';
+                data.forEach(t => {
+                    if (t.typeCode !== '0000') {
+                        const opt = document.createElement('option');
+                        opt.value = t.description;
+                        opt.dataset.code = t.typeCode;
+                        typeNameOptions.appendChild(opt);
+                    }
+                });
+            });
+    }
+
+    function loadCategories(company, type) {
+        fetch(`${ctx}/api/product-codes/categories?companyCode=${company}&typeCode=${type}`)
+            .then(r => r.json())
+            .then(data => {
+                categoryNameOptions.innerHTML = '';
+                data.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.description;
+                    opt.dataset.code = cat.categoryCode;
+                    categoryNameOptions.appendChild(opt);
+                });
+            });
+    }
+
+    loadCompanies();
+
+    function resetTypeFields() {
+        codeTypeName.value = '';
+        codeType.value = '';
+        codeTypeName.disabled = true;
+        codeType.disabled = true;
+        typePartialBtn.disabled = true;
+        typeNameOptions.innerHTML = '';
+    }
+
+    function resetCategoryFields() {
+        codeCategoryName.value = '';
+        codeCategory.value = '';
+        codeCategoryName.disabled = true;
+        codeCategory.disabled = true;
+        categoryPartialBtn.disabled = true;
+        categoryNameOptions.innerHTML = '';
+    }
+
+    codeCompanyName.addEventListener('input', () => {
+        const option = Array.from(companyNameOptions.options).find(o => o.value === codeCompanyName.value);
+        if (option) {
+            codeCompany.value = option.dataset.code;
+            codeCompany.disabled = true;
+            codeTypeName.disabled = false;
+            typePartialBtn.disabled = false;
+            loadTypes(codeCompany.value);
+        } else {
+            codeCompany.value = '';
+            codeCompany.disabled = false;
+            resetTypeFields();
+            resetCategoryFields();
+        }
+        resetCategoryFields();
+    });
+
+    codeCompany.addEventListener('input', () => {
+        const hasCompany = codeCompanyName.value.trim() && codeCompany.value.trim();
+        codeTypeName.disabled = !hasCompany;
+        typePartialBtn.disabled = !hasCompany;
+        if (!hasCompany) {
+            resetTypeFields();
+            resetCategoryFields();
+        }
+    });
+
+    codeTypeName.addEventListener('input', () => {
+        const option = Array.from(typeNameOptions.options).find(o => o.value === codeTypeName.value);
+        if (option) {
+            codeType.value = option.dataset.code;
+            codeType.disabled = true;
+            codeCategoryName.disabled = false;
+            categoryPartialBtn.disabled = false;
+            loadCategories(codeCompany.value, codeType.value);
+        } else {
+            codeType.value = '';
+            codeType.disabled = false;
+            resetCategoryFields();
+        }
+    });
+
+    codeType.addEventListener('input', () => {
+        const hasType = codeCompany.value && codeTypeName.value.trim() && codeType.value.trim();
+        codeCategoryName.disabled = !hasType;
+        categoryPartialBtn.disabled = !hasType;
+        if (!hasType) {
+            resetCategoryFields();
+        }
+    });
+
+    codeCategoryName.addEventListener('input', () => {
+        const option = Array.from(categoryNameOptions.options).find(o => o.value === codeCategoryName.value);
+        if (option) {
+            codeCategory.value = option.dataset.code;
+            codeCategory.disabled = true;
+        } else {
+            codeCategory.value = '';
+            codeCategory.disabled = false;
+        }
+    });
+
+    companyPartialBtn.addEventListener('click', () => {
+        const name = codeCompanyName.value.trim();
+        const code = codeCompany.value.trim();
+        if (!name || !code) {
+            alert('회사 이름과 코드를 입력하세요');
+            return;
+        }
+        fetch(`${ctx}/api/product-codes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ companyCode: code, typeCode: '0000', categoryCode: '0000', description: name })
+        }).then(() => {
+            alert('등록되었습니다.');
+            loadCompanies();
+        });
+    });
+
+    typePartialBtn.addEventListener('click', () => {
+        const company = codeCompany.value.trim();
+        const name = codeTypeName.value.trim();
+        const type = codeType.value.trim();
+        if (!company || !name || !type) {
+            alert('회사와 타입 이름, 코드를 입력하세요');
+            return;
+        }
+        fetch(`${ctx}/api/product-codes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ companyCode: company, typeCode: type, categoryCode: '0000', description: name })
+        }).then(() => {
+            alert('등록되었습니다.');
+            loadTypes(company);
+        });
+    });
+
+    categoryPartialBtn.addEventListener('click', () => {
+        const company = codeCompany.value.trim();
+        const type = codeType.value.trim();
+        const name = codeCategoryName.value.trim();
+        const category = codeCategory.value.trim();
+        if (!company || !type || !name || !category) {
+            alert('회사, 타입, 카테고리 이름과 코드를 입력하세요');
+            return;
+        }
+        fetch(`${ctx}/api/product-codes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ companyCode: company, typeCode: type, categoryCode: category, description: name })
+        }).then(() => {
+            alert('등록되었습니다.');
+            loadCategories(company, type);
+        });
+    });
+
+    document.getElementById('fullRegisterBtn').addEventListener('click', () => {
+        if (!codeCompany.value || !codeType.value || !codeCategory.value) {
+            alert('모든 코드를 입력하세요');
+            return;
+        }
+        fetch(`${ctx}/api/product-codes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ companyCode: codeCompany.value, typeCode: codeType.value, categoryCode: codeCategory.value, description: codeCategoryName.value })
+        }).then(() => {
+            alert('제품코드가 등록되었습니다.');
+            document.getElementById('companyCode').value = codeCompany.value;
+            document.getElementById('companyCode').dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                document.getElementById('typeCode').value = codeType.value;
+                document.getElementById('typeCode').dispatchEvent(new Event('change'));
+                setTimeout(() => {
+                    document.getElementById('categoryCode').value = codeCategory.value;
+                }, 100);
+            }, 100);
+            productTabBtn.click();
+        });
+    });
+
+    // ----- 제품 등록 폼 -----
     const companySelect = document.getElementById('companyCode');
     const typeSelect = document.getElementById('typeCode');
     const categorySelect = document.getElementById('categoryCode');
 
-  function updateTypeCategory() {
+    function updateTypeCategory() {
         if (!companySelect || !typeSelect || !categorySelect) return;
 
         if (!companySelect.value) {
@@ -175,33 +460,34 @@
         companySelect.addEventListener('change', updateTypeCategory);
     }
 
-  if (typeSelect) {
-      typeSelect.addEventListener('change', updateTypeCategory);
-  }
-  updateTypeCategory();
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateTypeCategory);
+    }
+    updateTypeCategory();
 
-  let detailEditMode = false;
-  function toggleDetailEdit() {
-      detailEditMode = !detailEditMode;
-      document.querySelectorAll('.edit-col').forEach(c => c.style.display = detailEditMode ? '' : 'none');
-      const checkbox = document.querySelector('#detailForm .edit-col input[type="checkbox"]');
-      if (checkbox) {
-          checkbox.checked = false;
-          toggleDetailRow(checkbox);
-      }
-  }
+    // ----- 상세 정보 수정 -----
+    let detailEditMode = false;
+    function toggleDetailEdit() {
+        detailEditMode = !detailEditMode;
+        document.querySelectorAll('.edit-col').forEach(c => c.style.display = detailEditMode ? '' : 'none');
+        const checkbox = document.querySelector('#detailForm .edit-col input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = false;
+            toggleDetailRow(checkbox);
+        }
+    }
 
-  function toggleDetailRow(cb) {
-      const row = cb.closest('tr');
-      const spans = row.querySelectorAll('.value');
-      const edits = row.querySelectorAll('.edit-field');
-      spans.forEach(s => s.style.display = cb.checked ? 'none' : '');
-      edits.forEach(e => {
-          e.style.display = cb.checked ? '' : 'none';
-          e.disabled = !cb.checked;
-      });
-      document.querySelectorAll('#detailForm .save-btn').forEach(b => b.style.display = cb.checked ? '' : 'none');
-  }
+    function toggleDetailRow(cb) {
+        const row = cb.closest('tr');
+        const spans = row.querySelectorAll('.value');
+        const edits = row.querySelectorAll('.edit-field');
+        spans.forEach(s => s.style.display = cb.checked ? 'none' : '');
+        edits.forEach(e => {
+            e.style.display = cb.checked ? '' : 'none';
+            e.disabled = !cb.checked;
+        });
+        document.querySelectorAll('#detailForm .save-btn').forEach(b => b.style.display = cb.checked ? '' : 'none');
+    }
 </script>
 
 </body>
