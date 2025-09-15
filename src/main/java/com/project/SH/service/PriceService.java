@@ -38,7 +38,7 @@ public class PriceService implements PriceServiceImpl {
 
     public Double getLatestPrice(Product product) {
         log.info("상품 코드: {}의 최신 가격을 조회", product.getProductCode());
-        Optional<Price> latest = priceRepository.findFirstByProductOrderByCreatedAtDesc(product);
+        Optional<Price> latest = priceRepository.findFirstByProductOrderByCreated_atDesc(product);
         return latest.map(price -> {
                     log.info("가장 최근 가격: {}", price.getPrice());
                     return price.getPrice();

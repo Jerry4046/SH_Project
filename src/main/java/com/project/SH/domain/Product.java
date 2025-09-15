@@ -10,10 +10,9 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 상품 기본 정보만을 담당하는 엔티티.
- * 재고 관련 정보는 {@link Stock} 엔티티로 분리되었다.
+ * 제품 기본 정보를 담당하는 엔티티.
+ * 재고 정보는 {@link Stock} 엔티티와 별도로 관리된다.
  */
-
 @Entity
 @Table(name = "product_tb")
 @Getter
@@ -29,50 +28,61 @@ public class Product {
     @Column(name = "product_id")
     private Long product_id;
 
-    @Column(nullable = false)
-    private Long registrant_seq;
+    @Column(name = "account_seq", nullable = false)
+    private Long account_seq;
 
-    @Column(nullable = false)
-    private Long product_code;
+    @Column(name = "product_code", nullable = false, length = 20)
+    private String product_code;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "item_code", length = 10)
     private String item_code;
 
-    @Column(nullable = false, length = 100)
-    private String product_name;
-
     @Column(name = "pd_name", nullable = false, length = 100)
-    private String pdName;
-    @Column(length = 255)
-    private String description;
+    private String pd_name;
 
-    @Column(name = "min_stock_quantity", nullable = false)
-    private Integer minStockQuantity = 0;
-    @Column(length = 255)
-    private String change_reason;
+    @Column(length = 100)
+    private String spec;
+
+    @Column(name = "pieces_per_box", nullable = false)
+    private Integer pieces_per_box = 1;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(nullable = false)
     private Boolean active = true;
 
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    @Column(updatable = false)
     private LocalDateTime created_at;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    @Column
     private LocalDateTime updated_at;
 
-    // Stock 테이블과 1:1 관계 설정
+    // Stock 테이블과 1:1 관계
     @OneToOne(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Stock stock;
 
-    // Price 테이블과 관계 설정
+    // Price 테이블과 관계
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<Price> prices;
 
-    // getPrice() 메서드를 통해 Price 테이블에서 가격을 반환
+    // 등록자 정보 (account_seq -> User)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_seq", insertable = false, updatable = false)
+    private User user;
+
+    @PrePersist
+    protected void onCreate() {
+        this.created_at = LocalDateTime.now();
+        this.updated_at = this.created_at;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updated_at = LocalDateTime.now();
+    }
+
+    // 최신 가격 조회
     public Double getPrice() {
         if (prices != null && !prices.isEmpty()) {
             return prices.stream()
@@ -84,33 +94,38 @@ public class Product {
         return 0.0;
     }
 
-    @Column(name = "account_seq", nullable = false)
-    private Long accountSeq;
-
-    // 등록자 정보 연동 (account_seq -> User)
-    // 등록자 정보 연동 (registrant_seq -> User)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_seq", insertable = false, updatable = false)
-    @JoinColumn(name = "registrant_seq", insertable = false, updatable = false)
-    private User user;
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-        this.updated_at = LocalDateTime.now();
-    }
-
-    //날짜 포멧
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yy/MM/dd H:mm");
 
-
     public String getFormattedCreatedAt() {
-        return createdAt != null ? createdAt.format(FORMATTER) : "";
         return created_at != null ? created_at.format(FORMATTER) : "";
     }
 
     public String getFormattedUpdatedAt() {
-        return updatedAt != null ? updatedAt.format(FORMATTER) : "";
         return updated_at != null ? updated_at.format(FORMATTER) : "";
     }
+
+    // 기존 camelCase 접근자를 위한 메서드들
+    public Long getProductId() { return product_id; }
+    public void setProductId(Long product_id) { this.product_id = product_id; }
+
+    public Long getAccountSeq() { return account_seq; }
+    public void setAccountSeq(Long account_seq) { this.account_seq = account_seq; }
+
+    public String getProductCode() { return product_code; }
+    public void setProductCode(String product_code) { this.product_code = product_code; }
+
+    public String getItemCode() { return item_code; }
+    public void setItemCode(String item_code) { this.item_code = item_code; }
+
+    public String getPdName() { return pd_name; }
+    public void setPdName(String pd_name) { this.pd_name = pd_name; }
+
+    public Integer getPiecesPerBox() { return pieces_per_box; }
+    public void setPiecesPerBox(Integer pieces_per_box) { this.pieces_per_box = pieces_per_box; }
+
+    public LocalDateTime getCreatedAt() { return created_at; }
+    public void setCreatedAt(LocalDateTime created_at) { this.created_at = created_at; }
+
+    public LocalDateTime getUpdatedAt() { return updated_at; }
+    public void setUpdatedAt(LocalDateTime updated_at) { this.updated_at = updated_at; }
 }

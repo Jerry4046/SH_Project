@@ -37,38 +37,45 @@ public class ProductService implements ProductServiceImpl {
             throw new IllegalStateException("Duplicate product code: " + product.getProductCode());
         }
 
-        // 상품 정보를 먼저 저장
+        if (piecesPerBox == null) piecesPerBox = 1;
+        if (totalQty == null) totalQty = 0;
+
+        // 상품 정보 저장
+        product.setPiecesPerBox(piecesPerBox);
         productRepository.save(product);
         log.info("상품 기본 정보 저장 완료, 상품 코드: {}", product.getProductCode());
 
         // 재고 정보 저장
-        if (piecesPerBox == null) piecesPerBox = 1;
-        if (totalQty == null) totalQty = 0;
+        int boxQty = totalQty / piecesPerBox;
+        int looseQty = totalQty % piecesPerBox;
         Stock stock = Stock.builder()
                 .product(product)
-                .piecesPerPack(piecesPerBox)
-                .totalQty(totalQty)
+                .pieces_per_box(piecesPerBox)
+                .box_qty(boxQty)
+                .loose_qty(looseQty)
                 .build();
         stockRepository.save(stock);
         log.info("상품 코드: {}에 재고 등록 완료", product.getProductCode());
 
-
         // 재고 변동 기록 저장
         StockHistory history = StockHistory.builder()
-                .product(product)
-                .oldTotalQty(0)
-                .changeQty(totalQty)
-                .newTotalQty(totalQty)
+                .product_id(product)
+                .account_seq(accountSeq)
+                .action("IN")
+                .old_total_qty(0)
+                .change_qty(totalQty)
+                .new_total_qty(totalQty)
+                .reason("Initial stock")
                 .build();
         stockHistoryRepository.save(history);
         log.info("상품 코드: {}의 초기 재고 이력 저장", product.getProductCode());
 
-            // 가격 등록
+        // 가격 등록
         priceService.registerPrice(product, price, accountSeq);
-            log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
-        }
+        log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
+    }
 
-        public List<Product> getAllProducts() {
+    public List<Product> getAllProducts() {
         log.info("상품 목록 조회 서비스 호출");
 
         // 상품과 해당 가격 목록을 함께 조회
@@ -76,7 +83,7 @@ public class ProductService implements ProductServiceImpl {
 
         log.info("상품 목록 조회 서비스 완료, 상품 수: {}", products.size());
         return products;
-}
+    }
 
     public Product getProductByCode(String productCode) {
         log.info("단일 상품 조회, 상품 코드: {}", productCode);
@@ -101,14 +108,14 @@ public class ProductService implements ProductServiceImpl {
         if (isAdmin && updatedProduct.getProductCode() != null &&
                 !updatedProduct.getProductCode().equals(product.getProductCode())) {
             log.info("상품코드 변경: {} -> {}", product.getProductCode(), updatedProduct.getProductCode());
-            saveHistory(product, "productCode", product.getProductCode(), updatedProduct.getProductCode(), reason, accountSeq);
+            saveHistory(product, "product_code", product.getProductCode(), updatedProduct.getProductCode(), reason, accountSeq);
             product.setProductCode(updatedProduct.getProductCode());
         }
 
         if (isAdmin && updatedProduct.getItemCode() != null &&
                 !updatedProduct.getItemCode().equals(product.getItemCode())) {
             log.info("아이템코드 변경: {} -> {}", product.getItemCode(), updatedProduct.getItemCode());
-            saveHistory(product, "itemCode", product.getItemCode(), updatedProduct.getItemCode(), reason, accountSeq);
+            saveHistory(product, "item_code", product.getItemCode(), updatedProduct.getItemCode(), reason, accountSeq);
             product.setItemCode(updatedProduct.getItemCode());
         }
 
@@ -120,7 +127,7 @@ public class ProductService implements ProductServiceImpl {
 
         if (updatedProduct.getPdName() != null && !updatedProduct.getPdName().equals(product.getPdName())) {
             log.info("상품명 변경: {} -> {}", product.getPdName(), updatedProduct.getPdName());
-            saveHistory(product, "pdName", product.getPdName(), updatedProduct.getPdName(), reason, accountSeq);
+            saveHistory(product, "pd_name", product.getPdName(), updatedProduct.getPdName(), reason, accountSeq);
             product.setPdName(updatedProduct.getPdName());
         }
 
@@ -135,28 +142,37 @@ public class ProductService implements ProductServiceImpl {
 
         Stock stock = product.getStock();
         if (stock != null) {
-            if (piecesPerBox != null && !piecesPerBox.equals(stock.getPiecesPerPack())) {
-                log.info("박스당 수량 변경: {} -> {}", stock.getPiecesPerPack(), piecesPerBox);
-                saveHistory(product, "piecesPerBox", String.valueOf(stock.getPiecesPerPack()),
+            if (piecesPerBox != null && !piecesPerBox.equals(stock.getPiecesPerBox())) {
+                log.info("박스당 수량 변경: {} -> {}", stock.getPiecesPerBox(), piecesPerBox);
+                saveHistory(product, "pieces_per_box", String.valueOf(stock.getPiecesPerBox()),
                         String.valueOf(piecesPerBox), reason, accountSeq);
-                stock.setPiecesPerPack(piecesPerBox);
+                stock.setPiecesPerBox(piecesPerBox);
+                product.setPiecesPerBox(piecesPerBox);
             }
 
-            if (totalQty != null && !totalQty.equals(stock.getTotalQty())) {
-                log.info("총재고 변경: {} -> {}", stock.getTotalQty(), totalQty);
-                saveHistory(product, "totalQty", String.valueOf(stock.getTotalQty()),
-                        String.valueOf(totalQty), reason, accountSeq);
+            if (totalQty != null) {
                 int oldTotal = stock.getTotalQty();
-                stock.setTotalQty(totalQty);
+                if (!totalQty.equals(oldTotal)) {
+                    log.info("총재고 변경: {} -> {}", oldTotal, totalQty);
+                    saveHistory(product, "total_qty", String.valueOf(oldTotal),
+                            String.valueOf(totalQty), reason, accountSeq);
+                    int boxQty = totalQty / stock.getPiecesPerBox();
+                    int looseQty = totalQty % stock.getPiecesPerBox();
+                    stock.setBoxQty(boxQty);
+                    stock.setLooseQty(looseQty);
 
-                StockHistory history = StockHistory.builder()
-                        .product(product)
-                        .oldTotalQty(oldTotal)
-                        .changeQty(totalQty - oldTotal)
-                        .newTotalQty(totalQty)
-                        .build();
-                stockHistoryRepository.save(history);
-                log.info("재고 이력 저장: productId={}, oldTotal={}, newTotal={}", product.getProductId(), oldTotal, totalQty);
+                    StockHistory history = StockHistory.builder()
+                            .product_id(product)
+                            .account_seq(accountSeq)
+                            .action("ADJUST")
+                            .old_total_qty(oldTotal)
+                            .change_qty(totalQty - oldTotal)
+                            .new_total_qty(totalQty)
+                            .reason(reason)
+                            .build();
+                    stockHistoryRepository.save(history);
+                    log.info("재고 이력 저장: productId={}, oldTotal={}, newTotal={}", product.getProductId(), oldTotal, totalQty);
+                }
             }
         }
 
@@ -178,12 +194,12 @@ public class ProductService implements ProductServiceImpl {
     private void saveHistory(Product product, String field, String oldValue, String newValue,
                              String reason, Long accountSeq) {
         ProductChangeHistory history = ProductChangeHistory.builder()
-                .product(product)
-                .fieldName(field)
-                .oldValue(oldValue)
-                .newValue(newValue)
+                .product_id(product)
+                .field_name(field)
+                .old_value(oldValue)
+                .new_value(newValue)
                 .reason(reason)
-                .changedBy(accountSeq)
+                .changed_by(accountSeq)
                 .build();
         productChangeHistoryRepository.save(history);
         log.debug("변경 이력 저장 - productId: {}, field: {}, old: {}, new: {}, reason: {}", product.getProductId(), field, oldValue, newValue, reason);

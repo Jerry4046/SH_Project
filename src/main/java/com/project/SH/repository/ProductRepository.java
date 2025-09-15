@@ -11,22 +11,25 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    boolean existsByProductCode(String productCode);
 
-    Product findByProductCode(String productCode);
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Product p WHERE p.product_code = :productCode")
+    boolean existsByProductCode(@Param("productCode") String productCode);
+
+    @Query("SELECT p FROM Product p WHERE p.product_code = :productCode")
+    Product findByProductCode(@Param("productCode") String productCode);
 
     List<Product> findAll(Sort sort);
 
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.prices LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user")
     List<Product> findAllWithPricesAndStock();
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user WHERE p.productCode = :productCode")
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user WHERE p.product_code = :productCode")
     Product findByProductCodeWithStock(@Param("productCode") String productCode);
 
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user " +
-            "WHERE p.productCode LIKE %:keyword% " +
-            "OR p.itemCode LIKE %:keyword% " +
+            "WHERE p.product_code LIKE %:keyword% " +
+            "OR p.item_code LIKE %:keyword% " +
             "OR p.spec LIKE %:keyword% " +
-            "OR p.pdName LIKE %:keyword%")
+            "OR p.pd_name LIKE %:keyword%")
     List<Product> searchAllByKeyword(@Param("keyword") String keyword);
 }
