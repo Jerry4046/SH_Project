@@ -1,5 +1,6 @@
 package com.project.SH.controller;
 
+import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.ProductCode;
 import com.project.SH.service.ProductCodeService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ public class ProductCodeApiController {
     private final ProductCodeService productCodeService;
 
     @GetMapping("/companies")
-    public List<ProductCode> getCompanies() {
+    public List<CompanyCode> getCompanies() {
         return productCodeService.getCompanies();
     }
 

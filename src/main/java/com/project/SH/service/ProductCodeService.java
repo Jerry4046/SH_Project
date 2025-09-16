@@ -43,8 +43,10 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     }
 
     @Override
-    public List<ProductCode> getCompanies() {
-        return productCodeRepository.findByTypeCodeAndCategoryCode("0000", "0000");
+    public List<CompanyCode> getCompanies() {
+        // DB가 반환한 회사 코드를 이름순으로 정렬해서 전달
+        // (값이 비어 보이는 문제를 줄이기 위해 명시적으로 정렬 사용)
+        return companyCodeRepository.findAll(org.springframework.data.domain.Sort.by("companyName"));
     }
 
     @Override
@@ -59,10 +61,10 @@ public class ProductCodeService implements ProductCodeServiceImpl {
 
     @Override
     public Map<String, String> getCompanyNameMap() {
-        List<ProductCode> companies = getCompanies();
+        List<CompanyCode> companies = getCompanies();
         Map<String, String> map = new LinkedHashMap<>();
-        for (ProductCode c : companies) {
-            map.putIfAbsent(c.getCompanyCode(), c.getDescription());
+        for (CompanyCode c : companies) {
+            map.putIfAbsent(c.getCompanyCode(), c.getCompanyName());
         }
         return map;
     }

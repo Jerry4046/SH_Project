@@ -69,7 +69,7 @@ public class ProductController {
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
             log.info("상품 등록 성공, 상품 코드: {}", product.getProductCode());
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "관리자에 문의하시오");
             log.error("상품 등록 실패, 에러: {}", e.getMessage());
         }
         return "redirect:/inventory";

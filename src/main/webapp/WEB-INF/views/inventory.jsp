@@ -11,6 +11,13 @@
 
 <div class="container mt-5">
 
+    <c:if test="${not empty error}">
+        <div class="alert alert-danger">${error}</div>
+    </c:if>
+    <c:if test="${not empty message}">
+        <div class="alert alert-success">${message}</div>
+    </c:if>
+
     <!-- 제목 + 버튼 -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>제품 목록</h2>

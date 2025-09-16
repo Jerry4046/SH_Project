@@ -12,10 +12,10 @@
 <div class="container mt-5">
     <c:choose>
         <c:when test="${empty product}">
-<h2>등록</h2>
+        <h2>등록</h2>
             <div class="btn-group mb-3">
-                <button type="button" class="btn btn-outline-primary active" id="codeTabBtn">제품코드</button>
                 <button type="button" class="btn btn-outline-primary" id="productTabBtn">제품</button>
+                <button type="button" class="btn btn-outline-primary active" id="codeTabBtn">제품코드</button>
             </div>
 
             <div id="codeForm">
@@ -23,8 +23,11 @@
                     <div class="row mb-3">
                         <div class="col">
                             <label class="form-label">회사 이름</label>
-                            <input list="companyNameOptions" id="codeCompanyName" class="form-control">
-                            <datalist id="companyNameOptions"></datalist>
+                            <select id="codeCompanyName" class="form-select">
+                                <option value="">선택하시오</option>
+                                <option value="__custom__">직접입력</option>
+                            </select>
+                            <input id="codeCompanyNameInput" class="form-control mt-2" style="display:none;" placeholder="회사 이름을 입력하세요">
                         </div>
                         <div class="col">
                             <label class="form-label">회사 코드</label>
@@ -62,8 +65,8 @@
                             <button type="button" class="btn btn-secondary" id="categoryPartialBtn" disabled>부분등록</button>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-primary w-100" id="fullRegisterBtn">전체등록</button>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button type="button" class="btn btn-primary btn-sm" id="fullRegisterBtn">전체등록</button>
                     </div>
                 </form>
             </div>
@@ -165,7 +168,6 @@
                                     <th>생성일자</th>
                                     <th>업데이트 일자</th>
                                 </tr>
-@@ -124,85 +181,326 @@
                                     <td><input type="number" name="looseQty" value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}" class="form-control form-control-sm" disabled></td>
                                     <td><input type="number" name="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" class="form-control form-control-sm" disabled></td>
                                     <td><input type="number" name="minStockQuantity" value="${product.minStockQuantity}" class="form-control form-control-sm" disabled></td>
@@ -214,12 +216,12 @@
     });
 
     const codeCompanyName = document.getElementById('codeCompanyName');
+    const codeCompanyNameInput = document.getElementById('codeCompanyNameInput');
     const codeCompany = document.getElementById('codeCompany');
     const codeTypeName = document.getElementById('codeTypeName');
     const codeType = document.getElementById('codeType');
     const codeCategoryName = document.getElementById('codeCategoryName');
     const codeCategory = document.getElementById('codeCategory');
-    const companyNameOptions = document.getElementById('companyNameOptions');
     const typeNameOptions = document.getElementById('typeNameOptions');
     const categoryNameOptions = document.getElementById('categoryNameOptions');
     const companyPartialBtn = document.getElementById('companyPartialBtn');
@@ -230,14 +232,15 @@
         fetch(`${ctx}/api/product-codes/companies`)
             .then(r => r.json())
             .then(data => {
-                companyNameOptions.innerHTML = '';
+                codeCompanyName.innerHTML = '<option value="">선택하시오</option><option value="__custom__">직접입력</option>';
                 data.forEach(c => {
                     const opt = document.createElement('option');
-                    opt.value = c.description;
-                    opt.dataset.code = c.companyCode;
-                    companyNameOptions.appendChild(opt);
+                    opt.value = c.companyCode;
+                    opt.textContent = c.companyName;
+                    codeCompanyName.appendChild(opt);
                 });
-            });
+            })
+            .catch(() => alert('회사 목록을 불러오지 못했습니다. 관리자에 문의하시오'));
     }
 
     function loadTypes(company) {
@@ -253,7 +256,8 @@
                         typeNameOptions.appendChild(opt);
                     }
                 });
-            });
+            })
+            .catch(() => alert('관리자에 문의하시오'));
     }
 
     function loadCategories(company, type) {
@@ -267,7 +271,8 @@
                     opt.dataset.code = cat.categoryCode;
                     categoryNameOptions.appendChild(opt);
                 });
-            });
+            })
+            .catch(() => alert('관리자에 문의하시오'));
     }
 
     loadCompanies();
@@ -290,32 +295,43 @@
         categoryNameOptions.innerHTML = '';
     }
 
-    codeCompanyName.addEventListener('input', () => {
-        const option = Array.from(companyNameOptions.options).find(o => o.value === codeCompanyName.value);
-        if (option) {
-            codeCompany.value = option.dataset.code;
-            codeCompany.disabled = true;
-            codeTypeName.disabled = false;
-            typePartialBtn.disabled = false;
-            loadTypes(codeCompany.value);
-        } else {
-            codeCompany.value = '';
-            codeCompany.disabled = false;
-            resetTypeFields();
-            resetCategoryFields();
-        }
-        resetCategoryFields();
-    });
-
-    codeCompany.addEventListener('input', () => {
-        const hasCompany = codeCompanyName.value.trim() && codeCompany.value.trim();
+    function updateTypeEnable() {
+        const nameFilled = codeCompanyName.value === '__custom__' ? codeCompanyNameInput.value.trim() : codeCompanyName.value;
+        const hasCompany = nameFilled && codeCompany.value.trim();
         codeTypeName.disabled = !hasCompany;
         typePartialBtn.disabled = !hasCompany;
         if (!hasCompany) {
             resetTypeFields();
             resetCategoryFields();
         }
+    }
+
+    codeCompanyName.addEventListener('change', () => {
+        if (codeCompanyName.value === '__custom__') {
+            // 직접입력: 회사 이름/코드 입력 가능
+            codeCompanyNameInput.style.display = '';
+            codeCompany.value = '';
+            codeCompany.disabled = false;
+        } else if (codeCompanyName.value) {
+            // DB에서 선택한 경우: 코드 자동 입력 후 비활성화
+            codeCompanyNameInput.style.display = 'none';
+            codeCompany.value = codeCompanyName.value;
+            codeCompany.disabled = true;
+            loadTypes(codeCompany.value);
+        } else {
+            // 선택 해제: 입력폼 초기화 및 비활성화
+            codeCompanyNameInput.style.display = 'none';
+            codeCompany.value = '';
+            codeCompany.disabled = true;
+        }
+
+        resetTypeFields();
+        resetCategoryFields();
+        updateTypeEnable();
     });
+
+    codeCompany.addEventListener('input', updateTypeEnable);
+    codeCompanyNameInput.addEventListener('input', updateTypeEnable);
 
     codeTypeName.addEventListener('input', () => {
         const option = Array.from(typeNameOptions.options).find(o => o.value === codeTypeName.value);
@@ -353,7 +369,11 @@
     });
 
     companyPartialBtn.addEventListener('click', () => {
-        const name = codeCompanyName.value.trim();
+        if (codeCompanyName.value !== '__custom__') {
+            alert('직접입력을 선택하세요');
+            return;
+        }
+        const name = codeCompanyNameInput.value.trim();
         const code = codeCompany.value.trim();
         if (!name || !code) {
             alert('회사 이름과 코드를 입력하세요');
@@ -363,10 +383,12 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ companyCode: code, typeCode: '0000', categoryCode: '0000', description: name })
-        }).then(() => {
-            alert('등록되었습니다.');
-            loadCompanies();
-        });
+        })
+            .then(() => {
+                alert('등록되었습니다.');
+                loadCompanies();
+            })
+            .catch(() => alert('관리자에 문의하시오'));
     });
 
     typePartialBtn.addEventListener('click', () => {
@@ -381,10 +403,12 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ companyCode: company, typeCode: type, categoryCode: '0000', description: name })
-        }).then(() => {
-            alert('등록되었습니다.');
-            loadTypes(company);
-        });
+        })
+            .then(() => {
+                alert('등록되었습니다.');
+                loadTypes(company);
+            })
+            .catch(() => alert('관리자에 문의하시오'));
     });
 
     categoryPartialBtn.addEventListener('click', () => {
@@ -400,10 +424,12 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ companyCode: company, typeCode: type, categoryCode: category, description: name })
-        }).then(() => {
-            alert('등록되었습니다.');
-            loadCategories(company, type);
-        });
+        })
+            .then(() => {
+                alert('등록되었습니다.');
+                loadCategories(company, type);
+            })
+            .catch(() => alert('관리자에 문의하시오'));
     });
 
     document.getElementById('fullRegisterBtn').addEventListener('click', () => {
@@ -415,19 +441,21 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ companyCode: codeCompany.value, typeCode: codeType.value, categoryCode: codeCategory.value, description: codeCategoryName.value })
-        }).then(() => {
-            alert('제품코드가 등록되었습니다.');
-            document.getElementById('companyCode').value = codeCompany.value;
-            document.getElementById('companyCode').dispatchEvent(new Event('change'));
-            setTimeout(() => {
-                document.getElementById('typeCode').value = codeType.value;
-                document.getElementById('typeCode').dispatchEvent(new Event('change'));
+        })
+            .then(() => {
+                alert('제품코드가 등록되었습니다.');
+                document.getElementById('companyCode').value = codeCompany.value;
+                document.getElementById('companyCode').dispatchEvent(new Event('change'));
                 setTimeout(() => {
-                    document.getElementById('categoryCode').value = codeCategory.value;
+                    document.getElementById('typeCode').value = codeType.value;
+                    document.getElementById('typeCode').dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        document.getElementById('categoryCode').value = codeCategory.value;
+                    }, 100);
                 }, 100);
-            }, 100);
-            productTabBtn.click();
-        });
+                productTabBtn.click();
+            })
+            .catch(() => alert('관리자에 문의하시오'));
     });
 
     // ----- 제품 등록 폼 -----

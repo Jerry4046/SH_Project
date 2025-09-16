@@ -1,5 +1,6 @@
 package com.project.SH.service;
 
+import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.ProductCode;
 import java.util.List;
 
@@ -9,7 +10,7 @@ public interface ProductCodeServiceImpl {
 
     ProductCode createProductCode(String companyCode, String typeCode, String categoryCode, String description);
 
-    List<ProductCode> getCompanies();
+    List<CompanyCode> getCompanies();
 
     List<ProductCode> getTypesByCompanyCode(String companyCode);
 

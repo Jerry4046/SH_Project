@@ -110,52 +110,53 @@
             const data = await res.json();
             data.forEach(c => {
                 const option = document.createElement('option');
-                option.value = c.companyInitial;
-                option.textContent = c.description || c.companyInitial;
+                option.value = c.companyCode;
+                option.textContent = c.companyName;
                 companySelect.appendChild(option);
             });
         }
 
-    companySelect.addEventListener('change', async () => {
-        const selectedCompany = companySelect.value;
-        typeSelect.innerHTML = '<option value="">종류</option>';
-        categorySelect.innerHTML = '<option value="">분류</option>';
-        categorySelect.disabled = true;
-        if (selectedCompany) {
-                const res = await fetch(`${ctx}/api/product-codes/types?companyInitial=${selectedCompany}`);
+        companySelect.addEventListener('change', async () => {
+            const selectedCompany = companySelect.value;
+            typeSelect.innerHTML = '<option value="">종류</option>';
+            categorySelect.innerHTML = '<option value="">분류</option>';
+            categorySelect.disabled = true;
+            if (selectedCompany) {
+                const res = await fetch(`${ctx}/api/product-codes/types?companyCode=${selectedCompany}`);
                 const data = await res.json();
                 data.forEach(t => {
-                const option = document.createElement('option');
-                option.value = t.typeCode;
-                option.textContent = t.description || t.typeCode;
-                typeSelect.appendChild(option);
-            });
-            typeSelect.disabled = false;
-        } else {
-            typeSelect.disabled = true;
-        }
-    });
+                    const option = document.createElement('option');
+                    option.value = t.typeCode;
+                    option.textContent = t.description || t.typeCode;
+                    typeSelect.appendChild(option);
+                });
+                typeSelect.disabled = false;
+            } else {
+                typeSelect.disabled = true;
+            }
+        });
 
-    typeSelect.addEventListener('change', async () => {
-        const selectedCompany = companySelect.value;
-        const selectedType = typeSelect.value;
-        categorySelect.innerHTML = '<option value="">분류</option>';
-        if (selectedType) {
-                const res = await fetch(`${ctx}/api/product-codes/categories?companyInitial=${selectedCompany}&typeCode=${selectedType}`);
+        typeSelect.addEventListener('change', async () => {
+            const selectedCompany = companySelect.value;
+            const selectedType = typeSelect.value;
+            categorySelect.innerHTML = '<option value="">분류</option>';
+            if (selectedType) {
+                const res = await fetch(`${ctx}/api/product-codes/categories?companyCode=${selectedCompany}&typeCode=${selectedType}`);
                 const data = await res.json();
                 data.forEach(cat => {
-                option.value = cat.categoryCode;
-                option.textContent = cat.description || cat.categoryCode;
-                option.textContent = categoryNames[cat] || cat;
-                categorySelect.appendChild(option);
-            });
-            categorySelect.disabled = false;
-        } else {
-            categorySelect.disabled = true;
-        }
-    });
+                    const option = document.createElement('option');
+                    option.value = cat.categoryCode;
+                    option.textContent = cat.description || cat.categoryCode;
+                    categorySelect.appendChild(option);
+                });
+                categorySelect.disabled = false;
+            } else {
+                categorySelect.disabled = true;
+            }
+        });
 
-    loadCompanies();
-</script>
+        loadCompanies();
+    }
+  </script>
 </body>
 </html>
