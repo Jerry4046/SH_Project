@@ -21,8 +21,8 @@
             <thead class="table-light">
             <tr>
                 <th>등록자</th>
-                <th>상품코드</th>
                 <th>제품코드</th>
+                <th>아이템코드</th>
                 <th>규격</th>
                 <th>제품이름</th>
                 <th>박스당 수량</th>
@@ -40,7 +40,7 @@
             <c:forEach var="product" items="${productList}">
                 <tr class="${product.active ? '' : 'text-muted'}">
                     <td><c:out value="${product.user.name}"/></td>
-                    <td>${product.productCode}</td>
+                    <td>${product.fullProductCode}</td>
                     <td>${product.itemCode}</td>
                     <td>${product.spec}</td>
                     <td>${product.pdName}</td>

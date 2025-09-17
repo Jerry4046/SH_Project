@@ -94,8 +94,9 @@
                           </select>
                       </td>
                       <td>
-                          <a href="${pageContext.request.contextPath}/product/detail/${product.productCode}" class="btn btn-sm btn-outline-primary">상세</a>
+                          <a href="${pageContext.request.contextPath}/product/detail/${product.productCode}?itemCode=${product.itemCode}" class="btn btn-sm btn-outline-primary">상세</a>
                           <input type="hidden" name="originalCode" value="${product.productCode}">
+                          <input type="hidden" name="originalItemCode" value="${product.itemCode}">
                           <input type="text" name="reason" class="form-control form-control-sm mt-1 save-btn" placeholder="사유" style="display:none" required>
                           <button type="submit" class="btn btn-sm btn-success mt-1 save-btn" style="display:none">저장</button>
                       </td>

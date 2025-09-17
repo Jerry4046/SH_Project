@@ -2,6 +2,7 @@ package com.project.SH.controller;
 
 import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.ProductCode;
+import com.project.SH.dto.NextItemCodeResponse;
 import com.project.SH.service.ProductCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +38,12 @@ public class ProductCodeApiController {
                                   @RequestParam String categoryCode,
                                   @RequestParam(required = false) String description) {
         return productCodeService.createProductCode(companyCode, typeCode, categoryCode, description);
+    }
+
+    @GetMapping("/next-item")
+    public NextItemCodeResponse getNextItemCode(@RequestParam String companyCode,
+                                                @RequestParam String typeCode,
+                                                @RequestParam String categoryCode) {
+        return productCodeService.previewNextItemCode(companyCode, typeCode, categoryCode);
     }
 }

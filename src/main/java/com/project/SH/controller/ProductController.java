@@ -46,7 +46,7 @@ public class ProductController {
                                   @RequestParam Integer totalQty,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
-        log.info("상품 등록 시작(ProductController), 상품명: {}, 단가: {}, 상품코드: {} ", product.getPdName(), product.getPrice(), product.getProductCode());
+        log.info("상품 등록 시작(ProductController), 상품명: {}, 단가: {}, 기본코드: {} ", product.getPdName(), price, product.getProductCode());
         try {
             if (userDetails == null || userDetails.getUser() == null) {
                 redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
@@ -67,7 +67,7 @@ public class ProductController {
             productService.registerProduct(product, price, piecesPerBox, totalQty, createdBySeq);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
-            log.info("상품 등록 성공, 상품 코드: {}", product.getProductCode());
+            log.info("상품 등록 성공, 상품 코드: {}", product.getFullProductCode());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "관리자에 문의하시오");
             log.error("상품 등록 실패, 에러: {}", e.getMessage());
@@ -97,9 +97,12 @@ public class ProductController {
 
 
     @GetMapping("/product/detail/{productCode}")
-    public String showProductDetail(@PathVariable String productCode, Model model) {
-        log.info("단일 상품 상세 조회, 상품 코드: {}", productCode);
-        Product product = productService.getProductByCode(productCode);
+    public String showProductDetail(@PathVariable String productCode,
+                                    @RequestParam("itemCode") String itemCode,
+                                    Model model) {
+        String fullCode = productCodeService.buildFullProductCode(productCode, itemCode);
+        log.info("단일 상품 상세 조회, 상품 코드: {}", fullCode);
+        Product product = productService.getProductByCode(productCode, itemCode);
         model.addAttribute("product", product);
         return "productdetail";
     }
@@ -121,6 +124,7 @@ public class ProductController {
 
     @PostMapping("/product/update")
     public String updateProduct(@RequestParam("originalCode") String originalCode,
+                                @RequestParam("originalItemCode") String originalItemCode,
                                 @ModelAttribute Product updatedProduct,
                                 @RequestParam(required = false) Integer piecesPerBox,
                                 @RequestParam(required = false) Integer boxQty,
@@ -137,7 +141,8 @@ public class ProductController {
         boolean isAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         Long seq = userDetails.getUser().getSeq();
-        log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalCode, isAdmin, seq);
+        String originalFullCode = productCodeService.buildFullProductCode(originalCode, originalItemCode);
+        log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalFullCode, isAdmin, seq);
         log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}", piecesPerBox, boxQty, looseQty, totalQty, price);
         if (piecesPerBox != null && boxQty != null) {
             int loose = looseQty != null ? looseQty : 0;
@@ -145,12 +150,12 @@ public class ProductController {
             log.info("총재고 계산 완료 - boxQty: {}, looseQty: {}, piecesPerBox: {}, 계산된 totalQty: {}", boxQty, looseQty, piecesPerBox, totalQty);
         }
         try {
-            productService.updateProduct(originalCode, updatedProduct, piecesPerBox, totalQty, price, seq, reason, isAdmin);
+            productService.updateProduct(originalCode, originalItemCode, updatedProduct, piecesPerBox, totalQty, price, seq, reason, isAdmin);
             redirectAttributes.addFlashAttribute("message", "수정 완료");
-            log.info("상품 수정 완료, 코드: {}", originalCode);
+            log.info("상품 수정 완료, 코드: {}", originalFullCode);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            log.error("상품 수정 실패, 코드: {}, 에러: {}", originalCode, e.getMessage());
+            log.error("상품 수정 실패, 코드: {}, 에러: {}", originalFullCode, e.getMessage());
         }
         return "redirect:/inventory";
     }
