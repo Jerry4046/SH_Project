@@ -19,7 +19,7 @@ public class PriceService implements PriceServiceImpl {
 
     public void registerPrice(Product product, Double price, Long accountSeq) {
         try {
-            log.info("가격 등록 시작, 상품 코드: {}, 가격: {}, 수정자 번호: {}", product.getProductCode(), price, accountSeq);
+            log.info("가격 등록 시작, 상품 코드: {}, 가격: {}, 수정자 번호: {}", product.getFullProductCode(), price, accountSeq);
 
             // 가격 테이블에 새로운 가격 기록 저장
             Price priceRecord = new Price();
@@ -29,22 +29,22 @@ public class PriceService implements PriceServiceImpl {
             priceRecord.setReason("상품 등록 시 가격");
             priceRepository.save(priceRecord);
 
-            log.info("가격 등록 성공, 상품 코드: {}", product.getProductCode());
+            log.info("가격 등록 성공, 상품 코드: {}", product.getFullProductCode());
         } catch (Exception e) {
-            log.error("가격 등록 실패, 상품 코드: {}, 에러: {}", product.getProductCode(), e.getMessage());
+            log.error("가격 등록 실패, 상품 코드: {}, 에러: {}", product.getFullProductCode(), e.getMessage());
             throw new RuntimeException("가격 등록 실패", e);
         }
     }
 
     public Double getLatestPrice(Product product) {
-        log.info("상품 코드: {}의 최신 가격을 조회", product.getProductCode());
+        log.info("상품 코드: {}의 최신 가격을 조회", product.getFullProductCode());
         Optional<Price> latest = priceRepository.findFirstByProductOrderByCreatedAtDesc(product);
         return latest.map(price -> {
                     log.info("가장 최근 가격: {}", price.getPrice());
                     return price.getPrice();
                 })
                 .orElseGet(() -> {
-                    log.warn("상품 코드: {}의 가격이 없습니다.", product.getProductCode());
+                    log.warn("상품 코드: {}의 가격이 없습니다.", product.getFullProductCode());
                     return 0.0;
                 });
     }

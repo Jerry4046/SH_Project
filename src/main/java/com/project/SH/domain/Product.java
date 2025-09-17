@@ -120,6 +120,17 @@ public class Product {
     public String getItemCode() { return item_code; }
     public void setItemCode(String item_code) { this.item_code = item_code; }
 
+    @Transient
+    public String getFullProductCode() {
+        if (product_code == null || product_code.isBlank()) {
+            return item_code != null ? item_code : "";
+        }
+        if (item_code == null || item_code.isBlank()) {
+            return product_code;
+        }
+        return product_code + "_" + item_code;
+    }
+
     public String getPdName() { return pd_name; }
     public void setPdName(String pd_name) { this.pd_name = pd_name; }
 
