@@ -134,4 +134,15 @@ public class Product {
 
     public LocalDateTime getUpdatedAt() { return updated_at; }
     public void setUpdatedAt(LocalDateTime updated_at) { this.updated_at = updated_at; }
+
+    @Transient
+    public String getFullProductCode() {
+        if (product_code == null || product_code.isBlank()) {
+            return item_code != null ? item_code : "";
+        }
+        if (item_code == null || item_code.isBlank()) {
+            return product_code;
+        }
+        return product_code + "_" + item_code;
+    }
 }

@@ -45,7 +45,12 @@
                         </select>
                     </div>
                 </td>
-                <td><input type="text" name="itemCode" class="form-control form-control-sm" required></td>
+                <td>
+                    <div class="d-flex flex-column">
+                        <input type="text" name="itemCode" id="registerItemCode" class="form-control form-control-sm mb-1" readonly>
+                        <small class="text-muted" id="registerFullCodePreview">회사, 종류, 분류를 선택하면 제품 코드가 자동으로 생성됩니다.</small>
+                    </div>
+                </td>
                 <td><input type="text" name="spec" class="form-control form-control-sm" required></td>
                 <td><input type="text" name="pdName" class="form-control form-control-sm" required></td>
                 <td><input type="text" name="unitName" class="form-control form-control-sm" required></td>
@@ -71,7 +76,7 @@
 
             <c:forEach var="product" items="${productList}">
                 <tr class="${product.active ? '' : 'text-muted'}">
-                    <td>${product.productCode}</td>
+                    <td>${product.fullProductCode}</td>
                     <td>${product.itemCode}</td>
                     <td>${product.spec}</td>
                     <td>${product.pdName}</td>
@@ -104,6 +109,63 @@
         const companySelect = document.getElementById('companyCode');
         const typeSelect = document.getElementById('typeCode');
         const categorySelect = document.getElementById('categoryCode');
+        const itemCodeInput = document.getElementById('registerItemCode');
+        const fullCodePreview = document.getElementById('registerFullCodePreview');
+        const fullCodeDefaultText = fullCodePreview ? fullCodePreview.textContent : '';
+
+        function resetItemPreview() {
+            if (itemCodeInput) {
+                itemCodeInput.value = '';
+            }
+            if (fullCodePreview) {
+                fullCodePreview.textContent = fullCodeDefaultText;
+                fullCodePreview.classList.remove('text-danger');
+            }
+        }
+
+        async function refreshRegisterItemCode() {
+            if (!itemCodeInput) {
+                return;
+            }
+            const company = companySelect ? companySelect.value : '';
+            const type = typeSelect ? typeSelect.value : '';
+            const category = categorySelect ? categorySelect.value : '';
+
+            if (!company || !type || !category) {
+                resetItemPreview();
+                return;
+            }
+
+            try {
+                if (fullCodePreview) {
+                    fullCodePreview.classList.remove('text-danger');
+                }
+            const response = await fetch(`${ctx}/api/product-codes/next-item?companyCode=${encodeURIComponent(company)}&typeCode=${encodeURIComponent(type)}&categoryCode=${encodeURIComponent(category)}`);
+                if (!response.ok) {
+                    throw new Error('failed to fetch next item code');
+                }
+                const data = await response.json();
+                itemCodeInput.value = data.itemCode || '';
+                if (fullCodePreview) {
+                    fullCodePreview.textContent = data.fullProductCode || fullCodeDefaultText;
+                }
+            } catch (error) {
+                console.error(error);
+                if (fullCodePreview) {
+                    fullCodePreview.textContent = '아이템 코드를 불러오지 못했습니다.';
+                    fullCodePreview.classList.add('text-danger');
+                }
+                itemCodeInput.value = '';
+            }
+        }
+
+        if (row.dataset.initialized === 'true') {
+            if (show) {
+                refreshRegisterItemCode();
+            }
+            return;
+        }
+        row.dataset.initialized = 'true';
 
         async function loadCompanies() {
             const res = await fetch(`${ctx}/api/product-codes/companies`);
@@ -114,6 +176,7 @@
                 option.textContent = c.companyName;
                 companySelect.appendChild(option);
             });
+            resetItemPreview();
         }
 
         companySelect.addEventListener('change', async () => {
@@ -121,6 +184,7 @@
             typeSelect.innerHTML = '<option value="">종류</option>';
             categorySelect.innerHTML = '<option value="">분류</option>';
             categorySelect.disabled = true;
+            resetItemPreview();
             if (selectedCompany) {
                 const res = await fetch(`${ctx}/api/product-codes/types?companyCode=${selectedCompany}`);
                 const data = await res.json();
@@ -134,6 +198,7 @@
             } else {
                 typeSelect.disabled = true;
             }
+            await refreshRegisterItemCode();
         });
 
         typeSelect.addEventListener('change', async () => {
@@ -153,9 +218,15 @@
             } else {
                 categorySelect.disabled = true;
             }
+            await refreshRegisterItemCode();
         });
 
+        categorySelect.addEventListener('change', refreshRegisterItemCode);
+
         loadCompanies();
+        if (show) {
+            refreshRegisterItemCode();
+        }
     }
   </script>
 </body>

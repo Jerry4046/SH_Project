@@ -22,6 +22,7 @@ public class ProductService implements ProductServiceImpl {
 
     private final ProductRepository productRepository;
     private final PriceService priceService;
+    private final ProductCodeService productCodeService;
     private final StockRepository stockRepository;
     private final StockHistoryRepository stockHistoryRepository;
     private final ProductChangeHistoryRepository productChangeHistoryRepository;
@@ -29,13 +30,19 @@ public class ProductService implements ProductServiceImpl {
 
     @Transactional
     public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer totalQty, Long accountSeq) {
-        log.info("상품 등록 서비스 호출, 상품 코드: {}", product.getProductCode());
+        final String baseProductCode = requireProductCode(product.getProductCode());
+        final String nextItemCode = productCodeService.getNextItemCodeForBase(baseProductCode);
+        product.setProductCode(baseProductCode);
+        product.setItemCode(nextItemCode);
 
-        // 중복 상품코드 검증
-        if (productRepository.existsByProductCode(product.getProductCode())) {
-            log.error("상품 등록 실패 - 중복된 코드: {}", product.getProductCode());
-            throw new IllegalStateException("Duplicate product code: " + product.getProductCode());
+        final String fullProductCode = product.getFullProductCode();
+
+        if (productRepository.existsByProductCodeAndItemCode(baseProductCode, nextItemCode)) {
+            log.error("상품 등록 실패 - 중복된 전체 코드: {}", fullProductCode);
+            throw new IllegalStateException("Duplicate product code: " + fullProductCode);
         }
+
+        log.info("상품 등록 서비스 호출, 기본 코드: {}, 생성된 전체 코드: {}", baseProductCode, fullProductCode);
 
         if (piecesPerBox == null) piecesPerBox = 1;
         if (totalQty == null) totalQty = 0;
@@ -44,7 +51,7 @@ public class ProductService implements ProductServiceImpl {
         // 상품 정보 저장
         product.setPiecesPerBox(piecesPerBox);
         productRepository.save(product);
-        log.info("상품 기본 정보 저장 완료, 상품 코드: {}", product.getProductCode());
+        log.info("상품 기본 정보 저장 완료, 상품 코드: {}", product.getFullProductCode());
 
         // 재고 정보 저장
         int boxQty = totalQty / piecesPerBox;
@@ -56,7 +63,7 @@ public class ProductService implements ProductServiceImpl {
                 .loose_qty(looseQty)
                 .build();
         stockRepository.save(stock);
-        log.info("상품 코드: {}에 재고 등록 완료", product.getProductCode());
+        log.info("상품 코드: {}에 재고 등록 완료", product.getFullProductCode());
 
         // 재고 변동 기록 저장
         StockHistory history = StockHistory.builder()
@@ -69,11 +76,11 @@ public class ProductService implements ProductServiceImpl {
                 .reason("Initial stock")
                 .build();
         stockHistoryRepository.save(history);
-        log.info("상품 코드: {}의 초기 재고 이력 저장", product.getProductCode());
+        log.info("상품 코드: {}의 초기 재고 이력 저장", product.getFullProductCode());
 
         // 가격 등록
         priceService.registerPrice(product, price, accountSeq);
-        log.info("상품 코드: {}에 가격 등록 완료", product.getProductCode());
+        log.info("상품 코드: {}에 가격 등록 완료", product.getFullProductCode());
     }
 
     public List<Product> getAllProducts() {
@@ -86,9 +93,12 @@ public class ProductService implements ProductServiceImpl {
         return products;
     }
 
-    public Product getProductByCode(String productCode) {
-        log.info("단일 상품 조회, 상품 코드: {}", productCode);
-        return productRepository.findByProductCodeWithStock(productCode);
+    public Product getProductByCode(String productCode, String itemCode) {
+        final String normalizedProductCode = requireProductCode(productCode);
+        final String normalizedItemCode = requireItemCode(itemCode);
+        final String fullCode = productCodeService.buildFullProductCode(normalizedProductCode, normalizedItemCode);
+        log.info("단일 상품 조회, 상품 코드: {}", fullCode);
+        return productRepository.findByProductCodeAndItemCodeWithStock(normalizedProductCode, normalizedItemCode);
     }
     public List<Product> searchProducts(String keyword) {
         log.info("상품 검색, 키워드: {}", keyword);
@@ -96,28 +106,46 @@ public class ProductService implements ProductServiceImpl {
     }
 
     @Transactional
-    public void updateProduct(String originalProductCode, Product updatedProduct,
+    public void updateProduct(String originalProductCode, String originalItemCode, Product updatedProduct,
                               Integer piecesPerBox, Integer totalQty, Double price,
                               Long accountSeq, String reason, boolean isAdmin) {
-        log.info("상품 수정 서비스 호출, 대상 코드: {}", originalProductCode);
-        Product product = productRepository.findByProductCodeWithStock(originalProductCode);
+        final String normalizedProductCode = requireProductCode(originalProductCode);
+        final String normalizedItemCode = requireItemCode(originalItemCode);
+        final String originalFullCode = productCodeService.buildFullProductCode(normalizedProductCode, normalizedItemCode);
+
+        log.info("상품 수정 서비스 호출, 대상 코드: {}", originalFullCode);
+        Product product = productRepository.findByProductCodeAndItemCodeWithStock(normalizedProductCode, normalizedItemCode);
         if (product == null) {
-            log.error("상품 수정 실패 - 상품을 찾을 수 없음: {}", originalProductCode);
-            throw new IllegalArgumentException("Product not found: " + originalProductCode);
+            log.error("상품 수정 실패 - 상품을 찾을 수 없음: {}", originalFullCode);
+            throw new IllegalArgumentException("Product not found: " + originalFullCode);
         }
 
-        if (isAdmin && updatedProduct.getProductCode() != null &&
-                !updatedProduct.getProductCode().equals(product.getProductCode())) {
-            log.info("상품코드 변경: {} -> {}", product.getProductCode(), updatedProduct.getProductCode());
-            saveHistory(product, "product_code", product.getProductCode(), updatedProduct.getProductCode(), reason, accountSeq);
-            product.setProductCode(updatedProduct.getProductCode());
+        if (isAdmin && updatedProduct.getProductCode() != null) {
+            final String candidateProductCode = requireProductCode(updatedProduct.getProductCode());
+            if (!candidateProductCode.equals(product.getProductCode())) {
+                if (productRepository.existsByProductCodeAndItemCode(candidateProductCode, product.getItemCode())) {
+                    String duplicateFullCode = productCodeService.buildFullProductCode(candidateProductCode, product.getItemCode());
+                    log.error("상품코드 변경 실패 - 중복된 전체 코드: {}", duplicateFullCode);
+                    throw new IllegalStateException("Duplicate product code: " + duplicateFullCode);
+                }
+                log.info("상품코드 변경: {} -> {}", product.getProductCode(), candidateProductCode);
+                saveHistory(product, "product_code", product.getProductCode(), candidateProductCode, reason, accountSeq);
+                product.setProductCode(candidateProductCode);
+            }
         }
 
-        if (isAdmin && updatedProduct.getItemCode() != null &&
-                !updatedProduct.getItemCode().equals(product.getItemCode())) {
-            log.info("아이템코드 변경: {} -> {}", product.getItemCode(), updatedProduct.getItemCode());
-            saveHistory(product, "item_code", product.getItemCode(), updatedProduct.getItemCode(), reason, accountSeq);
-            product.setItemCode(updatedProduct.getItemCode());
+        if (isAdmin && updatedProduct.getItemCode() != null) {
+            final String candidateItemCode = requireItemCode(updatedProduct.getItemCode());
+            if (!candidateItemCode.equals(product.getItemCode())) {
+                if (productRepository.existsByProductCodeAndItemCode(product.getProductCode(), candidateItemCode)) {
+                    String duplicateCode = productCodeService.buildFullProductCode(product.getProductCode(), candidateItemCode);
+                    log.error("아이템코드 변경 실패 - 중복된 전체 코드: {}", duplicateCode);
+                    throw new IllegalStateException("Duplicate product code: " + duplicateCode);
+                }
+                log.info("아이템코드 변경: {} -> {}", product.getItemCode(), candidateItemCode);
+                saveHistory(product, "item_code", product.getItemCode(), candidateItemCode, reason, accountSeq);
+                product.setItemCode(candidateItemCode);
+            }
         }
 
         if (updatedProduct.getSpec() != null && !updatedProduct.getSpec().equals(product.getSpec())) {
@@ -195,9 +223,31 @@ public class ProductService implements ProductServiceImpl {
         productRepository.save(product);
         if (stock != null) {
             stockRepository.save(stock);
-            log.info("총재고 저장 완료, 상품 코드: {}, 현재 총재고: {}", product.getProductCode(), stock.getTotalQty());
+            log.info("총재고 저장 완료, 상품 코드: {}, 현재 총재고: {}", product.getFullProductCode(), stock.getTotalQty());
         }
-        log.info("상품 수정 서비스 완료, 최종 코드: {}", product.getProductCode());
+        log.info("상품 수정 서비스 완료, 최종 코드: {}", product.getFullProductCode());
+    }
+
+    private String requireProductCode(String code) {
+        if (code == null) {
+            throw new IllegalArgumentException("제품 기본 코드가 필요합니다.");
+        }
+        final String trimmed = code.trim();
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException("제품 기본 코드가 필요합니다.");
+        }
+        return trimmed;
+    }
+
+    private String requireItemCode(String code) {
+        if (code == null) {
+            throw new IllegalArgumentException("아이템 코드가 필요합니다.");
+        }
+        final String trimmed = code.trim();
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException("아이템 코드가 필요합니다.");
+        }
+        return trimmed;
     }
 
     private void saveHistory(Product product, String field, String oldValue, String newValue,
