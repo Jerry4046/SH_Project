@@ -1,6 +1,9 @@
 package com.project.SH.controller;
 
 import com.project.SH.config.CustomUserDetails;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.Product;
 import com.project.SH.domain.ProductCode;
 import com.project.SH.service.ProductCodeService;
@@ -15,7 +18,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -29,6 +35,8 @@ public class ProductController {
 
     @GetMapping("/product/register")
     public String showRegisterForm(Model model) {
+        List<CompanyCode> companies = productCodeService.getCompanies();
+        model.addAttribute("companies", companies);
         model.addAttribute("companyNames", productCodeService.getCompanyNameMap());
         model.addAttribute("typeNames", productCodeService.getTypeNameMap());
         model.addAttribute("categoryNames", productCodeService.getCategoryNameMap());
@@ -90,6 +98,60 @@ public class ProductController {
         log.info("상품코드 및 목록 페이지 조회 시작");
         List<ProductCode> codes = productCodeService.getAllProductCodes();
         List<Product> products = productService.getAllProducts();
+        List<CompanyCode> companies = productCodeService.getCompanies();
+
+        Map<String, String> typeNames = new LinkedHashMap<>();
+        for (ProductCode code : codes) {
+            String typeCode = code.getTypeCode();
+            if ("0000".equals(code.getCategoryCode())
+                    && typeCode != null && !typeCode.isBlank()
+                    && !"0000".equals(typeCode)) {
+                String key = code.getCompanyCode() + "|" + typeCode;
+                String description = code.getDescription() != null ? code.getDescription() : typeCode;
+                typeNames.putIfAbsent(key, description);
+            }
+        }
+
+        Map<String, CompanyHierarchy> hierarchy = new LinkedHashMap<>();
+        for (CompanyCode company : companies) {
+            CompanyHierarchy companyHierarchy = hierarchy.computeIfAbsent(company.getCompanyCode(), key -> new CompanyHierarchy());
+            companyHierarchy.name = company.getCompanyName();
+        }
+
+        for (ProductCode code : codes) {
+            CompanyHierarchy companyHierarchy = hierarchy.computeIfAbsent(code.getCompanyCode(), key -> {
+                CompanyHierarchy data = new CompanyHierarchy();
+                data.name = key;
+                return data;
+            });
+
+            String typeCode = code.getTypeCode();
+            String typeKey = typeCode == null ? null : code.getCompanyCode() + "|" + typeCode;
+            String fallbackTypeName = (typeCode != null && !typeCode.isBlank()) ? typeCode : "";
+            String typeName = typeNames.getOrDefault(typeKey, fallbackTypeName);
+
+            if ("0000".equals(code.getCategoryCode())) {
+                if (!"0000".equals(code.getTypeCode())) {
+                    companyHierarchy.addTypeIfAbsent(code.getTypeCode(), typeName);
+                }
+            } else {
+                String categoryName = code.getDescription() != null ? code.getDescription() : code.getCategoryCode();
+                companyHierarchy.addTypeIfAbsent(code.getTypeCode(), typeName);
+                companyHierarchy.addCategoryIfAbsent(code.getTypeCode(), code.getCategoryCode(), categoryName);
+            }
+        }
+
+        String hierarchyJson;
+        try {
+            hierarchyJson = new ObjectMapper().writeValueAsString(hierarchy);
+        } catch (JsonProcessingException e) {
+            log.error("코드 계층 JSON 직렬화 실패", e);
+            hierarchyJson = "{}";
+        }
+
+        model.addAttribute("companies", companies);
+        model.addAttribute("productList", products);
+        model.addAttribute("codeHierarchyJson", hierarchyJson);
         model.addAttribute("productList", products);
         log.info("상품코드 및 목록 페이지 조회 완료, 코드 수: {}, 상품 수: {}", codes.size(), products.size());
         return "product";
@@ -158,6 +220,43 @@ public class ProductController {
             log.error("상품 수정 실패, 코드: {}, 에러: {}", originalFullCode, e.getMessage());
         }
         return "redirect:/inventory";
+    }
+
+    private static class CompanyHierarchy {
+        public String name;
+        public final List<CodeName> types = new ArrayList<>();
+        public final Map<String, List<CodeName>> categories = new LinkedHashMap<>();
+
+        public void addTypeIfAbsent(String code, String displayName) {
+            if (code == null || code.isBlank() || "0000".equals(code)) {
+                return;
+            }
+            boolean exists = types.stream().anyMatch(t -> t.code.equals(code));
+            if (!exists) {
+                types.add(new CodeName(code, displayName != null ? displayName : code));
+            }
+        }
+
+        public void addCategoryIfAbsent(String typeCode, String categoryCode, String displayName) {
+            if (typeCode == null || typeCode.isBlank() || categoryCode == null || categoryCode.isBlank()) {
+                return;
+            }
+            List<CodeName> categoryList = categories.computeIfAbsent(typeCode, key -> new ArrayList<>());
+            boolean exists = categoryList.stream().anyMatch(cat -> cat.code.equals(categoryCode));
+            if (!exists) {
+                categoryList.add(new CodeName(categoryCode, displayName != null ? displayName : categoryCode));
+            }
+        }
+    }
+
+    private static class CodeName {
+        public final String code;
+        public final String name;
+
+        private CodeName(String code, String name) {
+            this.code = code;
+            this.name = name;
+        }
     }
 
     public class ProductRow {

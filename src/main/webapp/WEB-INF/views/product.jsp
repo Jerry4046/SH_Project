@@ -33,16 +33,31 @@
             <tbody id="productTable">
             <tr id="registerRow" style="display:none;">
                 <td>
-                    <div class="d-flex gap-1">
-                        <select id="companyCode" name="companyCode" class="form-select form-select-sm" required>
-                            <option value="">회사</option>
-                        </select>
-                        <select id="typeCode" name="typeCode" class="form-select form-select-sm" required disabled>
-                            <option value="">종류</option>
-                        </select>
-                        <select id="categoryCode" name="categoryCode" class="form-select form-select-sm" required disabled>
-                            <option value="">분류</option>
-                        </select>
+                    <div class="d-flex gap-1 align-items-start">
+                        <div class="flex-fill">
+                            <select id="companyCode" name="companyCode" class="form-select form-select-sm" required>
+                                <option value="">선택하시오</option>
+                                <option value="__custom__">직접입력</option>
+                                <c:forEach var="company" items="${companies}">
+                                    <option value="${company.companyCode}">
+                                        <c:out value="${empty company.companyName ? company.companyCode : company.companyName}" />
+                                    </option>
+                                </c:forEach>
+                            </select>
+                            <input type="text" id="companyCodeCustom" class="form-control form-control-sm mt-1" placeholder="회사 코드를 입력하세요" style="display:none;" disabled>
+                        </div>
+                        <div class="flex-fill">
+                            <select id="typeCode" name="typeCode" class="form-select form-select-sm" required disabled>
+                                <option value="">선택하시오</option>
+                            </select>
+                            <input type="text" id="typeCodeCustom" class="form-control form-control-sm mt-1" placeholder="타입 코드를 입력하세요" style="display:none;" disabled>
+                        </div>
+                        <div class="flex-fill">
+                            <select id="categoryCode" name="categoryCode" class="form-select form-select-sm" required disabled>
+                                <option value="">선택하시오</option>
+                            </select>
+                            <input type="text" id="categoryCodeCustom" class="form-control form-control-sm mt-1" placeholder="카테고리 코드를 입력하세요" style="display:none;" disabled>
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -100,132 +115,264 @@
 </div>
 
 <script>
+    const codeHierarchy = <c:out value='${empty codeHierarchyJson ? "{}" : codeHierarchyJson}' escapeXml='false' /> || {};
+    let registerInitialized = false;
+    const registerState = {
+        companySelect: null,
+        typeSelect: null,
+        categorySelect: null,
+        companyCustomInput: null,
+        typeCustomInput: null,
+        categoryCustomInput: null
+    };
+
     function toggleRegisterRow() {
         const row = document.getElementById('registerRow');
         const show = row.style.display === 'none';
         row.style.display = show ? '' : 'none';
 
-        const ctx = '${pageContext.request.contextPath}';
-        const companySelect = document.getElementById('companyCode');
-        const typeSelect = document.getElementById('typeCode');
-        const categorySelect = document.getElementById('categoryCode');
-        const itemCodeInput = document.getElementById('registerItemCode');
-        const fullCodePreview = document.getElementById('registerFullCodePreview');
-        const fullCodeDefaultText = fullCodePreview ? fullCodePreview.textContent : '';
-
-        function resetItemPreview() {
-            if (itemCodeInput) {
-                itemCodeInput.value = '';
+        if (show) {
+            if (!registerInitialized) {
+                initializeRegisterForm();
+                registerInitialized = true;
             }
-            if (fullCodePreview) {
-                fullCodePreview.textContent = fullCodeDefaultText;
-                fullCodePreview.classList.remove('text-danger');
-            }
+            resetRegisterForm();
         }
+    }
 
-        async function refreshRegisterItemCode() {
-            if (!itemCodeInput) {
-                return;
-            }
-            const company = companySelect ? companySelect.value : '';
-            const type = typeSelect ? typeSelect.value : '';
-            const category = categorySelect ? categorySelect.value : '';
+    function initializeRegisterForm() {
+        registerState.companySelect = document.getElementById('companyCode');
+        registerState.typeSelect = document.getElementById('typeCode');
+        registerState.categorySelect = document.getElementById('categoryCode');
+        registerState.companyCustomInput = document.getElementById('companyCodeCustom');
+        registerState.typeCustomInput = document.getElementById('typeCodeCustom');
+        registerState.categoryCustomInput = document.getElementById('categoryCodeCustom');
 
-            if (!company || !type || !category) {
-                resetItemPreview();
-                return;
-            }
-
-            try {
-                if (fullCodePreview) {
-                    fullCodePreview.classList.remove('text-danger');
-                }
-            const response = await fetch(`${ctx}/api/product-codes/next-item?companyCode=${encodeURIComponent(company)}&typeCode=${encodeURIComponent(type)}&categoryCode=${encodeURIComponent(category)}`);
-                if (!response.ok) {
-                    throw new Error('failed to fetch next item code');
-                }
-                const data = await response.json();
-                itemCodeInput.value = data.itemCode || '';
-                if (fullCodePreview) {
-                    fullCodePreview.textContent = data.fullProductCode || fullCodeDefaultText;
-                }
-            } catch (error) {
-                console.error(error);
-                if (fullCodePreview) {
-                    fullCodePreview.textContent = '아이템 코드를 불러오지 못했습니다.';
-                    fullCodePreview.classList.add('text-danger');
-                }
-                itemCodeInput.value = '';
-            }
+        if (registerState.companySelect) {
+            registerState.companySelect.addEventListener('change', handleCompanyChange);
         }
+        if (registerState.typeSelect) {
+            registerState.typeSelect.addEventListener('change', handleTypeChange);
+        }
+    }
 
-        if (row.dataset.initialized === 'true') {
-            if (show) {
-                refreshRegisterItemCode();
-            }
+    function resetRegisterForm() {
+        const { companySelect, typeSelect, categorySelect, companyCustomInput, typeCustomInput, categoryCustomInput } = registerState;
+        if (!companySelect) {
             return;
         }
-        row.dataset.initialized = 'true';
 
-        async function loadCompanies() {
-            const res = await fetch(`${ctx}/api/product-codes/companies`);
-            const data = await res.json();
-            data.forEach(c => {
-                const option = document.createElement('option');
-                option.value = c.companyCode;
-                option.textContent = c.companyName;
-                companySelect.appendChild(option);
-            });
-            resetItemPreview();
+        useSelectInputs();
+        companySelect.value = '';
+        if (typeSelect) {
+            typeSelect.value = '';
+        }
+        if (categorySelect) {
+            categorySelect.value = '';
+        }
+        if (companyCustomInput) {
+            companyCustomInput.value = '';
+        }
+        if (typeCustomInput) {
+            typeCustomInput.value = '';
+        }
+        if (categoryCustomInput) {
+            categoryCustomInput.value = '';
+        }
+    }
+
+    function useSelectInputs() {
+        const { companySelect, typeSelect, categorySelect, companyCustomInput, typeCustomInput, categoryCustomInput } = registerState;
+        if (!companySelect || !typeSelect || !categorySelect) {
+            return;
         }
 
-        companySelect.addEventListener('change', async () => {
-            const selectedCompany = companySelect.value;
-            typeSelect.innerHTML = '<option value="">종류</option>';
-            categorySelect.innerHTML = '<option value="">분류</option>';
-            categorySelect.disabled = true;
-            resetItemPreview();
-            if (selectedCompany) {
-                const res = await fetch(`${ctx}/api/product-codes/types?companyCode=${selectedCompany}`);
-                const data = await res.json();
-                data.forEach(t => {
-                    const option = document.createElement('option');
-                    option.value = t.typeCode;
-                    option.textContent = t.description || t.typeCode;
-                    typeSelect.appendChild(option);
-                });
-                typeSelect.disabled = false;
-            } else {
-                typeSelect.disabled = true;
+        companySelect.name = 'companyCode';
+        companySelect.required = true;
+
+        if (companyCustomInput) {
+            companyCustomInput.style.display = 'none';
+            companyCustomInput.disabled = true;
+            companyCustomInput.required = false;
+            companyCustomInput.name = '';
+        }
+
+        typeSelect.disabled = true;
+        typeSelect.name = 'typeCode';
+        typeSelect.required = true;
+
+        if (typeCustomInput) {
+            typeCustomInput.style.display = 'none';
+            typeCustomInput.disabled = true;
+            typeCustomInput.required = false;
+            typeCustomInput.name = '';
+        }
+
+        categorySelect.disabled = true;
+        categorySelect.name = 'categoryCode';
+        categorySelect.required = true;
+
+        if (categoryCustomInput) {
+            categoryCustomInput.style.display = 'none';
+            categoryCustomInput.disabled = true;
+            categoryCustomInput.required = false;
+            categoryCustomInput.name = '';
+        }
+
+        resetTypeSelect();
+        resetCategorySelect();
+    }
+
+    function useCustomInputs() {
+        const { companySelect, typeSelect, categorySelect, companyCustomInput, typeCustomInput, categoryCustomInput } = registerState;
+        if (!companySelect || !typeSelect || !categorySelect) {
+            return;
+        }
+
+        companySelect.removeAttribute('name');
+        companySelect.required = false;
+
+        if (companyCustomInput) {
+            companyCustomInput.style.display = '';
+            companyCustomInput.disabled = false;
+            companyCustomInput.required = true;
+            companyCustomInput.name = 'companyCode';
+            companyCustomInput.focus();
+        }
+
+        typeSelect.removeAttribute('name');
+        typeSelect.required = false;
+        typeSelect.disabled = true;
+
+        if (typeCustomInput) {
+            typeCustomInput.style.display = '';
+            typeCustomInput.disabled = false;
+            typeCustomInput.required = true;
+            typeCustomInput.name = 'typeCode';
+        }
+
+        categorySelect.removeAttribute('name');
+        categorySelect.required = false;
+        categorySelect.disabled = true;
+
+        if (categoryCustomInput) {
+            categoryCustomInput.style.display = '';
+            categoryCustomInput.disabled = false;
+            categoryCustomInput.required = true;
+            categoryCustomInput.name = 'categoryCode';
+        }
+
+        resetTypeSelect();
+        resetCategorySelect();
+    }
+
+    function resetTypeSelect() {
+        const { typeSelect } = registerState;
+        if (!typeSelect) {
+            return;
+        }
+        typeSelect.innerHTML = '<option value="">선택하시오</option>';
+        typeSelect.disabled = true;
+    }
+
+    function resetCategorySelect() {
+        const { categorySelect } = registerState;
+        if (!categorySelect) {
+            return;
+        }
+        categorySelect.innerHTML = '<option value="">선택하시오</option>';
+        categorySelect.disabled = true;
+    }
+
+    function populateTypes(companyCode) {
+        const { typeSelect } = registerState;
+        resetTypeSelect();
+        resetCategorySelect();
+        if (!typeSelect || !companyCode) {
+            return;
+        }
+        const companyData = codeHierarchy[companyCode];
+        if (!companyData || !Array.isArray(companyData.types)) {
+            return;
+        }
+        companyData.types.forEach(type => {
+            if (!type || !type.code) {
+                return;
             }
-            await refreshRegisterItemCode();
+            const option = document.createElement('option');
+            option.value = type.code;
+            option.textContent = type.name || type.code;
+            typeSelect.appendChild(option);
         });
+        if (typeSelect.options.length > 1) {
+            typeSelect.disabled = false;
+        }
+    }
 
-        typeSelect.addEventListener('change', async () => {
-            const selectedCompany = companySelect.value;
-            const selectedType = typeSelect.value;
-            categorySelect.innerHTML = '<option value="">분류</option>';
-            if (selectedType) {
-                const res = await fetch(`${ctx}/api/product-codes/categories?companyCode=${selectedCompany}&typeCode=${selectedType}`);
-                const data = await res.json();
-                data.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat.categoryCode;
-                    option.textContent = cat.description || cat.categoryCode;
-                    categorySelect.appendChild(option);
-                });
-                categorySelect.disabled = false;
-            } else {
-                categorySelect.disabled = true;
+    function populateCategories(companyCode, typeCode) {
+        const { categorySelect } = registerState;
+        resetCategorySelect();
+        if (!categorySelect || !companyCode || !typeCode) {
+            return;
+        }
+        const companyData = codeHierarchy[companyCode];
+        if (!companyData || !companyData.categories) {
+            return;
+        }
+        const categories = companyData.categories[typeCode];
+        if (!Array.isArray(categories)) {
+            return;
+        }
+        categories.forEach(category => {
+            if (!category || !category.code) {
+                return;
             }
-            await refreshRegisterItemCode();
+            const option = document.createElement('option');
+            option.value = category.code;
+            option.textContent = category.name || category.code;
+            categorySelect.appendChild(option);
         });
+        if (categorySelect.options.length > 1) {
+            categorySelect.disabled = false;
+        }
+    }
 
-        categorySelect.addEventListener('change', refreshRegisterItemCode);
+    function handleCompanyChange() {
+        const { companySelect, companyCustomInput, typeCustomInput, categoryCustomInput } = registerState;
+        if (!companySelect) {
+            return;
+        }
 
-        loadCompanies();
-        if (show) {
-            refreshRegisterItemCode();
+        if (companySelect.value === '__custom__') {
+            useCustomInputs();
+            if (companyCustomInput) {
+                companyCustomInput.value = '';
+            }
+            if (typeCustomInput) {
+                typeCustomInput.value = '';
+            }
+            if (categoryCustomInput) {
+                categoryCustomInput.value = '';
+            }
+        } else {
+            useSelectInputs();
+            if (companySelect.value) {
+                populateTypes(companySelect.value);
+            }
+        }
+    }
+
+    function handleTypeChange() {
+        const { typeSelect, companySelect } = registerState;
+        if (!typeSelect || !companySelect || typeSelect.name !== 'typeCode') {
+            return;
+        }
+
+        const selectedType = typeSelect.value;
+        if (selectedType) {
+            populateCategories(companySelect.value, selectedType);
+        } else {
+            resetCategorySelect();
         }
     }
   </script>
