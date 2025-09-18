@@ -36,10 +36,13 @@ public class ProductController {
     @GetMapping("/product/register")
     public String showRegisterForm(Model model) {
         List<CompanyCode> companies = productCodeService.getCompanies();
+        List<ProductCode> codes = productCodeService.getAllProductCodes();
         model.addAttribute("companies", companies);
         model.addAttribute("companyNames", productCodeService.getCompanyNameMap());
         model.addAttribute("typeNames", productCodeService.getTypeNameMap());
         model.addAttribute("categoryNames", productCodeService.getCategoryNameMap());
+        Map<String, CompanyHierarchy> hierarchy = buildCompanyHierarchy(companies, codes);
+        model.addAttribute("codeHierarchyJson", writeHierarchyJson(hierarchy));
         return "productdetail";
     }
 
@@ -100,54 +103,8 @@ public class ProductController {
         List<Product> products = productService.getAllProducts();
         List<CompanyCode> companies = productCodeService.getCompanies();
 
-        Map<String, String> typeNames = new LinkedHashMap<>();
-        for (ProductCode code : codes) {
-            String typeCode = code.getTypeCode();
-            if ("0000".equals(code.getCategoryCode())
-                    && typeCode != null && !typeCode.isBlank()
-                    && !"0000".equals(typeCode)) {
-                String key = code.getCompanyCode() + "|" + typeCode;
-                String description = code.getDescription() != null ? code.getDescription() : typeCode;
-                typeNames.putIfAbsent(key, description);
-            }
-        }
-
-        Map<String, CompanyHierarchy> hierarchy = new LinkedHashMap<>();
-        for (CompanyCode company : companies) {
-            CompanyHierarchy companyHierarchy = hierarchy.computeIfAbsent(company.getCompanyCode(), key -> new CompanyHierarchy());
-            companyHierarchy.name = company.getCompanyName();
-        }
-
-        for (ProductCode code : codes) {
-            CompanyHierarchy companyHierarchy = hierarchy.computeIfAbsent(code.getCompanyCode(), key -> {
-                CompanyHierarchy data = new CompanyHierarchy();
-                data.name = key;
-                return data;
-            });
-
-            String typeCode = code.getTypeCode();
-            String typeKey = typeCode == null ? null : code.getCompanyCode() + "|" + typeCode;
-            String fallbackTypeName = (typeCode != null && !typeCode.isBlank()) ? typeCode : "";
-            String typeName = typeNames.getOrDefault(typeKey, fallbackTypeName);
-
-            if ("0000".equals(code.getCategoryCode())) {
-                if (!"0000".equals(code.getTypeCode())) {
-                    companyHierarchy.addTypeIfAbsent(code.getTypeCode(), typeName);
-                }
-            } else {
-                String categoryName = code.getDescription() != null ? code.getDescription() : code.getCategoryCode();
-                companyHierarchy.addTypeIfAbsent(code.getTypeCode(), typeName);
-                companyHierarchy.addCategoryIfAbsent(code.getTypeCode(), code.getCategoryCode(), categoryName);
-            }
-        }
-
-        String hierarchyJson;
-        try {
-            hierarchyJson = new ObjectMapper().writeValueAsString(hierarchy);
-        } catch (JsonProcessingException e) {
-            log.error("코드 계층 JSON 직렬화 실패", e);
-            hierarchyJson = "{}";
-        }
+        Map<String, CompanyHierarchy> hierarchy = buildCompanyHierarchy(companies, codes);
+        String hierarchyJson = writeHierarchyJson(hierarchy);
 
         model.addAttribute("companies", companies);
         model.addAttribute("productList", products);
@@ -220,6 +177,79 @@ public class ProductController {
             log.error("상품 수정 실패, 코드: {}, 에러: {}", originalFullCode, e.getMessage());
         }
         return "redirect:/inventory";
+    }
+
+    private Map<String, CompanyHierarchy> buildCompanyHierarchy(List<CompanyCode> companies, List<ProductCode> codes) {
+        Map<String, CompanyHierarchy> hierarchy = new LinkedHashMap<>();
+
+        if (companies != null) {
+            for (CompanyCode company : companies) {
+                if (company == null) {
+                    continue;
+                }
+                CompanyHierarchy companyHierarchy = hierarchy.computeIfAbsent(
+                        company.getCompanyCode(),
+                        key -> new CompanyHierarchy()
+                );
+                companyHierarchy.name = company.getCompanyName();
+            }
+        }
+
+        if (codes == null || codes.isEmpty()) {
+            return hierarchy;
+        }
+
+        Map<String, String> typeNames = new LinkedHashMap<>();
+        for (ProductCode code : codes) {
+            if (code == null) {
+                continue;
+            }
+            String typeCode = code.getTypeCode();
+            if ("0000".equals(code.getCategoryCode())
+                    && typeCode != null && !typeCode.isBlank()
+                    && !"0000".equals(typeCode)) {
+                String key = code.getCompanyCode() + "|" + typeCode;
+                String description = code.getDescription() != null ? code.getDescription() : typeCode;
+                typeNames.putIfAbsent(key, description);
+            }
+        }
+
+        for (ProductCode code : codes) {
+            if (code == null) {
+                continue;
+            }
+            CompanyHierarchy companyHierarchy = hierarchy.computeIfAbsent(code.getCompanyCode(), key -> {
+                CompanyHierarchy data = new CompanyHierarchy();
+                data.name = key;
+                return data;
+            });
+
+            String typeCode = code.getTypeCode();
+            String typeKey = typeCode == null ? null : code.getCompanyCode() + "|" + typeCode;
+            String fallbackTypeName = (typeCode != null && !typeCode.isBlank()) ? typeCode : "";
+            String typeName = typeNames.getOrDefault(typeKey, fallbackTypeName);
+
+            if ("0000".equals(code.getCategoryCode())) {
+                if (!"0000".equals(code.getTypeCode())) {
+                    companyHierarchy.addTypeIfAbsent(code.getTypeCode(), typeName);
+                }
+            } else {
+                String categoryName = code.getDescription() != null ? code.getDescription() : code.getCategoryCode();
+                companyHierarchy.addTypeIfAbsent(code.getTypeCode(), typeName);
+                companyHierarchy.addCategoryIfAbsent(code.getTypeCode(), code.getCategoryCode(), categoryName);
+            }
+        }
+
+        return hierarchy;
+    }
+
+    private String writeHierarchyJson(Map<String, CompanyHierarchy> hierarchy) {
+        try {
+            return new ObjectMapper().writeValueAsString(hierarchy);
+        } catch (JsonProcessingException e) {
+            log.error("코드 계층 JSON 직렬화 실패", e);
+            return "{}";
+        }
     }
 
     private static class CompanyHierarchy {
