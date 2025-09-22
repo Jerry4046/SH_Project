@@ -10,7 +10,14 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
 <div class="container mt-5">
-    <h2>제품 전체 상세 정보</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">제품 전체 상세 정보</h2>
+        <div class="d-flex gap-2">
+            <a href="${pageContext.request.contextPath}/product/register" class="btn btn-outline-primary">등록</a>
+            <button type="button" class="btn btn-outline-warning" onclick="showPendingAlert('수정');">수정</button>
+            <button type="button" class="btn btn-outline-danger" onclick="showPendingAlert('삭제');">삭제</button>
+        </div>
+    </div>
 
     <div class="mb-3">
         <input type="text" class="form-control" placeholder="상품명, 제품코드, 상품코드를 검색하세요" id="searchInput">

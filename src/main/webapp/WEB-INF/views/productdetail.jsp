@@ -53,11 +53,11 @@
         <c:when test="${empty product}">
             <h2 class="mb-4">등록</h2>
             <div class="btn-group mb-3">
-                <button type="button" class="btn btn-outline-primary" id="productTabBtn">제품</button>
-                <button type="button" class="btn btn-outline-primary active" id="codeTabBtn">제품코드</button>
+                <button type="button" class="btn btn-outline-primary active" id="productTabBtn">제품</button>
+                <button type="button" class="btn btn-outline-primary" id="codeTabBtn">제품코드</button>
             </div>
 
-<div id="codeForm">
+    <div id="codeForm" style="display:none;">
                 <form id="codeRegisterForm" autocomplete="off" onsubmit="return false;">
                     <div class="row g-3 align-items-end mb-3">
                         <div class="col-md">
@@ -158,7 +158,7 @@
                 </form>
             </div>
 
-            <div id="productForm" style="display:none;">
+            <div id="productForm">
                 <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3">
                     <div class="mb-3">
                         <label class="form-label" for="productCompanyCode">회사</label>
@@ -235,7 +235,11 @@
         <c:otherwise>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="mb-0">제품 상세 정보</h2>
-                <button type="button" class="btn btn-warning" onclick="toggleDetailEdit()">수정</button>
+                <div class="d-flex gap-2">
+                    <a href="${pageContext.request.contextPath}/product/register" class="btn btn-outline-primary">등록</a>
+                    <button type="button" class="btn btn-outline-warning" onclick="toggleDetailEdit()">수정</button>
+                    <button type="button" class="btn btn-outline-danger" onclick="showPendingAlert('삭제');">삭제</button>
+                </div>
             </div>
             <form action="${pageContext.request.contextPath}/product/update" method="post" id="detailForm">
                 <div class="table-responsive">
