@@ -34,7 +34,7 @@ public class Price {
     private LocalDateTime createdAt;
 
     @Column(name = "ended_at")
-    private LocalDateTime endedAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -51,6 +51,6 @@ public class Price {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime created_at) { this.createdAt = created_at; }
 
-    public LocalDateTime getEndedAt() { return endedAt; }
-    public void setEndedAt(LocalDateTime ended_at) { this.endedAt = ended_at; }
+    public LocalDateTime getEndedAt() { return updatedAt; }
+    public void setEndedAt(LocalDateTime ended_at) { this.updatedAt = ended_at; }
 }

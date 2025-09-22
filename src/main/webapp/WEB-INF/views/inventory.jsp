@@ -41,8 +41,8 @@
               <tr>
                   <th class="edit-col" style="display:none;"></th>
                   <th>상품명</th>
-                  <th>박스당 수량</th>
-                  <th>박스재고</th>
+                  <th>입수량</th>
+                  <th>BOX</th>
                   <th>낱개</th>
                   <th>총재고</th>
                   <th>단가</th>
@@ -63,27 +63,27 @@
                           <input type="text" name="pdName" value="${product.pdName}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
-                          <span class="value">${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}</span>
+                          <span class="value">${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox} ea</span>
                           <input type="number" name="piecesPerBox" value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
-                          <span class="value">${empty product.stock.boxQty ? 0 : product.stock.boxQty}</span>
+                          <span class="value">${empty product.stock.boxQty ? 0 : product.stock.boxQty} BOX</span>
                           <input type="number" name="boxQty" value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
-                          <span class="value">${empty product.stock.looseQty ? 0 : product.stock.looseQty}</span>
+                          <span class="value">${empty product.stock.looseQty ? 0 : product.stock.looseQty} ea</span>
                           <input type="number" name="looseQty" value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
-                          <span class="value">${empty product.stock.totalQty ? 0 : product.stock.totalQty}</span>
+                          <span class="value">${empty product.stock.totalQty ? 0 : product.stock.totalQty} ea</span>
                           <input type="number" name="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
                           <span class="value">${product.getPrice()}</span>
-                          <input type="number" step="0.01" name="price" value="${product.getPrice()}" class="form-control form-control-sm edit-field" style="display:none" disabled>
+                          <input type="number" step="0.1" name="price" value="${product.getPrice()}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
-                          <span class="value">${product.minStockQuantity}</span>
+                          <span class="value">${product.minStockQuantity} ea</span>
                           <input type="number" name="minStockQuantity" value="${product.minStockQuantity}" class="form-control form-control-sm edit-field" style="display:none" disabled>
                       </td>
                       <td>
