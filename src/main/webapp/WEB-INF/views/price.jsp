@@ -50,7 +50,7 @@
                             <td>${price.price}</td> <!-- 단가 -->
                             <td>${price.updatedAt}</td> <!-- 수정일자 -->
                             <td>${price.createdAt}</td> <!-- 생성일자 -->
-                            <td>${price.description}</td> <!-- 수정이유 -->
+                            <td>${price.reason}</td> <!-- 수정이유 -->
                             <td>
                                 <c:choose>
                                     <c:when test="${product.active}">

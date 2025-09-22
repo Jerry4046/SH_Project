@@ -5,9 +5,12 @@ import java.util.List;
 
 public interface ProductServiceImpl {
 
-    void registerProduct(Product product, String accountUuid);  // accountUuid를 인자로 추가
+    void registerProduct(Product product, Double price, Integer piecesPerBox, Integer totalQty, Long accountSeq);
     List<Product> getAllProducts();
+    Product getProductByCode(String productCode, String itemCode);
+
+    void updateProduct(String originalProductCode, String originalItemCode, Product updatedProduct,
+                       Integer piecesPerBox, Integer totalQty, Double price,
+                       Long accountSeq, String reason, boolean isAdmin);
 
 }
-
-
