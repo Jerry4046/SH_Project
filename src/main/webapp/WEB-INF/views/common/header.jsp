@@ -18,10 +18,9 @@
                 <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/sales">매출</a></li>
                 <li class="nav-item"><a class="nav-link" href="report.jsp">송장</a></li>
                 <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/price">단가맵</a></li>
-                <li class="nav-item"><a class="nav-link" href="report.jsp">거래처</a></li>
+                <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/client">거래처</a></li>
                 <li class="nav-item"><a class="nav-link" href="stockIn.jsp">입고 관리</a></li>
                 <li class="nav-item"><a class="nav-link" href="stockOut.jsp">출고 관리</a></li>
-                <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/productcode">코드 관리</a></li>
             </ul>
         </div>
 
