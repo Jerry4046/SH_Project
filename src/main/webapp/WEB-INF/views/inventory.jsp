@@ -23,6 +23,15 @@
             color: #842029;
             font-weight: 600;
         }
+
+        .auto-hide-alert {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .auto-hide-alert.fade-out {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -32,10 +41,10 @@
 <div class="container mt-5">
 
     <c:if test="${not empty error}">
-        <div class="alert alert-danger">${error}</div>
+        <div class="alert alert-danger auto-hide-alert">${error}</div>
     </c:if>
     <c:if test="${not empty message}">
-        <div class="alert alert-success">${message}</div>
+        <div class="alert alert-success auto-hide-alert">${message}</div>
     </c:if>
 
     <!-- 제목 + 버튼 -->
@@ -168,6 +177,22 @@
 <!-- ✅ 검색 / 정렬 스크립트 -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+            const autoHideAlerts = document.querySelectorAll('.auto-hide-alert');
+
+            if (autoHideAlerts.length > 0) {
+                autoHideAlerts.forEach((alert) => {
+                    alert.addEventListener('transitionend', () => {
+                        alert.remove();
+                    }, { once: true });
+                });
+
+                setTimeout(() => {
+                    autoHideAlerts.forEach((alert) => {
+                        alert.classList.add('fade-out');
+                    });
+                }, 1000);
+            }
+
         const searchInput = document.getElementById('searchInput');
         const usageFilter = document.getElementById('usageFilter');
         const stockFilter = document.getElementById('stockFilter');
