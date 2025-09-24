@@ -47,7 +47,7 @@
             <c:forEach var="product" items="${productList}">
                 <tr class="${product.active ? '' : 'text-muted'}">
                     <td><c:out value="${product.user.name}"/></td>
-                    <td>${product.productCode}</td>
+                    <td>${product.fullProductCode}</td>
                     <td>${product.itemCode}</td>
                     <td>${product.spec}</td>
                     <td>${product.pdName}</td>

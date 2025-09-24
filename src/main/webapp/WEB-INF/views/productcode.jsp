@@ -30,7 +30,7 @@
         <tbody>
         <c:forEach var="product" items="${productList}">
             <tr>
-                <td>${product.productCode}</td>
+                <td>${product.fullProductCode}</td>
                 <td>${product.pdName}</td>
                 <td>${product.getPrice()}</td>
             </tr>

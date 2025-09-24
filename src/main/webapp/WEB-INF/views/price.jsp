@@ -45,7 +45,7 @@
                 <c:forEach var="product" items="${productList}">
                     <c:forEach var="price" items="${product.prices}">
                         <tr class="${product.active ? '' : 'text-muted'}">
-                            <td>${product.productCode}</td>
+                            <td>${product.fullProductCode}</td>
                             <td>${product.pdName}</td>
                             <td>${price.price}</td> <!-- 단가 -->
                             <td>${price.updatedAt}</td> <!-- 수정일자 -->

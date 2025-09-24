@@ -24,10 +24,36 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             nativeQuery = true)
     Optional<Product> findTopByProductCodeOrderByItemCodeDesc(@Param("productCode") String productCode);
 
+    @Query(value = "SELECT * FROM product_tb WHERE product_code LIKE CONCAT(:productCodePrefix, '%') ORDER BY product_code DESC LIMIT 1",
+            nativeQuery = true)
+    Optional<Product> findTopByProductCodeStartingWith(@Param("productCodePrefix") String productCodePrefix);
+
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Product p WHERE p.product_code = :productCode")
+    boolean existsByProductCode(@Param("productCode") String productCode);
+
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Product p " +
+            "WHERE p.account_seq = :accountSeq AND p.product_code = :productCode")
+    boolean existsByAccountSeqAndProductCode(@Param("accountSeq") Long accountSeq,
+                                             @Param("productCode") String productCode);
+
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Product p " +
+            "WHERE p.account_seq = :accountSeq AND p.product_code = :productCode " +
+            "AND (:productId IS NULL OR p.product_id <> :productId)")
+    boolean existsByAccountSeqAndProductCodeExcludingId(@Param("accountSeq") Long accountSeq,
+                                                        @Param("productCode") String productCode,
+                                                        @Param("productId") Long productId);
+
     List<Product> findAll(Sort sort);
+
+    @Query("SELECT p FROM Product p WHERE p.product_code = :productCode")
+    Optional<Product> findByProductCode(@Param("productCode") String productCode);
 
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.prices LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user")
     List<Product> findAllWithPricesAndStock();
+
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user " +
+            "WHERE p.product_code = :productCode")
+    Product findByProductCodeWithStock(@Param("productCode") String productCode);
 
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.stock LEFT JOIN FETCH p.user " +
             "WHERE p.product_code = :productCode AND p.item_code = :itemCode")

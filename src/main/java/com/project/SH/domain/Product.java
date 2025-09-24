@@ -140,9 +140,25 @@ public class Product {
         if (product_code == null || product_code.isBlank()) {
             return item_code != null ? item_code : "";
         }
+        if (hasExtendedProductCode(product_code)) {
+            return product_code;
+        }
         if (item_code == null || item_code.isBlank()) {
             return product_code;
         }
         return product_code + "_" + item_code;
+    }
+
+    private boolean hasExtendedProductCode(String value) {
+        int underscoreCount = 0;
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) == '_') {
+                underscoreCount++;
+                if (underscoreCount >= 3) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -117,11 +117,17 @@ public class ProductController {
 
     @GetMapping("/product/detail/{productCode}")
     public String showProductDetail(@PathVariable String productCode,
-                                    @RequestParam("itemCode") String itemCode,
+                                    @RequestParam(value = "itemCode", required = false) String itemCode,
                                     Model model) {
-        String fullCode = productCodeService.buildFullProductCode(productCode, itemCode);
-        log.info("단일 상품 상세 조회, 상품 코드: {}", fullCode);
         Product product = productService.getProductByCode(productCode, itemCode);
+        if (product != null) {
+            log.info("단일 상품 상세 조회, 상품 코드: {}", product.getProductCode());
+        } else {
+            String referenceCode = (itemCode == null || itemCode.isBlank())
+                    ? productCode
+                    : productCodeService.buildFullProductCode(productCode, itemCode);
+            log.warn("단일 상품 상세 조회 실패, 요청 코드: {}", referenceCode);
+        }
         model.addAttribute("product", product);
         return "productdetail";
     }

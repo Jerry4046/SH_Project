@@ -278,7 +278,7 @@
                                     </c:choose>
                                 </span>
                             </td>
-                            <td><span class="value"><c:out value="${product.productCode}" /></span></td>
+                            <td><span class="value"><c:out value="${product.fullProductCode}" /></span></td>
                             <td><span class="value"><c:out value="${product.itemCode}" /></span></td>
                             <td>
                                 <span class="value"><c:out value="${product.spec}" /></span>

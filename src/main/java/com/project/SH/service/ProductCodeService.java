@@ -226,11 +226,30 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     }
 
     private int determineNextValue(String baseProductCode) {
-        final int lastValue = productRepository.findTopByProductCodeOrderByItemCodeDesc(baseProductCode)
+        final String prefix = baseProductCode + "_";
+
+        final int lastFromFullCode = productRepository.findTopByProductCodeStartingWith(prefix)
+                .map(Product::getProductCode)
+                .map(code -> extractSuffixValue(code, prefix))
+                .orElse(0);
+
+        final int lastFromLegacy = productRepository.findTopByProductCodeOrderByItemCodeDesc(baseProductCode)
                 .map(Product::getItemCode)
                 .map(this::parseItemCode)
                 .orElse(0);
-        return lastValue + 1;
+
+        return Math.max(lastFromFullCode, lastFromLegacy) + 1;
+    }
+
+    private int extractSuffixValue(String productCode, String prefix) {
+        if (productCode == null || prefix == null) {
+            return 0;
+        }
+        if (!productCode.startsWith(prefix)) {
+            return 0;
+        }
+        final String suffix = productCode.substring(prefix.length());
+        return parseItemCode(suffix);
     }
 
     private int parseItemCode(String value) {
