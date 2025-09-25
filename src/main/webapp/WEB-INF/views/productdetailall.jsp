@@ -32,15 +32,15 @@
                 <th>제품코드</th>
                 <th>규격</th>
                 <th>제품이름</th>
-                <th>박스당 수량</th>
-                <th>박스재고</th>
+                <th>입수량</th>
+                <th>BOX</th>
                 <th>낱개</th>
                 <th>총재고</th>
                 <th>최소재고</th>
                 <th>단가</th>
-                <th>사용상태</th>
+                <th>사용여부</th>
                 <th>생성일자</th>
-                <th>업데이트 일자</th>
+                <th>수정일자</th>
             </tr>
             </thead>
             <tbody id="productTable">
@@ -51,11 +51,11 @@
                     <td>${product.itemCode}</td>
                     <td>${product.spec}</td>
                     <td>${product.pdName}</td>
-                    <td><c:out value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}"/> 장</td>
+                    <td><c:out value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}"/> ea</td>
                     <td><c:out value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}"/> BOX</td>
-                    <td><c:out value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}"/> 장</td>
-                    <td><c:out value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}"/> 장</td>
-                    <td>${product.minStockQuantity} 장</td>
+                    <td><c:out value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}"/> ea</td>
+                    <td><c:out value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}"/> ea</td>
+                    <td>${product.minStockQuantity} ea</td>
                     <td>${product.getPrice()} 원</td>
                     <td>
                         <c:choose>
