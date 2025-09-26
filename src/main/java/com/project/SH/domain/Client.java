@@ -22,20 +22,27 @@ public class Client {
     @Column(name = "client_id")
     private Long clientId;
 
-    @Column(name = "company_initial", nullable = false, length = 20)
-    private String companyInitial;
+    @Column(name = "client_code", length = 10)
+    private String clientCode;
 
-    @Column(name = "company_name", nullable = false, length = 100)
-    private String companyName;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_initial", referencedColumnName = "company_code")
+    private CompanyCode company;
 
-    @Column(name = "branch_name", nullable = false, length = 100)
+    @Column(name = "manager_name", nullable = false, length = 50)
+    private String managerName;
+
+    @Column(name = "branch_name", length = 100)
     private String branchName;
 
-    @Column(length = 20)
-    private String phone;
+    @Column(name = "agency_name", length = 100)
+    private String agencyName;
 
-    @Column(length = 50)
-    private String ceo;
+    @Column(length = 255)
+    private String address;
+
+    @Column(name = "manager_phone", length = 20)
+    private String managerPhone;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

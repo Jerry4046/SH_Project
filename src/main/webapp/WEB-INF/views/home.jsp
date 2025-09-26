@@ -7,13 +7,6 @@
 <head>
     <meta charset="UTF-8">
     <title>SH실업 재고관리 시스템</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- ✅ Bootstrap CSS (static 경로 기준) -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/static/css/bootstrap.min.css">
-
-    <!-- ✅ 커스텀 CSS (optional) -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/static/css/style.css">
 </head>
 <body>
 
@@ -73,8 +66,5 @@
         </div>
     </div>
 </div>
-
-<!-- ✅ Bootstrap JS -->
-<script src="${pageContext.request.contextPath}/static/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -60,6 +60,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-logging' // 기본 로그
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+
+    //validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 }
 
 tasks.withType(JavaCompile) {
