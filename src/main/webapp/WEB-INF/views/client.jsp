@@ -23,29 +23,42 @@
             gap: 0.25rem;
             cursor: pointer;
         }
-
-        .sort-button:hover {
-            color: #0d6efd;
-        }
-
-        .sort-button:focus-visible {
-            outline: 2px solid #0d6efd;
-            outline-offset: 2px;
-        }
-
+        .sort-button:hover { color: #0d6efd; }
+        .sort-button:focus-visible { outline: 2px solid #0d6efd; outline-offset: 2px; }
         .sort-indicator {
             font-size: 0.8rem;
             min-width: 1rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center;
             color: currentColor;
         }
 
+        /* ===== 헤더 영역: 검색 + 버튼 한 줄 배치 ===== */
+        .header-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch; /* 입력창/버튼 높이 맞춤 */
+            gap: 0.75rem;
+        }
+        .header-controls .search-area {
+            flex: 1 1 260px; /* 남는 공간 채우기 */
+        }
+        .header-controls .search-area .input-group {
+            max-width: 600px;
+        }
+        .header-controls .action-buttons {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            align-items: stretch; /* 버튼 높이 입력창과 동일 */
+        }
+        .header-controls .action-buttons .btn {
+            white-space: nowrap;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+
         @media (max-width: 576px) {
-            .search-area .input-group {
-                max-width: 100%;
-            }
+            .header-controls { flex-direction: column; align-items: stretch; }
+            .header-controls .search-area .input-group { max-width: 100%; }
         }
     </style>
 </head>
@@ -55,21 +68,31 @@
         <div class="col-lg-10">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-4 border-0">
-                    <div class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-between gap-3">
-                        <div class="flex-grow-1 w-100">
-                            <h1 class="h3 mb-1">거래처 목록</h1>
-                            <div class="search-area mt-3">
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <h1 class="h3 mb-0">거래처 목록</h1>
+                        </div>
+
+                        <!-- ✅ 검색 입력폼과 등록/수정/삭제 버튼을 같은 줄에 배치 -->
+                        <div class="header-controls">
+                            <div class="search-area">
                                 <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-white border-end-0">🔍</span>
-                                    <input type="search" class="form-control border-start-0" id="clientSearch"
-                                           placeholder="회사 이름, 지점명, 대리점명, 주소, 성함 또는 연락처로 검색하세요." aria-label="거래처 검색">
+                                    <input type="search" class="form-control" id="clientSearch"
+                                           placeholder="회사 이름, 지점명, 대리점명, 주소, 성함 또는 연락처로 검색하세요."
+                                           aria-label="거래처 검색">
                                     <button class="btn btn-outline-secondary" type="button" id="clearClientSearch">지우기</button>
                                 </div>
                             </div>
+                            <div class="action-buttons" role="group" aria-label="거래처 관리">
+                                <a href="#" class="btn btn-outline-primary" role="button" aria-disabled="true">등록</a>
+                                <a href="#" class="btn btn-outline-warning" role="button" aria-disabled="true">수정</a>
+                                <a href="#" class="btn btn-outline-danger" role="button" aria-disabled="true">삭제</a>
+                            </div>
                         </div>
-                        <a href="#" class="btn btn-primary align-self-start mt-2 mt-sm-0" role="button" aria-disabled="true">거래처 등록</a>
+                        <!-- ✅ 여기까지가 한 줄 구성 -->
                     </div>
                 </div>
+
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0" id="clientTable">
@@ -157,16 +180,16 @@
                         </table>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const table = document.getElementById('clientTable');
-        if (!table) {
-            return;
-        }
+        if (!table) return;
 
         const tbody = table.querySelector('tbody');
         let rows = Array.from(tbody.querySelectorAll('tr'));
@@ -176,6 +199,7 @@
             return cell ? cell.textContent.trim().toLowerCase() : '';
         };
 
+        // 기본 정렬: 회사 이름
         const defaultSortedRows = rows.slice().sort((rowA, rowB) => {
             const textA = getCellText(rowA, 0);
             const textB = getCellText(rowB, 0);
@@ -184,9 +208,7 @@
         defaultSortedRows.forEach(row => tbody.appendChild(row));
 
         rows = Array.from(tbody.querySelectorAll('tr'));
-        rows.forEach((row, index) => {
-            row.dataset.originalOrder = index;
-        });
+        rows.forEach((row, index) => { row.dataset.originalOrder = index; });
         const originalOrder = rows.slice();
 
         const sortButtons = table.querySelectorAll('.sort-button');
@@ -196,11 +218,8 @@
         const updateAriaLabel = (button, state) => {
             const baseLabel = button.dataset.label || button.textContent.trim();
             let stateLabel = '정상';
-            if (state === 'asc') {
-                stateLabel = '오름차순';
-            } else if (state === 'desc') {
-                stateLabel = '내림차순';
-            }
+            if (state === 'asc') stateLabel = '오름차순';
+            else if (state === 'desc') stateLabel = '내림차순';
             button.setAttribute('aria-label', baseLabel + ' 정렬, ' + stateLabel);
         };
 
@@ -219,7 +238,6 @@
                 originalOrder.forEach(row => tbody.appendChild(row));
                 return;
             }
-
             const sortedRows = rows.slice().sort((rowA, rowB) => {
                 const textA = getCellText(rowA, columnIndex);
                 const textB = getCellText(rowB, columnIndex);
@@ -229,7 +247,6 @@
                 }
                 return state === 'asc' ? comparison : -comparison;
             });
-
             sortedRows.forEach(row => tbody.appendChild(row));
         };
 
@@ -240,7 +257,9 @@
 
             button.addEventListener('click', () => {
                 const currentState = button.dataset.sortState || 'default';
-                const nextState = currentState === 'asc' ? 'desc' : currentState === 'desc' ? 'default' : 'asc';
+                const nextState = currentState === 'asc' ? 'desc'
+                                  : currentState === 'desc' ? 'default'
+                                  : 'asc';
 
                 applySort(Number(button.dataset.column), nextState);
 
@@ -257,20 +276,18 @@
         });
 
         const filterRows = keyword => {
-            const normalizedKeyword = keyword.trim().toLowerCase();
+            const normalizedKeyword = (keyword || '').trim().toLowerCase();
             rows.forEach(row => {
                 const cells = Array.from(row.cells);
-                const hasMatch = normalizedKeyword === '' || cells.some(cell => cell.textContent.toLowerCase().includes(normalizedKeyword));
+                const hasMatch = normalizedKeyword === '' ||
+                    cells.some(cell => cell.textContent.toLowerCase().includes(normalizedKeyword));
                 row.style.display = hasMatch ? '' : 'none';
             });
         };
 
         if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                filterRows(searchInput.value);
-            });
+            searchInput.addEventListener('input', () => filterRows(searchInput.value));
         }
-
         if (clearButton && searchInput) {
             clearButton.addEventListener('click', () => {
                 searchInput.value = '';
@@ -278,7 +295,6 @@
                 searchInput.focus();
             });
         }
-
         filterRows(searchInput ? searchInput.value : '');
     });
 </script>
