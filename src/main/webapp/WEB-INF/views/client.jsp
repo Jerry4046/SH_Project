@@ -185,9 +185,10 @@
                         <col style="width: 11%">
                         <col style="width: 11%">
                         <col style="width: 11%">
-                        <col style="width: 46%">
+                        <col style="width: 35%">
                         <col style="width: 11%">
                         <col style="width: 10%">
+                        <col style="width: 11%">
                     </colgroup>
                     <thead class="table-light text-center">
                     <tr>
@@ -212,7 +213,8 @@
                         </th>
                         <th scope="col" class="text-nowrap">주소</th>
                         <th scope="col" class="text-nowrap">성함</th>
-                        <th scope="col" class="text-nowrap">전화번호</th>
+                        <th scope="col" class="text-nowrap">사무실번호</th>
+                        <th scope="col" class="text-nowrap">핸드폰번호</th>
                     </tr>
                     </thead>
                     <tbody id="clientTableBody">
@@ -238,14 +240,35 @@
                                     </td>
                                     <td class="compact-cell text-truncate"><c:out value="${client.managerName}"/></td>
                                     <td class="compact-cell">
-                                        <span class="badge bg-primary-subtle text-primary-emphasis phone-badge"><c:out value="${client.managerPhone}"/></span>
+                                        <c:choose>
+                                            <c:when test="${not empty client.regionalPhone}">
+                                                <span class="badge bg-primary-subtle text-primary-emphasis phone-badge">
+                                                    <c:out value="${client.regionalPhone}"/>
+                                                </span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="text-muted">-</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td class="compact-cell">
+                                        <c:choose>
+                                            <c:when test="${not empty client.managerPhone}">
+                                                <span class="badge bg-primary-subtle text-primary-emphasis phone-badge">
+                                                    <c:out value="${client.managerPhone}"/>
+                                                </span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="text-muted">-</span>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </td>
                                 </tr>
                             </c:forEach>
                         </c:when>
                         <c:otherwise>
                             <tr data-role="empty-state">
-                                <td colspan="6" class="text-center empty-copy">
+                                <td colspan="7" class="text-center empty-copy">
                                     등록된 거래처가 없습니다. <span class="text-primary fw-semibold">등록</span> 버튼을 눌러 추가하세요.
                                 </td>
                             </tr>
@@ -301,12 +324,18 @@
                    placeholder="담당자 성함" aria-label="담당자 성함" required>
         </td>
         <td>
-            <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2">
-                <div class="flex-grow-1">
-                    <input type="tel" class="form-control form-control-sm" name="managerPhone"
-                           placeholder="연락처" aria-label="연락처" required>
+            <div class="d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center gap-2">
+                <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 flex-grow-1">
+                    <div class="flex-grow-1">
+                        <input type="tel" class="form-control form-control-sm" name="regionalPhone"
+                               placeholder="사무실번호" aria-label="사무실번호">
+                    </div>
+                    <div class="flex-grow-1">
+                        <input type="tel" class="form-control form-control-sm" name="managerPhone"
+                               placeholder="연락처" aria-label="연락처" required>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 justify-content-end">
                     <button type="button" class="btn btn-success btn-sm" data-action="save-form">저장</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-action="cancel-form">취소</button>
                 </div>
@@ -338,8 +367,8 @@
         const DATA_ROW_SELECTOR = 'tr[data-role="client-data-row"]';
         const FORM_ROW_SELECTOR = 'tr[data-role="client-form-row"]';
         const EMPTY_STATE_SELECTOR = 'tr[data-role="empty-state"]';
-        const DEFAULT_EMPTY_HTML = '<td colspan="6" class="text-center empty-copy">등록된 거래처가 없습니다. <span class="text-primary fw-semibold">등록</span> 버튼을 눌러 추가하세요.</td>';
-        const SEARCH_EMPTY_HTML = '<td colspan="6" class="text-center empty-copy">검색 결과가 없습니다.</td>';
+        const DEFAULT_EMPTY_HTML = '<td colspan="7" class="text-center empty-copy">등록된 거래처가 없습니다. <span class="text-primary fw-semibold">등록</span> 버튼을 눌러 추가하세요.</td>';
+        const SEARCH_EMPTY_HTML = '<td colspan="7" class="text-center empty-copy">검색 결과가 없습니다.</td>';
 
         const state = {
             sortColumnIndex: 0,
@@ -620,6 +649,26 @@
             return cell;
         };
 
+        const buildPhoneCell = (phone) => {
+            const cell = document.createElement('td');
+            cell.className = 'compact-cell';
+
+            if (phone) {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary-subtle text-primary-emphasis phone-badge';
+                badge.textContent = phone;
+                badge.title = phone;
+                cell.appendChild(badge);
+            } else {
+                const placeholder = document.createElement('span');
+                placeholder.className = 'text-muted';
+                placeholder.textContent = '-';
+                cell.appendChild(placeholder);
+            }
+
+            return cell;
+        };
+
         const createDataRow = (client) => {
             const row = document.createElement('tr');
             row.dataset.role = 'client-data-row';
@@ -632,14 +681,8 @@
             row.appendChild(buildAddressCell(client));
             row.appendChild(buildTextCell(client.managerName || '', 'compact-cell text-truncate'));
 
-            const phoneCell = document.createElement('td');
-            phoneCell.className = 'compact-cell';
-            const badge = document.createElement('span');
-            badge.className = 'badge bg-primary-subtle text-primary-emphasis phone-badge';
-            badge.textContent = client.managerPhone || '';
-            badge.title = client.managerPhone || '';
-            phoneCell.appendChild(badge);
-            row.appendChild(phoneCell);
+            row.appendChild(buildPhoneCell(client.regionalPhone || ''));
+            row.appendChild(buildPhoneCell(client.managerPhone || ''));
 
             return row;
         };
@@ -671,6 +714,13 @@
             }
             const trimmed = value.trim();
             return trimmed.length === 0 ? null : trimmed;
+        };
+
+        const sanitizePhoneNumber = (value) => {
+            if (typeof value !== 'string') {
+                return '';
+            }
+            return value.replace(/[^0-9]/g, '');
         };
 
         const postClient = async (payload) => {
@@ -712,13 +762,27 @@
             }
 
             const formData = extractFormData(row);
+            const sanitizedRegionalPhone = sanitizePhoneNumber(formData.regionalPhone);
+            const sanitizedManagerPhone = sanitizePhoneNumber(formData.managerPhone);
+
+            if (!sanitizedManagerPhone) {
+                const phoneField = row.querySelector('input[name="managerPhone"]');
+                if (phoneField) {
+                    phoneField.classList.add('is-invalid');
+                    phoneField.focus();
+                }
+                alert('전화번호에는 숫자가 포함되어야 합니다.');
+                return;
+            }
+
             const payload = {
                 companyCode: formData.companyCode,
                 branchName: toNullable(formData.branchName),
                 agencyName: toNullable(formData.agencyName),
                 address: toNullable(formData.address),
                 managerName: formData.managerName,
-                managerPhone: formData.managerPhone
+                regionalPhone: toNullable(sanitizedRegionalPhone),
+                managerPhone: sanitizedManagerPhone
             };
 
             setButtonState(actionButton, {disabled: true, text: '저장 중...'});

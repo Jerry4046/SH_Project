@@ -22,6 +22,10 @@ public record CreateClientRequest(
         @Size(max = 50, message = "담당자 성함은 50자 이하여야 합니다.")
         String managerName,
 
+        @Size(max = 20, message = "지역번호는 20자 이하여야 합니다.")
+        @Pattern(regexp = "[0-9\\-]*", message = "지역번호는 숫자와 하이픈만 입력 가능합니다.")
+        String regionalPhone,
+
         @NotBlank(message = "전화번호를 입력하세요.")
         @Size(max = 20, message = "전화번호는 20자 이하여야 합니다.")
         @Pattern(regexp = "[0-9\\-]+", message = "전화번호는 숫자와 하이픈만 입력 가능합니다.")

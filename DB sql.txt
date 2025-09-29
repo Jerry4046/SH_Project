@@ -30,6 +30,7 @@ CREATE TABLE `client_tb` (
 	`agency_name` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
 	`address` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
 	`manager_phone` VARCHAR(20) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
+	`regional_phone` VARCHAR(20) NULL DEFAULT NULL COLLATE 'utf8mb3_general_ci',
 	`created_at` DATETIME NOT NULL DEFAULT current_timestamp(),
 	`updated_at` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
 	PRIMARY KEY (`client_id`) USING BTREE,
@@ -37,7 +38,9 @@ CREATE TABLE `client_tb` (
 )
 COLLATE='utf8mb3_general_ci'
 ENGINE=InnoDB
+AUTO_INCREMENT=4
 ;
+
 CREATE TABLE `company_code_tb` (
 	`company_code` CHAR(4) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`company_name` VARCHAR(50) NOT NULL COLLATE 'utf8mb4_general_ci',

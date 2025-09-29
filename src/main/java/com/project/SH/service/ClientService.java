@@ -30,7 +30,8 @@ public class ClientService {
                 .branchName(trimToNull(request.branchName()))
                 .agencyName(trimToNull(request.agencyName()))
                 .address(trimToNull(request.address()))
-                .managerPhone(request.managerPhone().trim())
+                .regionalPhone(normalizePhoneNumber(request.regionalPhone()))
+                .managerPhone(requirePhoneNumber(request.managerPhone()))
                 .build();
 
         return ClientResponse.from(clientRepository.save(client));
@@ -50,5 +51,21 @@ public class ClientService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizePhoneNumber(String phone) {
+        if (phone == null) {
+            return null;
+        }
+        String digits = phone.replaceAll("\\D", "");
+        return digits.isEmpty() ? null : digits;
+    }
+
+    private String requirePhoneNumber(String phone) {
+        String normalized = normalizePhoneNumber(phone);
+        if (normalized == null) {
+            throw new IllegalArgumentException("전화번호는 숫자를 포함해야 합니다.");
+        }
+        return normalized;
     }
 }

@@ -44,6 +44,9 @@ public class Client {
     @Column(name = "manager_phone", length = 20)
     private String managerPhone;
 
+    @Column(name = "regional_phone", length = 20)
+    private String regionalPhone;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
