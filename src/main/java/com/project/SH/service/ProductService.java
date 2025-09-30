@@ -74,7 +74,7 @@ public class ProductService implements ProductServiceImpl {
                 .old_total_qty(0)
                 .change_qty(totalQty)
                 .new_total_qty(totalQty)
-                .reason("Initial stock")
+                .reason("초기등록")
                 .build();
         stockHistoryRepository.save(history);
         log.info("상품 코드: {}의 초기 재고 이력 저장", product.getFullProductCode());
