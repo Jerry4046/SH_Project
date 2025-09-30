@@ -51,7 +51,7 @@
                     <td>${product.itemCode}</td>
                     <td>${product.spec}</td>
                     <td>${product.pdName}</td>
-                    <td><c:out value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}"/> ea</td>
+                    <td><c:out value="${product.piecesPerBox == null ? 1 : product.piecesPerBox}"/> ea</td>
                     <td><c:out value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}"/> BOX</td>
                     <td><c:out value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}"/> ea</td>
                     <td><c:out value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}"/> ea</td>

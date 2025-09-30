@@ -44,6 +44,7 @@ public class Product {
     private String spec;
 
     @Column(name = "pieces_per_box", nullable = false)
+    @Builder.Default
     private Integer pieces_per_box = 1;
 
     @Column(name = "min_stock_quantity", nullable = false)

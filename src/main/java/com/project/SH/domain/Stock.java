@@ -26,17 +26,14 @@ public class Stock {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "pieces_per_box", nullable = false)
-    private Integer pieces_per_box = 1;
-
     @Column(name = "box_qty", nullable = false)
     private Integer box_qty = 0;
 
     @Column(name = "loose_qty", nullable = false)
     private Integer loose_qty = 0;
 
-    @Column(name = "total_qty", insertable = false, updatable = false)
-    private Integer total_qty;
+    @Column(name = "total_qty", nullable = false)
+    private Integer total_qty = 0;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime created_at;
@@ -58,9 +55,6 @@ public class Stock {
     // 기존 camelCase 접근자를 위한 메서드들
     public Long getProductId() { return product_id; }
     public void setProductId(Long product_id) { this.product_id = product_id; }
-
-    public Integer getPiecesPerBox() { return pieces_per_box; }
-    public void setPiecesPerBox(Integer pieces_per_box) { this.pieces_per_box = pieces_per_box; }
 
     public Integer getBoxQty() { return box_qty; }
     public void setBoxQty(Integer box_qty) { this.box_qty = box_qty; }

@@ -168,14 +168,17 @@ public class ProductController {
         Long seq = userDetails.getUser().getSeq();
         String originalFullCode = productCodeService.buildFullProductCode(originalCode, originalItemCode);
         log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalFullCode, isAdmin, seq);
-        log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}", piecesPerBox, boxQty, looseQty, totalQty, price);
+        log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}",
+                piecesPerBox, boxQty, looseQty, totalQty, price);
         if (piecesPerBox != null && boxQty != null) {
             int loose = looseQty != null ? looseQty : 0;
             totalQty = boxQty * piecesPerBox + loose;
-            log.info("총재고 계산 완료 - boxQty: {}, looseQty: {}, piecesPerBox: {}, 계산된 totalQty: {}", boxQty, looseQty, piecesPerBox, totalQty);
+            log.info("총재고 계산 완료 - boxQty: {}, looseQty: {}, piecesPerBox: {}, 계산된 totalQty: {}",
+                    boxQty, looseQty, piecesPerBox, totalQty);
         }
         try {
-            productService.updateProduct(originalCode, originalItemCode, updatedProduct, piecesPerBox, totalQty, price, seq, reason, isAdmin);
+            productService.updateProduct(originalCode, originalItemCode, updatedProduct,
+                    piecesPerBox, boxQty, looseQty, totalQty, price, seq, reason, isAdmin);
             redirectAttributes.addFlashAttribute("message", "수정 완료");
             log.info("상품 수정 완료, 코드: {}", originalFullCode);
         } catch (Exception e) {

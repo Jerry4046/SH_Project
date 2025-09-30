@@ -198,7 +198,7 @@
             </thead>
             <tbody id="productTable">
             <c:forEach var="product" items="${productList}" varStatus="status">
-                <c:set var="piecesPerBox" value="${empty product.stock.piecesPerBox ? 0 : product.stock.piecesPerBox}" />
+                <c:set var="piecesPerBox" value="${product.piecesPerBox == null ? 1 : product.piecesPerBox}" />
                 <c:set var="boxQty" value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}" />
                 <c:set var="looseQty" value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}" />
                 <c:set var="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" />
@@ -233,7 +233,7 @@
                     </td>
                     <td data-column="piecesPerBox" data-sort-value="${piecesPerBox}">
                         <span class="value">${piecesPerBox} ea</span>
-                        <input type="number" name="piecesPerBox" value="${piecesPerBox}"
+                        <input type="number" name="piecesPerBox" value="${piecesPerBox}" min="1"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
                     </td>
