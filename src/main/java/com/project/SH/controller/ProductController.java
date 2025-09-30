@@ -170,7 +170,7 @@ public class ProductController {
         log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalFullCode, isAdmin, seq);
         log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}",
                 piecesPerBox, boxQty, looseQty, totalQty, price);
-        if (piecesPerBox != null && boxQty != null) {
+        if (piecesPerBox != null && boxQty != null && totalQty == null) {
             int loose = looseQty != null ? looseQty : 0;
             totalQty = boxQty * piecesPerBox + loose;
             log.info("총재고 계산 완료 - boxQty: {}, looseQty: {}, piecesPerBox: {}, 계산된 totalQty: {}",
