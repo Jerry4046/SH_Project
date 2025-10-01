@@ -198,10 +198,10 @@
             </thead>
             <tbody id="productTable">
             <c:forEach var="product" items="${productList}" varStatus="status">
-                <c:set var="piecesPerBox" value="${product.piecesPerBox == null || product.piecesPerBox == 0 ? 1 : product.piecesPerBox}" />
-                <c:set var="looseQty" value="${piecesPerBox > 0 ? totalQty mod piecesPerBox : totalQty}" />
-                <c:set var="boxCount" value="${piecesPerBox > 0 ? (totalQty - looseQty) / piecesPerBox : 0}" />
                 <c:set var="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" />
+                <c:set var="piecesPerBox" value="${product.piecesPerBox == null || product.piecesPerBox == 0 ? 1 : product.piecesPerBox}" />
+                <c:set var="boxCount" value="${piecesPerBox gt 0 ? totalQty / piecesPerBox : 0}" />
+                <c:set var="looseQty" value="${piecesPerBox gt 0 ? totalQty % piecesPerBox : totalQty}" />
                 <c:set var="minQty" value="${empty product.minStockQuantity ? 0 : product.minStockQuantity}" />
                 <c:set var="priceValue" value="${product.getPrice()}" />
                 <c:set var="stockState" value="normal" />
