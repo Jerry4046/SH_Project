@@ -45,6 +45,8 @@ public class ProductService implements ProductServiceImpl {
         product.setProductCode(fullProductCode);
         log.info("상품 등록 서비스 호출, 기본 코드: {}, 생성된 전체 코드: {}", baseProductCode, fullProductCode);
 
+        createImageDirectoryIfNecessary(product.getPdName());
+
         if (piecesPerBox == null || piecesPerBox < 1) piecesPerBox = 1;
         int safeShQty = resolveWarehouseQuantity(shQty, 0);
         int safeHpQty = resolveWarehouseQuantity(hpQty, 0);
@@ -84,6 +86,35 @@ public class ProductService implements ProductServiceImpl {
         // 가격 등록
         priceService.registerPrice(product, price, accountSeq);
         log.info("상품 코드: {}에 가격 등록 완료", product.getFullProductCode());
+    }
+
+    private void createImageDirectoryIfNecessary(String productName) {
+        if (productName == null || productName.isBlank()) {
+            log.warn("상품 이미지 디렉터리 생성 건너뜀 - 상품명이 비어있음");
+            return;
+        }
+
+        String sanitizedName = sanitizeDirectoryName(productName);
+        if (sanitizedName.isEmpty()) {
+            log.warn("상품 이미지 디렉터리 생성 건너뜀 - 상품명에 사용 가능한 문자가 없음: {}", productName);
+            return;
+        }
+
+        try {
+            java.nio.file.Path imagesDir = java.nio.file.Paths.get("src", "main", "resources", "static", "images");
+            java.nio.file.Path productDir = imagesDir.resolve(sanitizedName);
+            java.nio.file.Files.createDirectories(productDir);
+            log.info("상품 이미지 디렉터리 확인 완료: {}", productDir.toAbsolutePath());
+        } catch (Exception e) {
+            log.error("상품 이미지 디렉터리 생성 실패 - 상품명: {}, 에러: {}", productName, e.getMessage());
+            throw new IllegalStateException("Failed to prepare image directory for product: " + productName, e);
+        }
+    }
+
+    private String sanitizeDirectoryName(String name) {
+        String trimmed = name.trim();
+        String replacedWhitespace = trimmed.replaceAll("\\s+", "_");
+        return replacedWhitespace.replaceAll("[^\\p{L}0-9._-]", "");
     }
 
     public List<Product> getAllProducts() {
