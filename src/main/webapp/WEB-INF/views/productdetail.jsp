@@ -201,8 +201,16 @@
                         <input type="number" name="piecesPerBox" id="piecesPerBox" class="form-control" min="1" value="1" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="totalQty">총재고</label>
-                        <input type="number" name="totalQty" id="totalQty" class="form-control" min="0" value="0" required>
+                        <label class="form-label" for="registerShQty">SH 창고 재고</label>
+                        <input type="number" name="shQty" id="registerShQty" class="form-control" min="0" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="registerHpQty">HP 창고 재고</label>
+                        <input type="number" name="hpQty" id="registerHpQty" class="form-control" min="0" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="registerTotalQty">총재고</label>
+                        <input type="number" id="registerTotalQty" class="form-control" min="0" value="0" readonly>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="price">단가</label>
@@ -241,7 +249,30 @@
                     <button type="button" class="btn btn-outline-danger" onclick="showPendingAlert('삭제');">삭제</button>
                 </div>
             </div>
-            <form action="${pageContext.request.contextPath}/product/update" method="post" id="detailForm">
+            <c:set var="piecesPerBoxSafe" value="${product.piecesPerBox != null and product.piecesPerBox > 0 ? product.piecesPerBox : 1}" />
+            <c:set var="warehouseStock" value="${product.stock}" />
+            <c:set var="shQty" value="${empty warehouseStock ? 0 : warehouseStock.shQty}" />
+            <c:set var="hpQty" value="${empty warehouseStock ? 0 : warehouseStock.hpQty}" />
+            <c:set var="totalQty" value="${empty warehouseStock ? 0 : warehouseStock.totalQty}" />
+            <c:set var="shRemainder" value="${shQty mod piecesPerBoxSafe}" />
+            <c:set var="hpRemainder" value="${hpQty mod piecesPerBoxSafe}" />
+            <c:set var="totalRemainder" value="${totalQty mod piecesPerBoxSafe}" />
+            <c:set var="shBoxCount" value="${(shQty - shRemainder) / piecesPerBoxSafe}" />
+            <c:set var="hpBoxCount" value="${(hpQty - hpRemainder) / piecesPerBoxSafe}" />
+            <c:set var="totalBoxCount" value="${(totalQty - totalRemainder) / piecesPerBoxSafe}" />
+
+            <fmt:formatNumber value="${piecesPerBoxSafe}" type="number" maxFractionDigits="0" var="piecesPerBoxDisplay" />
+            <fmt:formatNumber value="${shQty}" type="number" maxFractionDigits="0" var="shQtyDisplay" />
+            <fmt:formatNumber value="${hpQty}" type="number" maxFractionDigits="0" var="hpQtyDisplay" />
+            <fmt:formatNumber value="${totalQty}" type="number" maxFractionDigits="0" var="totalQtyDisplay" />
+            <fmt:formatNumber value="${shBoxCount}" type="number" maxFractionDigits="0" var="shBoxDisplay" />
+            <fmt:formatNumber value="${hpBoxCount}" type="number" maxFractionDigits="0" var="hpBoxDisplay" />
+            <fmt:formatNumber value="${totalBoxCount}" type="number" maxFractionDigits="0" var="totalBoxDisplay" />
+            <fmt:formatNumber value="${shRemainder}" type="number" maxFractionDigits="0" var="shRemainderDisplay" />
+            <fmt:formatNumber value="${hpRemainder}" type="number" maxFractionDigits="0" var="hpRemainderDisplay" />
+            <fmt:formatNumber value="${totalRemainder}" type="number" maxFractionDigits="0" var="totalRemainderDisplay" />
+
+            <form action="${pageContext.request.contextPath}/product/update" method="post" id="detailForm" data-pieces-per-box="${piecesPerBoxSafe}">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle text-center">
                         <thead class="table-light">
@@ -253,8 +284,10 @@
                             <th>규격</th>
                             <th>제품이름</th>
                             <th>박스당 수량</th>
-                            <th>박스재고</th>
+                            <th>BOX</th>
                             <th>낱개</th>
+                            <th>SH 창고</th>
+                            <th>HP 창고</th>
                             <th>총재고</th>
                             <th>최소재고</th>
                             <th>사용상태</th>
@@ -291,24 +324,32 @@
                                        class="form-control form-control-sm edit-field" style="display:none;" disabled>
                             </td>
                             <td>
-                                <span class="value"><c:out value="${product.piecesPerBox}" /></span>
+                                <span class="value">${piecesPerBoxDisplay}</span>
                                 <input type="number" name="piecesPerBox" min="1" value="<c:out value='${product.piecesPerBox}'/>"
                                        class="form-control form-control-sm edit-field" style="display:none;" disabled>
                             </td>
                             <td>
-                                <span class="value"><c:out value="${empty product.stock ? 0 : product.stock.boxQty}" /></span>
-                                <input type="number" name="boxQty" min="0" value="<c:out value='${empty product.stock ? 0 : product.stock.boxQty}'/>"
+                                <span class="value" data-total-box-display="true">${totalBoxDisplay}</span>
+                            </td>
+                            <td>
+                                <span class="value" data-total-piece-display="true">${totalRemainderDisplay}</span>
+                            </td>
+                            <td>
+                                <span class="value warehouse-tooltip" data-warehouse-display="sh" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                      title="박스: ${shBoxDisplay} 박스&lt;br&gt;낱개: ${shRemainderDisplay} 개">${shQtyDisplay}</span>
+                                <input type="number" name="shQty" min="0" value="<c:out value='${empty product.stock ? 0 : product.stock.shQty}'/>"
                                        class="form-control form-control-sm edit-field" style="display:none;" disabled>
                             </td>
                             <td>
-                                <span class="value"><c:out value="${empty product.stock ? 0 : product.stock.looseQty}" /></span>
-                                <input type="number" name="looseQty" min="0" value="<c:out value='${empty product.stock ? 0 : product.stock.looseQty}'/>"
+                                <span class="value warehouse-tooltip" data-warehouse-display="hp" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                      title="박스: ${hpBoxDisplay} 박스&lt;br&gt;낱개: ${hpRemainderDisplay} 개">${hpQtyDisplay}</span>
+                                <input type="number" name="hpQty" min="0" value="<c:out value='${empty product.stock ? 0 : product.stock.hpQty}'/>"
                                        class="form-control form-control-sm edit-field" style="display:none;" disabled>
                             </td>
                             <td>
-                                <span class="value"><c:out value="${empty product.stock ? 0 : product.stock.totalQty}" /></span>
+                                <span class="value" data-total-display="true">${totalQtyDisplay}</span>
                                 <input type="number" name="totalQty" min="0" value="<c:out value='${empty product.stock ? 0 : product.stock.totalQty}'/>"
-                                       class="form-control form-control-sm edit-field" style="display:none;" disabled>
+                                       class="form-control form-control-sm edit-field" style="display:none;" disabled readonly>
                             </td>
                             <td>
                                 <span class="value"><c:out value="${product.minStockQuantity}" /></span>
@@ -349,6 +390,7 @@
     </c:choose>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const CONTEXT_PATH = '<c:out value="${pageContext.request.contextPath}" />';
 
@@ -365,6 +407,9 @@
         appState.productFormState = setupProductForm(appState.codeHierarchy);
 
         setupPartialRegistration(appState);
+        setupWarehouseTotalPreview();
+        setupDetailWarehouseEditor();
+        setupWarehouseTooltips();
     });
 
     function parseCodeHierarchy() {
@@ -1346,6 +1391,155 @@
             }
         }
     }
+    function setupWarehouseTotalPreview() {
+        const shInput = document.getElementById('registerShQty');
+        const hpInput = document.getElementById('registerHpQty');
+        const totalInput = document.getElementById('registerTotalQty');
+
+        if (!shInput || !hpInput || !totalInput) {
+            return;
+        }
+
+        const recalculate = () => {
+            const sh = Number.parseInt(shInput.value, 10) || 0;
+            const hp = Number.parseInt(hpInput.value, 10) || 0;
+            totalInput.value = Math.max(sh + hp, 0);
+        };
+
+        ['input', 'change'].forEach((eventName) => {
+            shInput.addEventListener(eventName, recalculate);
+            hpInput.addEventListener(eventName, recalculate);
+        });
+
+        recalculate();
+    }
+
+    function setupWarehouseTooltips() {
+        if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+            return;
+        }
+
+        const triggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        triggers.forEach((trigger) => {
+            if (typeof bootstrap.Tooltip.getOrCreateInstance === 'function') {
+                bootstrap.Tooltip.getOrCreateInstance(trigger);
+            } else {
+                const existing = bootstrap.Tooltip.getInstance(trigger);
+                if (existing) {
+                    existing.dispose();
+                }
+                new bootstrap.Tooltip(trigger);
+            }
+        });
+    }
+
+    function setupDetailWarehouseEditor() {
+        const form = document.getElementById('detailForm');
+        if (!form) {
+            return;
+        }
+
+        const shInput = form.querySelector('input[name="shQty"]');
+        const hpInput = form.querySelector('input[name="hpQty"]');
+        const totalInput = form.querySelector('input[name="totalQty"]');
+        const totalDisplay = form.querySelector('[data-total-display="true"]');
+        const totalBoxDisplay = form.querySelector('[data-total-box-display="true"]');
+        const totalPieceDisplay = form.querySelector('[data-total-piece-display="true"]');
+        const warehouseDisplays = Array.from(form.querySelectorAll('[data-warehouse-display]'))
+            .reduce((accumulator, element) => {
+                const key = element.dataset.warehouseDisplay;
+                if (key) {
+                    accumulator[key] = element;
+                }
+                return accumulator;
+            }, {});
+        const safePiecesPerBox = Math.max(Number.parseInt(form.dataset.piecesPerBox, 10) || 1, 1);
+
+        if (!shInput || !hpInput || !totalInput) {
+            return;
+        }
+
+        const numberFormatter = typeof Intl !== 'undefined'
+            ? new Intl.NumberFormat('ko-KR')
+            : null;
+
+        const formatNumber = (value) => (numberFormatter ? numberFormatter.format(value) : String(value));
+
+        const updateTooltipContent = (element, tooltipHtml) => {
+            if (!element) {
+                return;
+            }
+
+            element.setAttribute('title', tooltipHtml);
+            element.setAttribute('data-bs-original-title', tooltipHtml);
+
+            if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+                return;
+            }
+
+            if (typeof bootstrap.Tooltip.getOrCreateInstance === 'function') {
+                const instance = bootstrap.Tooltip.getOrCreateInstance(element);
+                if (instance && typeof instance.setContent === 'function') {
+                    instance.setContent({ '.tooltip-inner': tooltipHtml });
+                }
+            } else {
+                const existing = bootstrap.Tooltip.getInstance(element);
+                if (existing) {
+                    existing.dispose();
+                }
+                new bootstrap.Tooltip(element);
+            }
+        };
+
+        const updateWarehouseDisplay = (element, quantity) => {
+            if (!element) {
+                return;
+            }
+
+            const safeQuantity = Math.max(Number.parseInt(quantity, 10) || 0, 0);
+            const boxCount = Math.floor(safeQuantity / safePiecesPerBox);
+            const remainder = Math.max(safeQuantity - (boxCount * safePiecesPerBox), 0);
+
+            element.textContent = formatNumber(safeQuantity);
+            const tooltipHtml = '박스: ' + formatNumber(boxCount) + ' 박스<br>낱개: ' + formatNumber(remainder) + ' 개';
+            updateTooltipContent(element, tooltipHtml);
+        };
+
+        const updateTotalBreakdown = (total) => {
+            const safeTotal = Math.max(total, 0);
+            const totalBoxCount = Math.floor(safeTotal / safePiecesPerBox);
+            const totalRemainder = Math.max(safeTotal - (totalBoxCount * safePiecesPerBox), 0);
+
+            if (totalBoxDisplay) {
+                totalBoxDisplay.textContent = formatNumber(totalBoxCount);
+            }
+
+            if (totalPieceDisplay) {
+                totalPieceDisplay.textContent = formatNumber(totalRemainder);
+            }
+        };
+
+        const recalculate = () => {
+            const sh = Number.parseInt(shInput.value, 10) || 0;
+            const hp = Number.parseInt(hpInput.value, 10) || 0;
+            const total = Math.max(sh + hp, 0);
+            totalInput.value = total;
+            if (totalDisplay) {
+                totalDisplay.textContent = formatNumber(total);
+            }
+
+            updateWarehouseDisplay(warehouseDisplays.sh, sh);
+            updateWarehouseDisplay(warehouseDisplays.hp, hp);
+            updateTotalBreakdown(total);
+        };
+
+        ['input', 'change'].forEach((eventName) => {
+            shInput.addEventListener(eventName, recalculate);
+            hpInput.addEventListener(eventName, recalculate);
+        });
+
+        recalculate();
+    }
 
     function toggleManualInput(wrapper, shouldShow) {
         if (!wrapper) {
@@ -1391,3 +1585,4 @@
 
 </body>
 </html>
+

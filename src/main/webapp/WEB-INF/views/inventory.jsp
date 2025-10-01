@@ -181,13 +181,13 @@
                     </button>
                 </th>
                 <th class="sortable">
-                    <button type="button" class="sort-button" data-column-index="6" data-type="number">
+                    <button type="button" class="sort-button" data-column-index="7" data-type="number">
                         <span class="sort-label">단가</span>
                         <span class="sort-indicator" aria-hidden="true"></span>
                     </button>
                 </th>
                 <th class="sortable">
-                    <button type="button" class="sort-button" data-column-index="7" data-type="number">
+                    <button type="button" class="sort-button" data-column-index="8" data-type="number">
                         <span class="sort-label">최소재고</span>
                         <span class="sort-indicator" aria-hidden="true"></span>
                     </button>
@@ -198,9 +198,9 @@
             </thead>
             <tbody id="productTable">
             <c:forEach var="product" items="${productList}" varStatus="status">
-                <c:set var="piecesPerBox" value="${product.piecesPerBox == null ? 1 : product.piecesPerBox}" />
-                <c:set var="boxQty" value="${empty product.stock.boxQty ? 0 : product.stock.boxQty}" />
-                <c:set var="looseQty" value="${empty product.stock.looseQty ? 0 : product.stock.looseQty}" />
+                <c:set var="piecesPerBox" value="${product.piecesPerBox == null || product.piecesPerBox == 0 ? 1 : product.piecesPerBox}" />
+                <c:set var="looseQty" value="${piecesPerBox > 0 ? totalQty mod piecesPerBox : totalQty}" />
+                <c:set var="boxCount" value="${piecesPerBox > 0 ? (totalQty - looseQty) / piecesPerBox : 0}" />
                 <c:set var="totalQty" value="${empty product.stock.totalQty ? 0 : product.stock.totalQty}" />
                 <c:set var="minQty" value="${empty product.minStockQuantity ? 0 : product.minStockQuantity}" />
                 <c:set var="priceValue" value="${product.getPrice()}" />
@@ -237,17 +237,11 @@
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
                     </td>
-                    <td data-column="boxQty" data-sort-value="${boxQty}">
-                        <span class="value">${boxQty} BOX</span>
-                        <input type="number" name="boxQty" value="${boxQty}"
-                               class="form-control form-control-sm edit-field" style="display:none" disabled
-                               form="${formId}">
+                    <td data-column="boxCount" data-sort-value="${boxCount}">
+                        <span class="value"><fmt:formatNumber value="${boxCount}" pattern="#,##0" /></span>
                     </td>
-                    <td data-column="looseQty" data-sort-value="${looseQty}">
-                        <span class="value">${looseQty} ea</span>
-                        <input type="number" name="looseQty" value="${looseQty}"
-                               class="form-control form-control-sm edit-field" style="display:none" disabled
-                               form="${formId}">
+                    <td data-column="looseCount" data-sort-value="${looseQty}">
+                        <span class="value"><fmt:formatNumber value="${looseQty}" pattern="#,##0" /></span>
                     </td>
                     <td data-column="totalQty" data-sort-value="${totalQty}" class="stock-cell ${stockClass}">
                         <span class="value"><fmt:formatNumber value="${totalQty}" pattern="#,##0" /> ea</span>
