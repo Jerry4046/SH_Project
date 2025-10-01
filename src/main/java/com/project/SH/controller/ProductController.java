@@ -54,7 +54,8 @@ public class ProductController {
                                   @RequestParam String typeCode,
                                   @RequestParam String categoryCode,
                                   @RequestParam Integer piecesPerBox,
-                                  @RequestParam Integer totalQty,
+                                  @RequestParam Integer shQty,
+                                  @RequestParam Integer hpQty,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
         log.info("상품 등록 시작(ProductController), 상품명: {}, 단가: {}, 기본코드: {} ", product.getPdName(), price, product.getProductCode());
@@ -75,7 +76,7 @@ public class ProductController {
 
 
             // 3) 저장
-            productService.registerProduct(product, price, piecesPerBox, totalQty, createdBySeq);
+            productService.registerProduct(product, price, piecesPerBox, shQty, hpQty, createdBySeq);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
             log.info("상품 등록 성공, 상품 코드: {}", product.getFullProductCode());
@@ -152,9 +153,8 @@ public class ProductController {
                                 @RequestParam("originalItemCode") String originalItemCode,
                                 @ModelAttribute Product updatedProduct,
                                 @RequestParam(required = false) Integer piecesPerBox,
-                                @RequestParam(required = false) Integer boxQty,
-                                @RequestParam(required = false) Integer looseQty,
-                                @RequestParam(required = false) Integer totalQty,
+                                @RequestParam(required = false) Integer shQty,
+                                @RequestParam(required = false) Integer hpQty,
                                 @RequestParam(required = false) Double price,
                                 @RequestParam String reason,
                                 @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -168,17 +168,11 @@ public class ProductController {
         Long seq = userDetails.getUser().getSeq();
         String originalFullCode = productCodeService.buildFullProductCode(originalCode, originalItemCode);
         log.info("상품 수정 요청, 원본 코드: {}, 관리자 여부: {}, 요청자: {}", originalFullCode, isAdmin, seq);
-        log.debug("수정 파라미터 - piecesPerBox: {}, boxQty: {}, looseQty: {}, totalQty: {}, price: {}",
-                piecesPerBox, boxQty, looseQty, totalQty, price);
-        if (piecesPerBox != null && boxQty != null && totalQty == null) {
-            int loose = looseQty != null ? looseQty : 0;
-            totalQty = boxQty * piecesPerBox + loose;
-            log.info("총재고 계산 완료 - boxQty: {}, looseQty: {}, piecesPerBox: {}, 계산된 totalQty: {}",
-                    boxQty, looseQty, piecesPerBox, totalQty);
-        }
+        log.debug("수정 파라미터 - piecesPerBox: {}, shQty: {}, hpQty: {}, price: {}",
+                piecesPerBox, shQty, hpQty, price);
         try {
             productService.updateProduct(originalCode, originalItemCode, updatedProduct,
-                    piecesPerBox, boxQty, looseQty, totalQty, price, seq, reason, isAdmin);
+                    piecesPerBox, shQty, hpQty, price, seq, reason, isAdmin);
             redirectAttributes.addFlashAttribute("message", "수정 완료");
             log.info("상품 수정 완료, 코드: {}", originalFullCode);
         } catch (Exception e) {

@@ -5,12 +5,12 @@ import java.util.List;
 
 public interface ProductServiceImpl {
 
-    void registerProduct(Product product, Double price, Integer piecesPerBox, Integer totalQty, Long accountSeq);
+    void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty, Long accountSeq);
     List<Product> getAllProducts();
     Product getProductByCode(String productCode, String itemCode);
 
     void updateProduct(String originalProductCode, String originalItemCode, Product updatedProduct,
-                       Integer piecesPerBox, Integer boxQty, Integer looseQty, Integer totalQty, Double price,
+                       Integer piecesPerBox, Integer shQty, Integer hpQty, Double price,
                        Long accountSeq, String reason, boolean isAdmin);
 
 }

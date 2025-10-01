@@ -34,6 +34,18 @@ public class StockHistory {
     @Column(name = "change_qty", nullable = false)
     private Integer change_qty;
 
+    @Column(name = "old_sh_qty", nullable = false)
+    private Integer old_sh_qty;
+
+    @Column(name = "new_sh_qty", nullable = false)
+    private Integer new_sh_qty;
+
+    @Column(name = "old_hp_qty", nullable = false)
+    private Integer old_hp_qty;
+
+    @Column(name = "new_hp_qty", nullable = false)
+    private Integer new_hp_qty;
+
     @Column(name = "old_total_qty", nullable = false)
     private Integer old_total_qty;
 
@@ -60,6 +72,18 @@ public class StockHistory {
 
     public Integer getChangeQty() { return change_qty; }
     public void setChangeQty(Integer change_qty) { this.change_qty = change_qty; }
+
+    public Integer getOldShQty() { return old_sh_qty; }
+    public void setOldShQty(Integer old_sh_qty) { this.old_sh_qty = old_sh_qty; }
+
+    public Integer getNewShQty() { return new_sh_qty; }
+    public void setNewShQty(Integer new_sh_qty) { this.new_sh_qty = new_sh_qty; }
+
+    public Integer getOldHpQty() { return old_hp_qty; }
+    public void setOldHpQty(Integer old_hp_qty) { this.old_hp_qty = old_hp_qty; }
+
+    public Integer getNewHpQty() { return new_hp_qty; }
+    public void setNewHpQty(Integer new_hp_qty) { this.new_hp_qty = new_hp_qty; }
 
     public Integer getOldTotalQty() { return old_total_qty; }
     public void setOldTotalQty(Integer old_total_qty) { this.old_total_qty = old_total_qty; }

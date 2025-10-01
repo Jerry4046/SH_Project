@@ -29,7 +29,7 @@ public class ProductService implements ProductServiceImpl {
 
 
     @Transactional
-    public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer totalQty, Long accountSeq) {
+    public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty, Long accountSeq) {
         final String baseProductCode = requireProductCode(product.getProductCode());
         final String nextSequence = productCodeService.getNextItemCodeForBase(baseProductCode);
         final String fullProductCode = productCodeService.buildFullProductCode(baseProductCode, nextSequence);
@@ -46,7 +46,8 @@ public class ProductService implements ProductServiceImpl {
         log.info("상품 등록 서비스 호출, 기본 코드: {}, 생성된 전체 코드: {}", baseProductCode, fullProductCode);
 
         if (piecesPerBox == null || piecesPerBox < 1) piecesPerBox = 1;
-        if (totalQty == null) totalQty = 0;
+        int safeShQty = resolveWarehouseQuantity(shQty, 0);
+        int safeHpQty = resolveWarehouseQuantity(hpQty, 0);
         if (product.getMinStockQuantity() == null) product.setMinStockQuantity(0);
 
         // 상품 정보 저장
@@ -55,22 +56,23 @@ public class ProductService implements ProductServiceImpl {
         log.info("상품 기본 정보 저장 완료, 상품 코드: {}", product.getFullProductCode());
 
         // 재고 정보 저장
-        int boxQty = piecesPerBox > 0 ? totalQty / piecesPerBox : totalQty;
-        int looseQty = piecesPerBox > 0 ? totalQty % piecesPerBox : 0;
         Stock stock = Stock.builder()
                 .product(product)
-                .box_qty(boxQty)
-                .loose_qty(looseQty)
-                .total_qty(totalQty)
                 .build();
+        stock.updateWarehouseQuantities(safeShQty, safeHpQty);
         stockRepository.save(stock);
         log.info("상품 코드: {}에 재고 등록 완료", product.getFullProductCode());
 
         // 재고 변동 기록 저장
+        int totalQty = stock.getTotalQty();
         StockHistory history = StockHistory.builder()
                 .product_id(product)
                 .account_seq(accountSeq)
                 .action("IN")
+                .old_sh_qty(0)
+                .new_sh_qty(stock.getShQty())
+                .old_hp_qty(0)
+                .new_hp_qty(stock.getHpQty())
                 .old_total_qty(0)
                 .change_qty(totalQty)
                 .new_total_qty(totalQty)
@@ -119,7 +121,7 @@ public class ProductService implements ProductServiceImpl {
 
     @Transactional
     public void updateProduct(String originalProductCode, String originalItemCode, Product updatedProduct,
-                              Integer piecesPerBox, Integer boxQty, Integer looseQty, Integer totalQty, Double price,
+                              Integer piecesPerBox, Integer shQty, Integer hpQty, Double price,
                               Long accountSeq, String reason, boolean isAdmin) {
         final String normalizedProductCode = requireProductCode(originalProductCode);
         final boolean productCodeIncludesSequence = hasSequenceSuffix(normalizedProductCode);
@@ -211,7 +213,6 @@ public class ProductService implements ProductServiceImpl {
         if (stock != null) {
             int currentPiecesPerBox = product.getPiecesPerBox() == null ? 1 : product.getPiecesPerBox();
             Integer sanitizedPieces = sanitizePiecesPerBox(piecesPerBox);
-            int effectivePieces = sanitizedPieces != null ? sanitizedPieces : currentPiecesPerBox;
 
             if (sanitizedPieces != null && !sanitizedPieces.equals(currentPiecesPerBox)) {
                 log.info("박스당 수량 변경: {} -> {}", currentPiecesPerBox, sanitizedPieces);
@@ -221,54 +222,50 @@ public class ProductService implements ProductServiceImpl {
                 currentPiecesPerBox = sanitizedPieces;
             }
 
-            if (totalQty == null) {
-                Integer resolvedBox = boxQty != null ? boxQty : stock.getBoxQty();
-                Integer resolvedLoose = looseQty != null ? looseQty : stock.getLooseQty();
-                if (resolvedBox != null || resolvedLoose != null) {
-                    int safeBox = resolvedBox != null ? resolvedBox : 0;
-                    int safeLoose = resolvedLoose != null ? resolvedLoose : 0;
-                    totalQty = safeBox * effectivePieces + safeLoose;
-                }
+            int oldShQty = stock.getShQty() == null ? 0 : stock.getShQty();
+            int oldHpQty = stock.getHpQty() == null ? 0 : stock.getHpQty();
+            int oldTotal = stock.getTotalQty() != null ? stock.getTotalQty() : oldShQty + oldHpQty;
+
+            int resolvedShQty = resolveWarehouseQuantity(shQty, oldShQty);
+            int resolvedHpQty = resolveWarehouseQuantity(hpQty, oldHpQty);
+
+            boolean shChanged = resolvedShQty != oldShQty;
+            boolean hpChanged = resolvedHpQty != oldHpQty;
+
+            stock.updateWarehouseQuantities(resolvedShQty, resolvedHpQty);
+            int newTotal = stock.getTotalQty();
+            boolean totalChanged = newTotal != oldTotal;
+
+            if (shChanged) {
+                saveHistory(product, "sh_qty", String.valueOf(oldShQty), String.valueOf(resolvedShQty), reason, accountSeq);
+            }
+            if (hpChanged) {
+                saveHistory(product, "hp_qty", String.valueOf(oldHpQty), String.valueOf(resolvedHpQty), reason, accountSeq);
             }
 
-            int oldTotal = stock.getTotalQty() != null
-                    ? stock.getTotalQty()
-                    : (stock.getBoxQty() == null ? 0 : stock.getBoxQty()) * currentPiecesPerBox
-                    + (stock.getLooseQty() == null ? 0 : stock.getLooseQty());
-
-            if (totalQty != null) {
-                if (!totalQty.equals(oldTotal)) {
-                    log.info("총재고 변경: {} -> {}", oldTotal, totalQty);
-                    saveHistory(product, "total_qty", String.valueOf(oldTotal),
-                            String.valueOf(totalQty), reason, accountSeq);
-                    stock.setTotalQty(totalQty);
-
-                    StockHistory history = StockHistory.builder()
-                            .product_id(product)
-                            .account_seq(accountSeq)
-                            .action("ADJUST")
-                            .old_total_qty(oldTotal)
-                            .change_qty(totalQty - oldTotal)
-                            .new_total_qty(totalQty)
-                            .reason(reason)
-                            .build();
-                    stockHistoryRepository.save(history);
-                    log.info("재고 이력 저장: productId={}, oldTotal={}, newTotal={}", product.getProductId(), oldTotal, totalQty);
-                } else if (stock.getTotalQty() == null) {
-                    stock.setTotalQty(totalQty);
+            if (shChanged || hpChanged || totalChanged || stock.getTotalQty() == null) {
+                if (totalChanged) {
+                    log.info("총재고 변경: {} -> {}", oldTotal, newTotal);
+                    saveHistory(product, "total_qty", String.valueOf(oldTotal), String.valueOf(newTotal), reason, accountSeq);
                 }
 
-                int newBoxQty = effectivePieces > 0 ? totalQty / effectivePieces : totalQty;
-                int newLooseQty = effectivePieces > 0 ? totalQty % effectivePieces : 0;
-                stock.setBoxQty(newBoxQty);
-                stock.setLooseQty(newLooseQty);
-            } else if (sanitizedPieces != null) {
-                int baseTotal = oldTotal;
-                int recalculatedBox = effectivePieces > 0 ? baseTotal / effectivePieces : baseTotal;
-                int recalculatedLoose = effectivePieces > 0 ? baseTotal % effectivePieces : 0;
-                stock.setBoxQty(recalculatedBox);
-                stock.setLooseQty(recalculatedLoose);
-                stock.setTotalQty(baseTotal);
+                StockHistory history = StockHistory.builder()
+                        .product_id(product)
+                        .account_seq(accountSeq)
+                        .action("ADJUST")
+                        .old_sh_qty(oldShQty)
+                        .new_sh_qty(stock.getShQty())
+                        .old_hp_qty(oldHpQty)
+                        .new_hp_qty(stock.getHpQty())
+                        .old_total_qty(oldTotal)
+                        .change_qty(newTotal - oldTotal)
+                        .new_total_qty(newTotal)
+                        .reason(reason)
+                        .build();
+                stockHistoryRepository.save(history);
+                log.info("재고 이력 저장: productId={}, oldTotal={}, newTotal={}", product.getProductId(), oldTotal, newTotal);
+            } else {
+                stock.recalculateTotalQty();
             }
         }
 
@@ -360,5 +357,12 @@ public class ProductService implements ProductServiceImpl {
             return 1;
         }
         return piecesPerBox;
+    }
+
+    private int resolveWarehouseQuantity(Integer requested, int fallback) {
+        if (requested == null) {
+            return fallback;
+        }
+        return requested < 0 ? 0 : requested;
     }
 }
