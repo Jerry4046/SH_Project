@@ -55,6 +55,28 @@
             font-weight: 600;
         }
 
+        .product-name {
+            cursor: pointer;
+        }
+
+        #productImagePreview {
+            position: fixed;
+            pointer-events: none;
+            display: none;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            background-color: #ffffff;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            z-index: 1080;
+        }
+
+        #productImagePreview img {
+            max-width: 200px;
+            max-height: 200px;
+            display: block;
+        }
+
         .detail-cell {
             display: flex;
             align-items: center;
@@ -99,7 +121,7 @@
         }
     </style>
 </head>
-<body>
+<body data-context-path="${pageContext.request.contextPath}">
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
@@ -206,6 +228,7 @@
                 <c:set var="priceValue" value="${product.getPrice()}" />
                 <c:set var="stockState" value="normal" />
                 <c:set var="stockClass" value="" />
+                <c:set var="imageDirName" value="${product.imageDirectoryName}" />
                 <c:if test="${minQty > 0}">
                     <c:choose>
                         <c:when test="${totalQty <= minQty}">
@@ -226,7 +249,7 @@
                         <input type="checkbox" class="row-check" onchange="toggleRow(this)">
                     </td>
                     <td data-column="pdName" data-sort-value="${fn:escapeXml(fn:toLowerCase(product.pdName))}">
-                        <span class="value">${product.pdName}</span>
+                        <span class="value product-name" data-image-name="${imageDirName}">${product.pdName}</span>
                         <input type="text" name="pdName" value="${product.pdName}"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
@@ -302,6 +325,7 @@
             setTimeout(() => alert.classList.add('fade-out'), 1000);
         });
 
+        const contextPath = document.body?.dataset?.contextPath || '';
         const ROWS_PER_PAGE = 20;
         const searchInput = document.getElementById('searchInput');
         const usageFilter = document.getElementById('usageFilter');
@@ -319,6 +343,9 @@
             tr,
             originalIndex: index
         }));
+
+        const imagePreviewElement = createImagePreview();
+        setupProductImageHover(tableBody, contextPath, imagePreviewElement);
 
         const state = {
             currentPage: 1,
@@ -383,6 +410,81 @@
                 return a.originalIndex - b.originalIndex;
             }
             return direction === 'asc' ? result : -result;
+        }
+
+        function createImagePreview() {
+            let preview = document.getElementById('productImagePreview');
+            if (!preview) {
+                preview = document.createElement('div');
+                preview.id = 'productImagePreview';
+                const previewImage = document.createElement('img');
+                previewImage.alt = '제품 이미지 미리보기';
+                previewImage.decoding = 'async';
+                preview.appendChild(previewImage);
+                document.body.appendChild(preview);
+            }
+            return preview;
+        }
+
+        function setupProductImageHover(tableBodyElement, basePath, previewElement) {
+            if (!tableBodyElement || !previewElement) {
+                return;
+            }
+
+            const previewImage = previewElement.querySelector('img');
+            let activeImageName = '';
+
+            const hidePreview = () => {
+                previewElement.style.display = 'none';
+                if (previewImage) {
+                    previewImage.removeAttribute('src');
+                }
+                activeImageName = '';
+            };
+
+            const positionPreview = (event) => {
+                const offset = 16;
+                previewElement.style.left = (event.clientX + offset) + 'px';
+                previewElement.style.top = (event.clientY + offset) + 'px';
+            };
+
+            tableBodyElement.addEventListener('mouseover', (event) => {
+                const target = event.target.closest('.product-name');
+                if (!target || !previewImage) {
+                    return;
+                }
+
+                const imageName = target.dataset.imageName;
+                if (!imageName) {
+                    hidePreview();
+                    return;
+                }
+
+                if (imageName === activeImageName && previewElement.style.display === 'block') {
+                    positionPreview(event);
+                    return;
+                }
+
+                const imagePath = basePath + '/images/' + imageName + '/' + imageName + '.webp';
+                activeImageName = imageName;
+
+                previewImage.onload = () => {
+                    previewElement.style.display = 'block';
+                    positionPreview(event);
+                };
+                previewImage.onerror = () => {
+                    hidePreview();
+                };
+                previewImage.src = imagePath;
+            });
+
+            tableBodyElement.addEventListener('mousemove', (event) => {
+                if (previewElement.style.display === 'block') {
+                    positionPreview(event);
+                }
+            });
+
+            tableBodyElement.addEventListener('mouseleave', hidePreview);
         }
 
         function passesFilters(tr) {

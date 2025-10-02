@@ -159,7 +159,8 @@
             </div>
 
             <div id="productForm">
-                <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3">
+                <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3"
+                      enctype="multipart/form-data" id="productRegisterForm">
                     <div class="mb-3">
                         <label class="form-label" for="productCompanyCode">회사</label>
                         <select name="companyCode" id="productCompanyCode" class="form-select" required
@@ -219,6 +220,12 @@
                     <div class="mb-3">
                         <label class="form-label" for="minStockQuantity">최소재고</label>
                         <input type="number" name="minStockQuantity" id="minStockQuantity" class="form-control" min="0" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-secondary" id="productImageTrigger">이미지 등록</button>
+                        <input type="file" name="productImage" id="productImage" class="form-control mt-2 d-none"
+                               accept="image/*">
+                        <div class="form-text text-muted" id="productImageInfo">선택된 이미지가 없습니다.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">사용여부</label>
@@ -407,6 +414,7 @@
         appState.productFormState = setupProductForm(appState.codeHierarchy);
 
         setupPartialRegistration(appState);
+        setupProductImageUpload();
         setupWarehouseTotalPreview();
         setupDetailWarehouseEditor();
         setupWarehouseTooltips();
@@ -1412,6 +1420,44 @@
         });
 
         recalculate();
+    }
+
+    function setupProductImageUpload() {
+        const form = document.getElementById('productRegisterForm');
+        if (!form) {
+            return;
+        }
+
+        const triggerButton = document.getElementById('productImageTrigger');
+        const fileInput = document.getElementById('productImage');
+        const infoText = document.getElementById('productImageInfo');
+
+        if (!triggerButton || !fileInput) {
+            return;
+        }
+
+        triggerButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            fileInput.click();
+        });
+
+        const updateInfoText = () => {
+            if (!infoText) {
+                return;
+            }
+
+            const selectedFile = fileInput.files && fileInput.files[0];
+            if (selectedFile) {
+                infoText.textContent = selectedFile.name + ' (업로드 시 제품명으로 저장됩니다.)';
+                infoText.classList.remove('text-muted');
+            } else {
+                infoText.textContent = '선택된 이미지가 없습니다.';
+                infoText.classList.add('text-muted');
+            }
+        };
+
+        fileInput.addEventListener('change', updateInfoText);
+        updateInfoText();
     }
 
     function setupWarehouseTooltips() {

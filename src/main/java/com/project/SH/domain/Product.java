@@ -108,6 +108,16 @@ public class Product {
         return updated_at != null ? updated_at.format(FORMATTER) : "";
     }
 
+    @Transient
+    public String getImageDirectoryName() {
+        if (pd_name == null) {
+            return "";
+        }
+        String trimmed = pd_name.trim();
+        String replacedWhitespace = trimmed.replaceAll("\\s+", "_");
+        return replacedWhitespace.replaceAll("[^\\p{L}0-9._-]", "");
+    }
+
     // 기존 camelCase 접근자를 위한 메서드들
     public Long getProductId() { return product_id; }
     public void setProductId(Long product_id) { this.product_id = product_id; }

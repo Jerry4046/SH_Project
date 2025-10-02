@@ -64,7 +64,15 @@ dependencies {
     //validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Image processing
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.11.0'
+
+    implementation 'commons-fileupload:commons-fileupload:1.5'
+    implementation 'commons-io:commons-io:2.16.1'
+
 }
+
+
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'

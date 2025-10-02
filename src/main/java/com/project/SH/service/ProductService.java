@@ -11,7 +11,23 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import com.project.SH.repository.ProductChangeHistoryRepository;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.Iterator;
 
 import java.util.List;
 
@@ -29,7 +45,8 @@ public class ProductService implements ProductServiceImpl {
 
 
     @Transactional
-    public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty, Long accountSeq) {
+    public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty,
+                                Long accountSeq, MultipartFile productImage) {
         final String baseProductCode = requireProductCode(product.getProductCode());
         final String nextSequence = productCodeService.getNextItemCodeForBase(baseProductCode);
         final String fullProductCode = productCodeService.buildFullProductCode(baseProductCode, nextSequence);
@@ -45,7 +62,7 @@ public class ProductService implements ProductServiceImpl {
         product.setProductCode(fullProductCode);
         log.info("상품 등록 서비스 호출, 기본 코드: {}, 생성된 전체 코드: {}", baseProductCode, fullProductCode);
 
-        createImageDirectoryIfNecessary(product.getPdName());
+        Path imageDirectory = createImageDirectoryIfNecessary(product.getPdName());
 
         if (piecesPerBox == null || piecesPerBox < 1) piecesPerBox = 1;
         int safeShQty = resolveWarehouseQuantity(shQty, 0);
@@ -86,29 +103,111 @@ public class ProductService implements ProductServiceImpl {
         // 가격 등록
         priceService.registerPrice(product, price, accountSeq);
         log.info("상품 코드: {}에 가격 등록 완료", product.getFullProductCode());
+        storeProductImage(product.getPdName(), productImage, imageDirectory);
     }
 
-    private void createImageDirectoryIfNecessary(String productName) {
+    private Path createImageDirectoryIfNecessary(String productName) {
         if (productName == null || productName.isBlank()) {
             log.warn("상품 이미지 디렉터리 생성 건너뜀 - 상품명이 비어있음");
-            return;
+            return null;
         }
 
         String sanitizedName = sanitizeDirectoryName(productName);
         if (sanitizedName.isEmpty()) {
             log.warn("상품 이미지 디렉터리 생성 건너뜀 - 상품명에 사용 가능한 문자가 없음: {}", productName);
-            return;
+            return null;
         }
 
         try {
-            java.nio.file.Path imagesDir = java.nio.file.Paths.get("src", "main", "resources", "static", "images");
-            java.nio.file.Path productDir = imagesDir.resolve(sanitizedName);
-            java.nio.file.Files.createDirectories(productDir);
+            Path imagesDir = Paths.get("src", "main", "resources", "static", "images");
+            Path productDir = imagesDir.resolve(sanitizedName);
+            Files.createDirectories(productDir);
             log.info("상품 이미지 디렉터리 확인 완료: {}", productDir.toAbsolutePath());
+            return productDir;
         } catch (Exception e) {
             log.error("상품 이미지 디렉터리 생성 실패 - 상품명: {}, 에러: {}", productName, e.getMessage());
             throw new IllegalStateException("Failed to prepare image directory for product: " + productName, e);
         }
+    }
+
+    private void storeProductImage(String productName, MultipartFile productImage, Path preparedDirectory) {
+        if (productImage == null || productImage.isEmpty()) {
+            return;
+        }
+
+        if (productName == null || productName.isBlank()) {
+            log.warn("상품 이미지 저장 건너뜀 - 상품명이 비어있음");
+            return;
+        }
+
+        String sanitizedName = sanitizeDirectoryName(productName);
+        if (sanitizedName.isEmpty()) {
+            log.warn("상품 이미지 저장 건너뜀 - 상품명에 사용 가능한 문자가 없음: {}", productName);
+            return;
+        }
+
+        Path targetDirectory = preparedDirectory != null ? preparedDirectory : createImageDirectoryIfNecessary(productName);
+        if (targetDirectory == null) {
+            log.warn("상품 이미지 저장 건너뜀 - 유효한 디렉터리를 준비하지 못함: {}", productName);
+            return;
+        }
+
+        Path targetFile = targetDirectory.resolve(sanitizedName + ".webp");
+        String extension = getFileExtension(productImage.getOriginalFilename());
+
+        try {
+            if ("webp".equalsIgnoreCase(extension)) {
+                try (InputStream inputStream = productImage.getInputStream()) {
+                    Files.copy(inputStream, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+                log.info("상품 이미지 저장 완료(WebP 그대로): {}", targetFile.toAbsolutePath());
+                return;
+            }
+
+            convertToWebp(productImage, targetFile);
+            log.info("상품 이미지 저장 완료(WebP 변환): {}", targetFile.toAbsolutePath());
+        } catch (IOException e) {
+            log.error("상품 이미지 저장 실패 - 상품명: {}, 에러: {}", productName, e.getMessage(), e);
+            throw new IllegalStateException("Failed to store product image for product: " + productName, e);
+        }
+    }
+
+    private void convertToWebp(MultipartFile productImage, Path targetFile) throws IOException {
+        ImageIO.scanForPlugins();
+        BufferedImage bufferedImage;
+        try (InputStream inputStream = productImage.getInputStream()) {
+            bufferedImage = ImageIO.read(inputStream);
+        }
+
+        if (bufferedImage == null) {
+            throw new IllegalArgumentException("Unsupported image format for conversion to webp");
+        }
+
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByMIMEType("image/webp");
+        if (!writers.hasNext()) {
+            throw new IllegalStateException("No WebP writers available");
+        }
+
+        ImageWriter writer = writers.next();
+        try (ImageOutputStream outputStream = ImageIO.createImageOutputStream(Files.newOutputStream(targetFile,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
+            writer.setOutput(outputStream);
+            ImageWriteParam writeParam = writer.getDefaultWriteParam();
+            writer.write(null, new IIOImage(bufferedImage, null, null), writeParam);
+        } finally {
+            writer.dispose();
+        }
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null) {
+            return "";
+        }
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot < 0 || lastDot == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(lastDot + 1);
     }
 
     private String sanitizeDirectoryName(String name) {
