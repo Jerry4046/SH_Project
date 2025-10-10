@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.Product;
 import com.project.SH.domain.ProductCode;
+import com.project.SH.service.ImageStorageService;
 import com.project.SH.service.ProductCodeService;
 import com.project.SH.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -14,14 +15,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 
@@ -32,6 +36,7 @@ public class ProductController {
 
     private final ProductService productService;
     private final ProductCodeService productCodeService;
+    private final ImageStorageService imageStorageService;
 
     @GetMapping("/product/register")
     public String showRegisterForm(Model model) {
@@ -56,6 +61,7 @@ public class ProductController {
                                   @RequestParam Integer piecesPerBox,
                                   @RequestParam Integer shQty,
                                   @RequestParam Integer hpQty,
+                                  @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
         log.info("상품 등록 시작(ProductController), 상품명: {}, 단가: {}, 기본코드: {} ", product.getPdName(), price, product.getProductCode());
@@ -76,7 +82,7 @@ public class ProductController {
 
 
             // 3) 저장
-            productService.registerProduct(product, price, piecesPerBox, shQty, hpQty, createdBySeq);
+            productService.registerProduct(product, price, piecesPerBox, shQty, hpQty, createdBySeq, imageFile);
 
             redirectAttributes.addFlashAttribute("message", "제품 등록 성공");
             log.info("상품 등록 성공, 상품 코드: {}", product.getFullProductCode());
@@ -93,6 +99,7 @@ public class ProductController {
         log.info("상품 목록 조회 시작");
         List<Product> products = productService.getAllProducts();
         model.addAttribute("productList", products);
+        model.addAttribute("productImageUrls", buildProductImageMap(products));
         log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
         return "inventory";  // /WEB-INF/views/inventory.jsp
     }
@@ -244,6 +251,22 @@ public class ProductController {
         }
 
         return hierarchy;
+    }
+
+    private Map<Long, String> buildProductImageMap(List<Product> products) {
+        Map<Long, String> imageMap = new HashMap<>();
+        for (Product product : products) {
+            if (product == null) {
+                continue;
+            }
+            Long productId = product.getProductId();
+            if (productId == null) {
+                continue;
+            }
+            Optional<String> imageUrl = imageStorageService.findLatestImageUrlByProductName(product.getPdName());
+            imageUrl.ifPresent(url -> imageMap.put(productId, url));
+        }
+        return imageMap;
     }
 
     private String writeHierarchyJson(Map<String, CompanyHierarchy> hierarchy) {

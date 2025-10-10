@@ -16,7 +16,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/signup","/inventory").permitAll() // public 경로
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/media/**", "/api/images/**", "/image-manager", "/signup","/inventory").permitAll() // public 경로
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
                 .formLogin(form -> form

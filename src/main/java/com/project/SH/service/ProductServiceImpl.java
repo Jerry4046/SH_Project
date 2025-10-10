@@ -1,11 +1,14 @@
 package com.project.SH.service;
 
 import com.project.SH.domain.Product;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 public interface ProductServiceImpl {
 
-    void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty, Long accountSeq);
+    void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty,
+                         Long accountSeq, MultipartFile imageFile);
     List<Product> getAllProducts();
     Product getProductByCode(String productCode, String itemCode);
 

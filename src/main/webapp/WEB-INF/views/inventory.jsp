@@ -97,6 +97,29 @@
         #paginationControls ul.pagination {
             gap: 0.25rem;
         }
+
+        .image-preview-tooltip {
+            position: fixed;
+            display: none;
+            z-index: 1050;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            background-color: #fff;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            max-width: 260px;
+        }
+
+        .image-preview-tooltip img {
+            max-width: 240px;
+            max-height: 240px;
+            display: block;
+        }
+
+        .product-name[data-image-url] {
+            cursor: pointer;
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +241,7 @@
                         </c:when>
                     </c:choose>
                 </c:if>
+                <c:set var="imageUrl" value="${productImageUrls[product.productId]}" />
                 <c:set var="formId" value="product-form-${status.index}" />
                 <tr class="${product.active ? '' : 'text-muted'}" data-row-index="${status.index}"
                     data-usage="${product.active ? '사용' : '미사용'}" data-stock-state="${stockState}"
@@ -226,7 +250,10 @@
                         <input type="checkbox" class="row-check" onchange="toggleRow(this)">
                     </td>
                     <td data-column="pdName" data-sort-value="${fn:escapeXml(fn:toLowerCase(product.pdName))}">
-                        <span class="value">${product.pdName}</span>
+                        <span class="value product-name"
+                              <c:if test="${not empty imageUrl}">data-image-url="${pageContext.request.contextPath}${imageUrl}"</c:if>>
+                            ${product.pdName}
+                        </span>
                         <input type="text" name="pdName" value="${product.pdName}"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
@@ -291,6 +318,10 @@
         </table>
     </div>
 
+    <div id="imagePreviewTooltip" class="image-preview-tooltip" role="presentation" aria-hidden="true">
+        <img src="" alt="상품 이미지 미리보기">
+    </div>
+
     <nav id="paginationControls" class="mt-4 d-none" aria-label="제품 목록 페이지"></nav>
 </div>
 
@@ -309,6 +340,63 @@
         const tableBody = document.getElementById('productTable');
         const paginationContainer = document.getElementById('paginationControls');
         const sortButtons = Array.from(document.querySelectorAll('th .sort-button'));
+        const tooltip = document.getElementById('imagePreviewTooltip');
+        const tooltipImage = tooltip ? tooltip.querySelector('img') : null;
+
+        function showImagePreview(event, element) {
+            if (!tooltip || !tooltipImage) {
+                return;
+            }
+            const url = element.dataset.imageUrl;
+            if (!url) {
+                return;
+            }
+            tooltipImage.src = url;
+            tooltip.style.display = 'block';
+            tooltip.setAttribute('aria-hidden', 'false');
+            moveImagePreview(event);
+        }
+
+        function moveImagePreview(event) {
+            if (!tooltip || tooltip.style.display !== 'block') {
+                return;
+            }
+            const offset = 20;
+            let x = event.clientX + offset;
+            let y = event.clientY + offset;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const rect = tooltip.getBoundingClientRect();
+
+            if (x + rect.width > viewportWidth) {
+                x = event.clientX - rect.width - offset;
+            }
+            if (y + rect.height > viewportHeight) {
+                y = event.clientY - rect.height - offset;
+            }
+
+            tooltip.style.left = `${Math.max(0, x)}px`;
+            tooltip.style.top = `${Math.max(0, y)}px`;
+        }
+
+        function hideImagePreview() {
+            if (!tooltip || !tooltipImage) {
+                return;
+            }
+            tooltip.style.display = 'none';
+            tooltip.setAttribute('aria-hidden', 'true');
+            tooltipImage.src = '';
+        }
+
+        const productNameCells = document.querySelectorAll('.product-name[data-image-url]');
+        productNameCells.forEach(cell => {
+            cell.addEventListener('mouseenter', event => showImagePreview(event, cell));
+            cell.addEventListener('mousemove', moveImagePreview);
+            cell.addEventListener('mouseleave', hideImagePreview);
+            cell.addEventListener('focus', event => showImagePreview(event, cell));
+            cell.addEventListener('blur', hideImagePreview);
+            cell.setAttribute('tabindex', '0');
+        });
 
         if (!tableBody) {
             return;

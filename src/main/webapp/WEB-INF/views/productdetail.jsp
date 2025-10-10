@@ -197,6 +197,11 @@
                         <input type="text" name="pdName" id="pdName" class="form-control" required>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label" for="imageFile">제품 이미지</label>
+                        <input type="file" name="imageFile" id="imageFile" class="form-control" accept="image/*">
+                        <div class="form-text">이미지를 선택하면 WebP 형식으로 변환되어 상품명 폴더에 저장됩니다.</div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label" for="piecesPerBox">박스당 수량</label>
                         <input type="number" name="piecesPerBox" id="piecesPerBox" class="form-control" min="1" value="1" required>
                     </div>

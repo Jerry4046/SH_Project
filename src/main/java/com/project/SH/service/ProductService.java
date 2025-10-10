@@ -5,14 +5,17 @@ import com.project.SH.domain.ProductChangeHistory;
 import com.project.SH.domain.Stock;
 import com.project.SH.domain.StockHistory;
 import com.project.SH.repository.ProductRepository;
+import com.project.SH.repository.ProductChangeHistoryRepository;
 import com.project.SH.repository.StockHistoryRepository;
 import com.project.SH.repository.StockRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import com.project.SH.repository.ProductChangeHistoryRepository;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -26,10 +29,12 @@ public class ProductService implements ProductServiceImpl {
     private final StockRepository stockRepository;
     private final StockHistoryRepository stockHistoryRepository;
     private final ProductChangeHistoryRepository productChangeHistoryRepository;
+    private final ImageStorageService imageStorageService;
 
 
     @Transactional
-    public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty, Long accountSeq) {
+    public void registerProduct(Product product, Double price, Integer piecesPerBox, Integer shQty, Integer hpQty,
+                                Long accountSeq, MultipartFile imageFile) {
         final String baseProductCode = requireProductCode(product.getProductCode());
         final String nextSequence = productCodeService.getNextItemCodeForBase(baseProductCode);
         final String fullProductCode = productCodeService.buildFullProductCode(baseProductCode, nextSequence);
@@ -44,8 +49,6 @@ public class ProductService implements ProductServiceImpl {
 
         product.setProductCode(fullProductCode);
         log.info("상품 등록 서비스 호출, 기본 코드: {}, 생성된 전체 코드: {}", baseProductCode, fullProductCode);
-
-        createImageDirectoryIfNecessary(product.getPdName());
 
         if (piecesPerBox == null || piecesPerBox < 1) piecesPerBox = 1;
         int safeShQty = resolveWarehouseQuantity(shQty, 0);
@@ -86,36 +89,43 @@ public class ProductService implements ProductServiceImpl {
         // 가격 등록
         priceService.registerPrice(product, price, accountSeq);
         log.info("상품 코드: {}에 가격 등록 완료", product.getFullProductCode());
+
+        createProductImageFolder(product);
+        storeProductImageIfPresent(product, imageFile);
     }
 
-    private void createImageDirectoryIfNecessary(String productName) {
-        if (productName == null || productName.isBlank()) {
-            log.warn("상품 이미지 디렉터리 생성 건너뜀 - 상품명이 비어있음");
+    private void createProductImageFolder(Product product) {
+        if (product == null || !StringUtils.hasText(product.getPdName())) {
+            log.warn("상품 이미지 폴더 생성 건너뜀 - 상품명이 비어있음");
             return;
         }
+        try {
+            imageStorageService.ensureProductFolderExists(product.getPdName());
+            log.debug("상품 이미지 폴더 준비 완료 - 상품명: {}", product.getPdName());
+        } catch (IOException | IllegalArgumentException e) {
+            log.error("상품 이미지 폴더 생성 실패 - 상품명: {}, 에러: {}", product.getPdName(), e.getMessage());
+            throw new IllegalStateException("상품 이미지 폴더를 생성하는 중 오류가 발생했습니다.", e);
+        }
+    }
 
-        String sanitizedName = sanitizeDirectoryName(productName);
-        if (sanitizedName.isEmpty()) {
-            log.warn("상품 이미지 디렉터리 생성 건너뜀 - 상품명에 사용 가능한 문자가 없음: {}", productName);
+    private void storeProductImageIfPresent(Product product, MultipartFile imageFile) {
+        if (imageFile == null || imageFile.isEmpty()) {
             return;
         }
 
         try {
-            java.nio.file.Path imagesDir = java.nio.file.Paths.get("src", "main", "resources", "static", "images");
-            java.nio.file.Path productDir = imagesDir.resolve(sanitizedName);
-            java.nio.file.Files.createDirectories(productDir);
-            log.info("상품 이미지 디렉터리 확인 완료: {}", productDir.toAbsolutePath());
-        } catch (Exception e) {
-            log.error("상품 이미지 디렉터리 생성 실패 - 상품명: {}, 에러: {}", productName, e.getMessage());
-            throw new IllegalStateException("Failed to prepare image directory for product: " + productName, e);
+            if (!StringUtils.hasText(product.getPdName())) {
+                log.warn("상품 이미지 저장 건너뜀 - 상품명이 비어있음");
+                return;
+            }
+            imageStorageService.storeAsWebp(imageFile, product.getPdName());
+            log.info("상품 이미지 저장 완료 - 상품명: {}", product.getPdName());
+        } catch (IOException | IllegalArgumentException e) {
+            log.error("상품 이미지 저장 실패 - 상품명: {}, 에러: {}", product.getPdName(), e.getMessage());
+            throw new IllegalStateException("상품 이미지를 저장하는 중 오류가 발생했습니다.", e);
         }
     }
 
-    private String sanitizeDirectoryName(String name) {
-        String trimmed = name.trim();
-        String replacedWhitespace = trimmed.replaceAll("\\s+", "_");
-        return replacedWhitespace.replaceAll("[^\\p{L}0-9._-]", "");
-    }
 
     public List<Product> getAllProducts() {
         log.info("상품 목록 조회 서비스 호출");
