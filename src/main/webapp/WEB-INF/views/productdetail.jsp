@@ -39,6 +39,17 @@
             height: 100%;
             padding-right: 1rem;
         }
+
+        .image-preview-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .image-preview-container img {
+            max-width: 180px;
+            max-height: 180px;
+        }
     </style>
 <head>
     <meta charset="UTF-8">
@@ -159,7 +170,7 @@
             </div>
 
             <div id="productForm">
-                <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3">
+                <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label class="form-label" for="productCompanyCode">회사</label>
                         <select name="companyCode" id="productCompanyCode" class="form-select" required
@@ -199,6 +210,13 @@
                     <div class="mb-3">
                         <label class="form-label" for="imageFile">제품 이미지</label>
                         <input type="file" name="imageFile" id="imageFile" class="form-control" accept="image/*">
+                        <div class="image-preview-container mt-2">
+                            <img src="" alt="선택한 이미지 미리보기" id="imagePreview" class="img-thumbnail d-none">
+                            <div>
+                                <div id="imagePreviewPlaceholder" class="text-muted small">선택된 이미지가 없습니다.</div>
+                                <div id="imageFileName" class="small"></div>
+                            </div>
+                        </div>
                         <div class="form-text">이미지를 선택하면 WebP 형식으로 변환되어 상품명 폴더에 저장됩니다.</div>
                     </div>
                     <div class="mb-3">
@@ -412,6 +430,7 @@
         appState.productFormState = setupProductForm(appState.codeHierarchy);
 
         setupPartialRegistration(appState);
+        setupImageUploadPreview();
         setupWarehouseTotalPreview();
         setupDetailWarehouseEditor();
         setupWarehouseTooltips();
@@ -500,6 +519,60 @@
                 });
             });
         });
+    }
+
+    function setupImageUploadPreview() {
+        const fileInput = document.getElementById('imageFile');
+        const previewImage = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imagePreviewPlaceholder');
+        const fileNameLabel = document.getElementById('imageFileName');
+
+        if (!fileInput || !previewImage || !placeholder) {
+            return;
+        }
+
+        const resetPreview = (message = '선택된 이미지가 없습니다.') => {
+            previewImage.src = '';
+            previewImage.classList.add('d-none');
+            placeholder.textContent = message;
+            if (fileNameLabel) {
+                fileNameLabel.textContent = '';
+            }
+            fileInput.setCustomValidity('');
+        };
+
+        const showPreview = (file) => {
+            if (!file || !file.type || !file.type.startsWith('image/')) {
+                resetPreview(file ? '이미지 파일만 선택할 수 있습니다.' : undefined);
+                if (file) {
+                    fileInput.setCustomValidity('이미지 파일만 업로드 가능합니다.');
+                }
+                return;
+            }
+
+            fileInput.setCustomValidity('');
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewImage.src = event.target?.result || '';
+                previewImage.classList.toggle('d-none', !event.target?.result);
+                placeholder.textContent = '선택한 이미지 미리보기';
+                if (fileNameLabel) {
+                    fileNameLabel.textContent = file.name;
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        fileInput.addEventListener('change', (event) => {
+            const [file] = event.target.files || [];
+            if (!file) {
+                resetPreview();
+                return;
+            }
+            showPreview(file);
+        });
+
+        resetPreview();
     }
 
     function setupCodeForm(codeHierarchy) {
