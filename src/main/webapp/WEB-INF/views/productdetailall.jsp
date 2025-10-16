@@ -20,7 +20,7 @@
     </div>
 
     <div class="mb-3">
-        <input type="text" class="form-control" placeholder="상품명, 제품코드, 상품코드를 검색하세요" id="searchInput">
+        <input type="text" class="form-control" placeholder="제품명, 제품코드, 상품코드를 검색하세요" id="searchInput">
     </div>
 
     <div class="table-responsive">

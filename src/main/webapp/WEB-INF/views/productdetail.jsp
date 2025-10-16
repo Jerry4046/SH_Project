@@ -204,7 +204,7 @@
                         <input type="text" name="spec" id="spec" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="pdName">상품명</label>
+                        <label class="form-label" for="pdName">제품명</label>
                         <input type="text" name="pdName" id="pdName" class="form-control" required>
                     </div>
                     <div class="mb-3">
@@ -217,7 +217,7 @@
                                 <div id="imageFileName" class="small"></div>
                             </div>
                         </div>
-                        <div class="form-text">이미지를 선택하면 WebP 형식으로 변환되어 상품명 폴더에 저장됩니다.</div>
+                        <div class="form-text">이미지를 선택하면 WebP 형식으로 변환되어 제품명 폴더에 저장됩니다.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="piecesPerBox">박스당 수량</label>
@@ -342,7 +342,28 @@
                                        class="form-control form-control-sm edit-field" style="display:none;" disabled>
                             </td>
                             <td>
-                                <span class="value"><c:out value="${product.pdName}" /></span>
+                                <span class="value">
+                                    <c:choose>
+                                        <c:when test="${not empty productImageUrl}">
+                                            <span id="productNameDisplay"
+                                                  class="text-primary text-decoration-underline fw-semibold cursor-pointer focus-ring focus-ring-primary focus-ring-opacity-50"
+                                                  data-image-url="${productImageUrl}"
+                                                  data-product-name="<c:out value='${product.pdName}'/>"
+                                                  data-bs-toggle="popover"
+                                                  data-bs-trigger="hover focus"
+                                                  data-bs-placement="auto"
+                                                  role="button"
+                                                  tabindex="0"
+                                                  aria-haspopup="dialog"
+                                                  aria-label="<c:out value='${product.pdName}'/> 이미지 확대 보기">
+                                                <c:out value="${product.pdName}" />
+                                            </span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:out value="${product.pdName}" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
                                 <input type="text" name="pdName" value="<c:out value='${product.pdName}'/>"
                                        class="form-control form-control-sm edit-field" style="display:none;" disabled>
                             </td>
@@ -409,6 +430,21 @@
                 <input type="text" name="reason" id="detailReason" class="form-control mt-3 save-control" placeholder="수정 사유를 입력하세요" style="display:none;" disabled required>
                 <button type="submit" class="btn btn-success mt-2 save-control" style="display:none;" disabled>저장</button>
             </form>
+            <c:if test="${not empty productImageUrl}">
+                <div class="modal fade" id="productImageModal" tabindex="-1" aria-labelledby="productImageModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="productImageModalLabel">상품 이미지</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <img src="" alt="" id="productImageModalImg" class="img-fluid w-100 object-fit-contain">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </c:if>
         </c:otherwise>
     </c:choose>
 </div>
@@ -434,6 +470,7 @@
         setupWarehouseTotalPreview();
         setupDetailWarehouseEditor();
         setupWarehouseTooltips();
+        setupProductNameImagePreview();
     });
 
     function parseCodeHierarchy() {
@@ -523,6 +560,7 @@
 
     function setupImageUploadPreview() {
         const fileInput = document.getElementById('imageFile');
+        const productNameInput = document.getElementById('pdName');
         const previewImage = document.getElementById('imagePreview');
         const placeholder = document.getElementById('imagePreviewPlaceholder');
         const fileNameLabel = document.getElementById('imageFileName');
@@ -531,6 +569,9 @@
             return;
         }
 
+        let currentImageBlob = null;
+        let currentFile = null;
+
         const resetPreview = (message = '선택된 이미지가 없습니다.') => {
             previewImage.src = '';
             previewImage.classList.add('d-none');
@@ -538,7 +579,38 @@
             if (fileNameLabel) {
                 fileNameLabel.textContent = '';
             }
+            fileInput.value = '';
             fileInput.setCustomValidity('');
+            currentImageBlob = null;
+            currentFile = null;
+        };
+
+        const sanitizeForFilename = (input) => {
+            if (!input || !input.trim()) {
+                return '';
+            }
+            return input
+                .trim()
+                .replace(/[\\/:*?"<>|]+/g, '')
+                .replace(/\s+/g, '_')
+                .replace(/[^\p{L}0-9._-]+/gu, '-')
+                .replace(/-+/g, '-')
+                .replace(/_+/g, '_')
+                .replace(/^[-_]+/, '')
+                .replace(/[-_]+$/, '');
+        };
+
+        const removeExtension = (filename) => {
+            return filename ? filename.replace(/\.[^.]+$/, '') : '';
+        };
+
+        const buildBaseName = (fallback) => {
+            const fromProductName = sanitizeForFilename(productNameInput?.value || '');
+            if (fromProductName) {
+                return fromProductName;
+            }
+            const fromFileName = sanitizeForFilename(removeExtension(fallback || ''));
+            return fromFileName || 'product-image';
         };
 
         const showPreview = (file) => {
@@ -563,14 +635,113 @@
             reader.readAsDataURL(file);
         };
 
-        fileInput.addEventListener('change', (event) => {
+        const updateFileSelection = (file) => {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            currentFile = file;
+            if (fileNameLabel) {
+                fileNameLabel.textContent = file.name;
+            }
+        };
+
+        const convertImageToWebp = async (file, baseName) => {
+            if (!file.type.startsWith('image/')) {
+                throw new Error('이미지 파일만 변환할 수 있습니다.');
+            }
+
+            if (file.type === 'image/webp') {
+                const safeName = `${baseName}.webp`;
+                return { blob: file, file: new File([file], safeName, { type: 'image/webp', lastModified: file.lastModified }) };
+            }
+
+            const loadImage = () => new Promise((resolve, reject) => {
+                const image = new Image();
+                const url = URL.createObjectURL(file);
+                image.onload = () => {
+                    URL.revokeObjectURL(url);
+                    resolve(image);
+                };
+                image.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('이미지를 불러오는 중 오류가 발생했습니다.'));
+                };
+                image.src = url;
+            });
+
+            const imageElement = await loadImage();
+            const canvas = document.createElement('canvas');
+            canvas.width = imageElement.naturalWidth || imageElement.width;
+            canvas.height = imageElement.naturalHeight || imageElement.height;
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+                throw new Error('이미지를 변환할 수 없습니다.');
+            }
+            context.drawImage(imageElement, 0, 0);
+
+            const blob = await new Promise((resolve, reject) => {
+                canvas.toBlob((result) => {
+                    if (!result) {
+                        reject(new Error('WebP 변환에 실패했습니다.'));
+                        return;
+                    }
+                    resolve(result);
+                }, 'image/webp', 0.9);
+            });
+
+            const safeName = `${baseName}.webp`;
+            return { blob, file: new File([blob], safeName, { type: 'image/webp' }) };
+        };
+
+        const handleFileSelection = async (file) => {
+            try {
+                const baseName = buildBaseName(file.name);
+                const { blob, file: convertedFile } = await convertImageToWebp(file, baseName);
+                currentImageBlob = blob;
+                updateFileSelection(convertedFile);
+                showPreview(convertedFile);
+            } catch (error) {
+                console.error('이미지 변환 실패:', error);
+                resetPreview(error?.message || '이미지 변환 중 문제가 발생했습니다.');
+                fileInput.setCustomValidity('이미지 변환에 실패했습니다. 다른 파일을 선택해주세요.');
+            }
+        };
+
+        fileInput.addEventListener('change', async (event) => {
             const [file] = event.target.files || [];
             if (!file) {
                 resetPreview();
                 return;
             }
-            showPreview(file);
+            await handleFileSelection(file);
         });
+
+        if (productNameInput) {
+            const renameWithProductName = () => {
+                if (!currentImageBlob) {
+                    return;
+                }
+                const sanitized = sanitizeForFilename(productNameInput.value);
+                if (!sanitized) {
+                    return;
+                }
+                const desiredName = `${sanitized}.webp`;
+                if (currentFile && currentFile.name === desiredName) {
+                    return;
+                }
+                const renamedFile = new File([currentImageBlob], desiredName, {
+                    type: 'image/webp',
+                    lastModified: currentFile?.lastModified || Date.now()
+                });
+                updateFileSelection(renamedFile);
+                showPreview(renamedFile);
+            };
+
+            productNameInput.addEventListener('change', renameWithProductName);
+            productNameInput.addEventListener('blur', renameWithProductName);
+            productNameInput.addEventListener('input', renameWithProductName);
+        }
 
         resetPreview();
     }
@@ -943,6 +1114,97 @@
         toggleManualInput(state.typeManualWrapper, false);
         setCodeInputState(state.typeCodeInput, { value: '', disabled: true });
         setButtonDisabled(state.typePartialBtn, true);
+    }
+
+    function setupProductNameImagePreview() {
+        const trigger = document.getElementById('productNameDisplay');
+        const modalElement = document.getElementById('productImageModal');
+        const modalImage = document.getElementById('productImageModalImg');
+        const modalTitle = document.getElementById('productImageModalLabel');
+
+        if (!trigger || !modalElement || !modalImage) {
+            return;
+        }
+
+        const imageUrl = trigger.dataset.imageUrl;
+        if (!imageUrl) {
+            trigger.removeAttribute('role');
+            trigger.removeAttribute('tabindex');
+            trigger.removeAttribute('aria-label');
+            trigger.removeAttribute('aria-haspopup');
+            trigger.removeAttribute('data-bs-toggle');
+            trigger.removeAttribute('data-bs-trigger');
+            trigger.removeAttribute('data-bs-placement');
+            trigger.classList.remove('cursor-pointer', 'text-primary', 'text-decoration-underline', 'fw-semibold', 'focus-ring', 'focus-ring-primary', 'focus-ring-opacity-50');
+            return;
+        }
+
+        const productName = (trigger.dataset.productName || trigger.textContent || '').trim();
+        const previewAlt = productName ? productName + ' 이미지 미리보기' : '상품 이미지 미리보기';
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Popover) {
+            const popoverOptions = {
+                trigger: 'hover focus',
+                html: true,
+                sanitize: false,
+                placement: trigger.getAttribute('data-bs-placement') || 'auto',
+                container: 'body',
+                customClass: 'p-0 border-0 bg-transparent shadow',
+                content: () => '<img src="' + imageUrl + '" alt="' + previewAlt + '" class="img-fluid rounded">'
+            };
+
+            const existingPopover = typeof bootstrap.Popover.getInstance === 'function'
+                ? bootstrap.Popover.getInstance(trigger)
+                : null;
+
+            if (existingPopover && typeof existingPopover.dispose === 'function') {
+                existingPopover.dispose();
+            }
+
+            if (typeof bootstrap.Popover.getOrCreateInstance === 'function') {
+                bootstrap.Popover.getOrCreateInstance(trigger, popoverOptions);
+            } else {
+                new bootstrap.Popover(trigger, popoverOptions);
+            }
+        } else {
+            trigger.setAttribute('title', previewAlt);
+        }
+
+        const updateModalContent = () => {
+            modalImage.src = imageUrl;
+            modalImage.alt = productName ? productName + ' 이미지 확대 보기' : '상품 이미지 확대 보기';
+            if (modalTitle) {
+                modalTitle.textContent = productName ? productName + ' 이미지' : '상품 이미지';
+            }
+        };
+
+        const openModal = (event) => {
+            event.preventDefault();
+            if (!imageUrl) {
+                return;
+            }
+
+            if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+                window.open(imageUrl, '_blank');
+                return;
+            }
+
+            updateModalContent();
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.show();
+        };
+
+        trigger.addEventListener('click', openModal);
+        trigger.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                openModal(event);
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            modalImage.removeAttribute('src');
+            modalImage.removeAttribute('alt');
+        });
     }
 
     function resetCategoryControls(state) {

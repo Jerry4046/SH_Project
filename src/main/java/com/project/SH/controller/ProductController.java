@@ -64,7 +64,7 @@ public class ProductController {
                                   @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
                                   RedirectAttributes redirectAttributes) {
-        log.info("상품 등록 시작(ProductController), 상품명: {}, 단가: {}, 기본코드: {} ", product.getPdName(), price, product.getProductCode());
+        log.info("상품 등록 시작(ProductController), 제품명: {}, 단가: {}, 기본코드: {} ", product.getPdName(), price, product.getProductCode());
         try {
             if (userDetails == null || userDetails.getUser() == null) {
                 redirectAttributes.addFlashAttribute("error", "로그인이 필요합니다.");
@@ -130,6 +130,8 @@ public class ProductController {
         Product product = productService.getProductByCode(productCode, itemCode);
         if (product != null) {
             log.info("단일 상품 상세 조회, 상품 코드: {}", product.getProductCode());
+            imageStorageService.findLatestImageUrlByProductName(product.getPdName())
+                    .ifPresent(url -> model.addAttribute("productImageUrl", url));
         } else {
             String referenceCode = (itemCode == null || itemCode.isBlank())
                     ? productCode

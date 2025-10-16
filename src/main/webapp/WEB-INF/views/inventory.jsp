@@ -148,7 +148,7 @@
 
     <div class="row g-2 mb-4">
         <div class="col-md-4">
-            <input type="text" class="form-control" placeholder="상품명을 검색하세요" id="searchInput">
+            <input type="text" class="form-control" placeholder="제품명을 검색하세요" id="searchInput">
         </div>
         <div class="col-md-4">
             <select id="usageFilter" class="form-select">
@@ -175,7 +175,7 @@
                 <th class="sortable">
                     <button type="button" class="sort-button" data-column-index="1" data-type="text"
                             data-default-sort="true">
-                        <span class="sort-label">상품명</span>
+                        <span class="sort-label">제품명</span>
                         <span class="sort-indicator" aria-hidden="true"></span>
                     </button>
                 </th>

@@ -23,7 +23,7 @@
         <thead>
         <tr>
             <th>상품코드</th>
-            <th>상품명</th>
+            <th>제품명</th>
             <th>단가</th>
         </tr>
         </thead>

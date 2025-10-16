@@ -1,6 +1,8 @@
 package com.project.SH.service;
 
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -17,10 +19,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +32,8 @@ import java.util.stream.Stream;
 
 @Service
 public class ImageStorageService {
+
+    private static final Logger log = LoggerFactory.getLogger(ImageStorageService.class);
 
     @Value("${app.media.base-directory}")
     private String mediaBaseDirectory;
@@ -55,17 +61,36 @@ public class ImageStorageService {
             throw new IllegalArgumentException("비어 있는 파일은 업로드할 수 없습니다.");
         }
 
-        BufferedImage image = readImage(file);
-        if (image == null) {
-            throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
-        }
-
         ensureProductFolderExists(productName);
         String outputFileName = buildProductFileName(productName);
         Path targetDirectory = getBasePath().resolve(normalizedFolder);
         Path targetFile = targetDirectory.resolve(outputFileName);
 
-        writeWebp(image, targetFile);
+        BufferedImage image = readImage(file);
+        boolean attemptedWebp = false;
+        boolean storedAsWebp = false;
+
+        if (image != null) {
+            attemptedWebp = true;
+            try {
+                storedAsWebp = writeWebp(image, targetFile);
+            } catch (IOException ex) {
+                log.warn("WebP 변환에 실패하여 원본 파일을 저장합니다. (target: {})", targetFile, ex);
+            }
+        } else if (!isLikelyImage(file)) {
+            throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
+        }
+
+        if (!storedAsWebp) {
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, targetFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            if (attemptedWebp) {
+                log.info("원본 이미지를 그대로 저장했습니다. (target: {})", targetFile);
+            } else {
+                log.info("이미지 판독이 불가능했지만 원본 파일을 그대로 저장했습니다. (target: {})", targetFile);
+            }
+        }
 
         return buildPublicUrl(normalizedFolder, outputFileName);
     }
@@ -176,10 +201,11 @@ public class ImageStorageService {
         return sanitized;
     }
 
-    private void writeWebp(BufferedImage image, Path targetFile) throws IOException {
+    private boolean writeWebp(BufferedImage image, Path targetFile) throws IOException {
         var writers = ImageIO.getImageWritersByMIMEType("image/webp");
         if (!writers.hasNext()) {
-            throw new IOException("WebP 인코더를 찾을 수 없습니다.");
+            log.warn("WebP 인코더를 찾을 수 없습니다. 원본 파일을 그대로 저장합니다. (target: {})", targetFile);
+            return false;
         }
         ImageWriter writer = writers.next();
 
@@ -187,6 +213,7 @@ public class ImageStorageService {
             writer.setOutput(outputStream);
             ImageWriteParam writeParam = writer.getDefaultWriteParam();
             writer.write(null, new IIOImage(image, null, null), writeParam);
+            return true;
         } finally {
             writer.dispose();
         }
@@ -196,6 +223,11 @@ public class ImageStorageService {
         try (InputStream inputStream = file.getInputStream()) {
             return ImageIO.read(inputStream);
         }
+    }
+
+    private boolean isLikelyImage(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && contentType.toLowerCase(Locale.ROOT).startsWith("image/");
     }
 
     private String buildPublicUrl(String folder, String filename) {

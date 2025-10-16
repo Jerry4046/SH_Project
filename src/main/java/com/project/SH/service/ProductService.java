@@ -96,14 +96,14 @@ public class ProductService implements ProductServiceImpl {
 
     private void createProductImageFolder(Product product) {
         if (product == null || !StringUtils.hasText(product.getPdName())) {
-            log.warn("상품 이미지 폴더 생성 건너뜀 - 상품명이 비어있음");
+            log.warn("상품 이미지 폴더 생성 건너뜀 - 제품명이 비어있음");
             return;
         }
         try {
             imageStorageService.ensureProductFolderExists(product.getPdName());
-            log.debug("상품 이미지 폴더 준비 완료 - 상품명: {}", product.getPdName());
+            log.debug("상품 이미지 폴더 준비 완료 - 제품명: {}", product.getPdName());
         } catch (IOException | IllegalArgumentException e) {
-            log.error("상품 이미지 폴더 생성 실패 - 상품명: {}, 에러: {}", product.getPdName(), e.getMessage());
+            log.error("상품 이미지 폴더 생성 실패 - 제품명: {}, 에러: {}", product.getPdName(), e.getMessage());
             throw new IllegalStateException("상품 이미지 폴더를 생성하는 중 오류가 발생했습니다.", e);
         }
     }
@@ -115,13 +115,13 @@ public class ProductService implements ProductServiceImpl {
 
         try {
             if (!StringUtils.hasText(product.getPdName())) {
-                log.warn("상품 이미지 저장 건너뜀 - 상품명이 비어있음");
+                log.warn("상품 이미지 저장 건너뜀 - 제품명이 비어있음");
                 return;
             }
             imageStorageService.storeAsWebp(imageFile, product.getPdName());
-            log.info("상품 이미지 저장 완료 - 상품명: {}", product.getPdName());
+            log.info("상품 이미지 저장 완료 - 제품명: {}", product.getPdName());
         } catch (IOException | IllegalArgumentException e) {
-            log.error("상품 이미지 저장 실패 - 상품명: {}, 에러: {}", product.getPdName(), e.getMessage());
+            log.error("상품 이미지 저장 실패 - 제품명: {}, 에러: {}", product.getPdName(), e.getMessage());
             throw new IllegalStateException("상품 이미지를 저장하는 중 오류가 발생했습니다.", e);
         }
     }
@@ -228,7 +228,7 @@ public class ProductService implements ProductServiceImpl {
         }
 
         if (updatedProduct.getPdName() != null && !updatedProduct.getPdName().equals(product.getPdName())) {
-            log.info("상품명 변경: {} -> {}", product.getPdName(), updatedProduct.getPdName());
+            log.info("제품명 변경: {} -> {}", product.getPdName(), updatedProduct.getPdName());
             saveHistory(product, "pd_name", product.getPdName(), updatedProduct.getPdName(), reason, accountSeq);
             product.setPdName(updatedProduct.getPdName());
         }

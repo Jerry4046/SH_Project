@@ -22,7 +22,7 @@
     
     <!-- 검색창 -->
     <div class="mb-3">
-        <input type="text" class="form-control" placeholder="상품명 또는 상품코드를 검색하세요" id="searchInput" onkeyup="filterTable()">
+        <input type="text" class="form-control" placeholder="제품명 또는 상품코드를 검색하세요" id="searchInput" onkeyup="filterTable()">
     </div>
 
     <!-- 테이블 -->
@@ -31,7 +31,7 @@
             <thead class="table-light">
                 <tr>
                     <th>상품코드</th>
-                    <th>상품명</th>
+                    <th>제품명</th>
                     <th>단가</th>
                     <th>수정일자</th>
                     <th>생성일자</th>
@@ -79,7 +79,7 @@
 
         rows.forEach(row => {
             // 등록행은 필터에서 제외
-            const nameCell = row.cells[1]; // 상품명
+            const nameCell = row.cells[1]; // 제품명
             const codeCell = row.cells[0]; // 상품코드
 
             if (!nameCell || !codeCell) return;
