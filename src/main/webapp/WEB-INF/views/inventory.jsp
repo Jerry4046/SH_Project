@@ -251,7 +251,12 @@
                     </td>
                     <td data-column="pdName" data-sort-value="${fn:escapeXml(fn:toLowerCase(product.pdName))}">
                         <span class="value product-name"
-                              <c:if test="${not empty imageUrl}">data-image-url="${pageContext.request.contextPath}${imageUrl}"</c:if>>
+                              <c:if test="${not empty imageUrl}">
+                                  data-image-url="${pageContext.request.contextPath}${imageUrl}"
+                                  data-product-name="${fn:escapeXml(product.pdName)}"
+                                  role="button"
+                                  aria-haspopup="dialog"
+                              </c:if>>
                             ${product.pdName}
                         </span>
                         <input type="text" name="pdName" value="${product.pdName}"
@@ -322,8 +327,27 @@
         <img src="" alt="상품 이미지 미리보기">
     </div>
 
+   <div class="modal fade" id="productImageModal" tabindex="-1" aria-hidden="true"
+         aria-labelledby="productImageModalTitle">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productImageModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" alt="" id="productImageModalImg" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <nav id="paginationControls" class="mt-4 d-none" aria-label="제품 목록 페이지"></nav>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -342,6 +366,26 @@
         const sortButtons = Array.from(document.querySelectorAll('th .sort-button'));
         const tooltip = document.getElementById('imagePreviewTooltip');
         const tooltipImage = tooltip ? tooltip.querySelector('img') : null;
+        const hasBootstrapModal = typeof bootstrap !== 'undefined' && typeof bootstrap.Modal === 'function';
+        const productImageModalElement = document.getElementById('productImageModal');
+        const productImageModalImage = document.getElementById('productImageModalImg');
+        const productImageModalTitle = document.getElementById('productImageModalTitle');
+        const productImageModalInstance = hasBootstrapModal && productImageModalElement
+            ? new bootstrap.Modal(productImageModalElement)
+            : null;
+
+        if (productImageModalInstance && productImageModalElement) {
+            productImageModalElement.addEventListener('hidden.bs.modal', () => {
+                if (productImageModalImage) {
+                    productImageModalImage.src = '';
+                    productImageModalImage.alt = '';
+                }
+                if (productImageModalTitle) {
+                    productImageModalTitle.textContent = '';
+                }
+            });
+        }
+
 
         function showImagePreview(event, element) {
             if (!tooltip || !tooltipImage) {
@@ -395,6 +439,35 @@
             cell.addEventListener('mouseleave', hideImagePreview);
             cell.addEventListener('focus', event => showImagePreview(event, cell));
             cell.addEventListener('blur', hideImagePreview);
+            cell.addEventListener('click', event => {
+                if (!productImageModalInstance) {
+                    return;
+                }
+                const url = cell.dataset.imageUrl;
+                if (!url) {
+                    return;
+                }
+                hideImagePreview();
+                event.preventDefault();
+                const productName = cell.dataset.productName || cell.textContent.trim();
+                if (productImageModalTitle) {
+                    productImageModalTitle.textContent = productName || '제품 이미지';
+                }
+                if (productImageModalImage) {
+                    productImageModalImage.src = url;
+                    productImageModalImage.alt = productName ? `${productName} 이미지` : '제품 이미지';
+                }
+                productImageModalInstance.show();
+            });
+            cell.addEventListener('keydown', event => {
+                if (!productImageModalInstance) {
+                    return;
+                }
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    cell.click();
+                }
+            });
             cell.setAttribute('tabindex', '0');
         });
 

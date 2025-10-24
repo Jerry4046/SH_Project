@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -117,7 +115,6 @@ public class ProductController {
         model.addAttribute("companies", companies);
         model.addAttribute("productList", products);
         model.addAttribute("codeHierarchyJson", hierarchyJson);
-        model.addAttribute("productList", products);
         log.info("상품코드 및 목록 페이지 조회 완료, 코드 수: {}, 상품 수: {}", codes.size(), products.size());
         return "product";
     }
@@ -314,14 +311,6 @@ public class ProductController {
         private CodeName(String code, String name) {
             this.code = code;
             this.name = name;
-        }
-    }
-
-    public class ProductRow {
-        private LocalDateTime createdAt;
-        public String getCreatedAtStr() {
-            return createdAt == null ? "" :
-                    createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         }
     }
 }
