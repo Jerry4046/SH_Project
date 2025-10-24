@@ -98,24 +98,6 @@
             gap: 0.25rem;
         }
 
-        .image-preview-tooltip {
-            position: fixed;
-            display: none;
-            z-index: 1050;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            background-color: #fff;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            max-width: 260px;
-        }
-
-        .image-preview-tooltip img {
-            max-width: 240px;
-            max-height: 240px;
-            display: block;
-        }
-
         .product-name[data-image-url] {
             cursor: pointer;
             position: relative;
@@ -323,10 +305,6 @@
         </table>
     </div>
 
-    <div id="imagePreviewTooltip" class="image-preview-tooltip" role="presentation" aria-hidden="true">
-        <img src="" alt="상품 이미지 미리보기">
-    </div>
-
    <div class="modal fade" id="productImageModal" tabindex="-1" aria-hidden="true"
          aria-labelledby="productImageModalTitle">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -364,8 +342,6 @@
         const tableBody = document.getElementById('productTable');
         const paginationContainer = document.getElementById('paginationControls');
         const sortButtons = Array.from(document.querySelectorAll('th .sort-button'));
-        const tooltip = document.getElementById('imagePreviewTooltip');
-        const tooltipImage = tooltip ? tooltip.querySelector('img') : null;
         const hasBootstrapModal = typeof bootstrap !== 'undefined' && typeof bootstrap.Modal === 'function';
         const productImageModalElement = document.getElementById('productImageModal');
         const productImageModalImage = document.getElementById('productImageModalImg');
@@ -386,59 +362,8 @@
             });
         }
 
-
-        function showImagePreview(event, element) {
-            if (!tooltip || !tooltipImage) {
-                return;
-            }
-            const url = element.dataset.imageUrl;
-            if (!url) {
-                return;
-            }
-            tooltipImage.src = url;
-            tooltip.style.display = 'block';
-            tooltip.setAttribute('aria-hidden', 'false');
-            moveImagePreview(event);
-        }
-
-        function moveImagePreview(event) {
-            if (!tooltip || tooltip.style.display !== 'block') {
-                return;
-            }
-            const offset = 20;
-            let x = event.clientX + offset;
-            let y = event.clientY + offset;
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            const rect = tooltip.getBoundingClientRect();
-
-            if (x + rect.width > viewportWidth) {
-                x = event.clientX - rect.width - offset;
-            }
-            if (y + rect.height > viewportHeight) {
-                y = event.clientY - rect.height - offset;
-            }
-
-            tooltip.style.left = `${Math.max(0, x)}px`;
-            tooltip.style.top = `${Math.max(0, y)}px`;
-        }
-
-        function hideImagePreview() {
-            if (!tooltip || !tooltipImage) {
-                return;
-            }
-            tooltip.style.display = 'none';
-            tooltip.setAttribute('aria-hidden', 'true');
-            tooltipImage.src = '';
-        }
-
         const productNameCells = document.querySelectorAll('.product-name[data-image-url]');
         productNameCells.forEach(cell => {
-            cell.addEventListener('mouseenter', event => showImagePreview(event, cell));
-            cell.addEventListener('mousemove', moveImagePreview);
-            cell.addEventListener('mouseleave', hideImagePreview);
-            cell.addEventListener('focus', event => showImagePreview(event, cell));
-            cell.addEventListener('blur', hideImagePreview);
             cell.addEventListener('click', event => {
                 if (!productImageModalInstance) {
                     return;
@@ -447,7 +372,6 @@
                 if (!url) {
                     return;
                 }
-                hideImagePreview();
                 event.preventDefault();
                 const productName = cell.dataset.productName || cell.textContent.trim();
                 if (productImageModalTitle) {
