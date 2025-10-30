@@ -274,3 +274,26 @@ CREATE TABLE `type_code` (
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ;
+CREATE TABLE `code_group_tb` (
+	`group_code` VARCHAR(20) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`group_name` VARCHAR(50) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`description` VARCHAR(200) NULL DEFAULT NULL COLLATE 'utf8mb4_general_ci',
+	`is_active` TINYINT(1) NOT NULL DEFAULT '1',
+	`created_at` DATETIME NOT NULL DEFAULT current_timestamp(),
+	PRIMARY KEY (`group_code`) USING BTREE
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
+CREATE TABLE `code_item_tb` (
+	`group_code` VARCHAR(20) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`code` VARCHAR(30) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`code_name` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`is_active` TINYINT(1) NOT NULL DEFAULT '1',
+	`created_at` DATETIME NOT NULL DEFAULT current_timestamp(),
+	PRIMARY KEY (`group_code`, `code`) USING BTREE,
+	CONSTRAINT `fk_item_group` FOREIGN KEY (`group_code`) REFERENCES `code_group_tb` (`group_code`) ON UPDATE CASCADE ON DELETE RESTRICT
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;

@@ -15,6 +15,9 @@
                 <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/price">단가맵</a></li>
                 <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/client">거래처</a></li>
                 <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/inout">입/출고 관리</a></li>
+                <c:if test="${sessionScope.grade eq 'A'}">
+                    <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/codes/manage">코드등록</a></li>
+                </c:if>
             </ul>
         </div>
 

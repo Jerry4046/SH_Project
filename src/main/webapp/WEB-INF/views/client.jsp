@@ -22,7 +22,7 @@
         }
 
         .card {
-            border: none;
+            border: none;+
             border-radius: 1rem;
         }
 
