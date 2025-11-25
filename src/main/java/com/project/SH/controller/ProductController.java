@@ -9,6 +9,8 @@ import com.project.SH.domain.ProductCode;
 import com.project.SH.service.ImageStorageService;
 import com.project.SH.service.ProductCodeService;
 import com.project.SH.service.ProductService;
+import com.project.SH.domain.CodeItem;
+import com.project.SH.service.CodeItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;  // SLF4J 로그 추가
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,20 +34,27 @@ import java.util.Optional;
 @Slf4j
 public class ProductController {
 
+    private static final String COMPANY_CODE_GROUP = "PD_CP";
+    private static final String TYPE_CODE_GROUP = "PD_TY";
+    private static final String CATEGORY_CODE_GROUP = "PD_CT";
+
     private final ProductService productService;
     private final ProductCodeService productCodeService;
     private final ImageStorageService imageStorageService;
+    private final CodeItemService codeItemService;
 
     @GetMapping("/product/register")
     public String showRegisterForm(Model model) {
-        List<CompanyCode> companies = productCodeService.getCompanies();
-        List<ProductCode> codes = productCodeService.getAllProductCodes();
-        model.addAttribute("companies", companies);
-        model.addAttribute("companyNames", productCodeService.getCompanyNameMap());
-        model.addAttribute("typeNames", productCodeService.getTypeNameMap());
-        model.addAttribute("categoryNames", productCodeService.getCategoryNameMap());
-        Map<String, CompanyHierarchy> hierarchy = buildCompanyHierarchy(companies, codes);
-        model.addAttribute("codeHierarchyJson", writeHierarchyJson(hierarchy));
+        List<CodeItem> companyCodes = codeItemService.search(COMPANY_CODE_GROUP, null, true);
+        List<CodeItem> typeCodes = codeItemService.search(TYPE_CODE_GROUP, null, true);
+        List<CodeItem> categoryCodes = codeItemService.search(CATEGORY_CODE_GROUP, null, true);
+
+        model.addAttribute("companyCodes", companyCodes);
+        model.addAttribute("typeCodes", typeCodes);
+        model.addAttribute("categoryCodes", categoryCodes);
+
+        Map<String, Object> lookup = buildCodeLookup(companyCodes, typeCodes, categoryCodes);
+        model.addAttribute("codeHierarchyJson", writeHierarchyJson(lookup));
         return "productdetail";
     }
 
@@ -268,13 +277,40 @@ public class ProductController {
         return imageMap;
     }
 
-    private String writeHierarchyJson(Map<String, CompanyHierarchy> hierarchy) {
+    private String writeHierarchyJson(Object hierarchy) {
         try {
             return new ObjectMapper().writeValueAsString(hierarchy);
         } catch (JsonProcessingException e) {
             log.error("코드 계층 JSON 직렬화 실패", e);
             return "{}";
         }
+    }
+
+    private Map<String, Object> buildCodeLookup(List<CodeItem> companies,
+                                                List<CodeItem> types,
+                                                List<CodeItem> categories) {
+        Map<String, Object> lookup = new LinkedHashMap<>();
+        lookup.put("companyGroupCode", COMPANY_CODE_GROUP);
+        lookup.put("typeGroupCode", TYPE_CODE_GROUP);
+        lookup.put("categoryGroupCode", CATEGORY_CODE_GROUP);
+        lookup.put("companies", toCodeNameList(companies));
+        lookup.put("types", toCodeNameList(types));
+        lookup.put("categories", toCodeNameList(categories));
+        return lookup;
+    }
+
+    private List<CodeName> toCodeNameList(List<CodeItem> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        List<CodeName> result = new ArrayList<>(items.size());
+        for (CodeItem item : items) {
+            if (item == null || item.getCode() == null || item.getCode().isBlank()) {
+                continue;
+            }
+            result.add(new CodeName(item.getCode(), item.getCodeLabel()));
+        }
+        return result;
     }
 
     private static class CompanyHierarchy {

@@ -75,11 +75,11 @@
                             <label class="form-label" for="codeCompanyName">회사 이름</label>
                             <div class="combo-field">
                                 <select id="codeCompanyName" class="form-select pe-5" data-placeholder="선택하세요"
-                                        data-selected-code="${param.companyCode}">
+                                        data-selected-code="${param.companyCode}" data-group-code="PD_CP">
                                     <option value="">선택하세요</option>
                                     <option value="__manual__">직접입력</option>
-                                    <c:forEach var="company" items="${companies}">
-                                        <option value="${company.companyCode}">${company.companyName}</option>
+                                    <c:forEach var="company" items="${companyCodes}">
+                                        <option value="${company.code}">${company.codeLabel}</option>
                                     </c:forEach>
                                 </select>
                                 <button type="button"
@@ -90,8 +90,14 @@
                                 </button>
                                 <div class="manual-input-wrapper d-none" id="codeCompanyManualWrapper">
                                     <input type="text" id="codeCompanyNameInput" class="manual-input form-control"
-                                           placeholder="회사 이름을 입력하세요" autocomplete="off" disabled>
+                                           placeholder="회사 이름을 입력하세요" autocomplete="off" disabled
+                                           list="companyNameSuggestions">
                                 </div>
+                                <datalist id="companyNameSuggestions">
+                                    <c:forEach var="company" items="${companyCodes}">
+                                        <option value="${company.codeLabel}" data-code="${company.code}"></option>
+                                    </c:forEach>
+                                </datalist>
                             </div>
                         </div>
                         <div class="col-md">
@@ -108,7 +114,7 @@
                             <label class="form-label" for="codeTypeName">타입 이름</label>
                             <div class="combo-field">
                                 <select id="codeTypeName" class="form-select pe-5" data-placeholder="선택하세요"
-                                        data-selected-code="${param.typeCode}" disabled>
+                                        data-selected-code="${param.typeCode}" data-group-code="PD_TY" disabled>
                                     <option value="">선택하세요</option>
                                     <option value="__manual__">직접입력</option>
                                 </select>
@@ -120,8 +126,14 @@
                                 </button>
                                 <div class="manual-input-wrapper d-none" id="codeTypeManualWrapper">
                                     <input type="text" id="codeTypeNameInput" class="manual-input form-control"
-                                           placeholder="타입 이름을 입력하세요" autocomplete="off" disabled>
+                                           placeholder="타입 이름을 입력하세요" autocomplete="off" disabled
+                                           list="typeNameSuggestions">
                                 </div>
+                                <datalist id="typeNameSuggestions">
+                                    <c:forEach var="type" items="${typeCodes}">
+                                        <option value="${type.codeLabel}" data-code="${type.code}"></option>
+                                    </c:forEach>
+                                </datalist>
                             </div>
                         </div>
                         <div class="col-md">
@@ -138,7 +150,7 @@
                             <label class="form-label" for="codeCategoryName">카테고리 이름</label>
                             <div class="combo-field">
                                 <select id="codeCategoryName" class="form-select pe-5" data-placeholder="선택하세요"
-                                        data-selected-code="${param.categoryCode}" disabled>
+                                        data-selected-code="${param.categoryCode}" data-group-code="PD_CT" disabled>
                                     <option value="">선택하세요</option>
                                     <option value="__manual__">직접입력</option>
                                 </select>
@@ -150,8 +162,14 @@
                                 </button>
                                 <div class="manual-input-wrapper d-none" id="codeCategoryManualWrapper">
                                     <input type="text" id="codeCategoryNameInput" class="manual-input form-control"
-                                           placeholder="카테고리 이름을 입력하세요" autocomplete="off" disabled>
+                                           placeholder="카테고리 이름을 입력하세요" autocomplete="off" disabled
+                                           list="categoryNameSuggestions">
                                 </div>
+                                <datalist id="categoryNameSuggestions">
+                                    <c:forEach var="category" items="${categoryCodes}">
+                                        <option value="${category.codeLabel}" data-code="${category.code}"></option>
+                                    </c:forEach>
+                                </datalist>
                             </div>
                         </div>
                         <div class="col-md">
@@ -172,26 +190,26 @@
             <div id="productForm">
                 <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label class="form-label" for="productCompanyCode">회사</label>
+                            <label class="form-label" for="productCompanyCode">회사</label>
                         <select name="companyCode" id="productCompanyCode" class="form-select" required
-                                data-selected-company="${param.companyCode}" data-placeholder="선택하세요">
+                                data-selected-company="${param.companyCode}" data-placeholder="선택하세요" data-group-code="PD_CP">
                             <option value="">선택하세요</option>
-                            <c:forEach var="company" items="${companies}">
-                                <option value="${company.companyCode}">${company.companyName}</option>
+                            <c:forEach var="company" items="${companyCodes}">
+                                <option value="${company.code}">${company.codeLabel}</option>
                             </c:forEach>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="productTypeCode">유형</label>
                         <select name="typeCode" id="productTypeCode" class="form-select" disabled required
-                                data-selected-type="${param.typeCode}" data-placeholder="선택하세요">
+                                data-selected-type="${param.typeCode}" data-placeholder="선택하세요" data-group-code="PD_TY">
                             <option value="">선택하세요</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="productCategoryCode">카테고리</label>
                         <select name="categoryCode" id="productCategoryCode" class="form-select" disabled required
-                                data-selected-category="${param.categoryCode}" data-placeholder="선택하세요">
+                                data-selected-category="${param.categoryCode}" data-placeholder="선택하세요" data-group-code="PD_CT">
                             <option value="">선택하세요</option>
                         </select>
                     </div>
@@ -558,6 +576,37 @@
         });
     }
 
+    function bindAutocompleteToDatalist(input, codeInput, datalistId, onChange) {
+        if (!input || !codeInput || !datalistId) {
+            return;
+        }
+
+        const datalist = document.getElementById(datalistId);
+        if (!datalist) {
+            return;
+        }
+
+        const applyMatch = () => {
+            const value = input.value;
+            const match = Array.from(datalist.options).find((option) => option.value === value);
+
+            if (match) {
+                codeInput.value = match.dataset.code || '';
+                codeInput.dataset.autofilled = 'true';
+            } else if (codeInput.dataset.autofilled === 'true') {
+                codeInput.value = '';
+                delete codeInput.dataset.autofilled;
+            }
+
+            if (typeof onChange === 'function') {
+                onChange(Boolean(match));
+            }
+        };
+
+        input.addEventListener('input', applyMatch);
+        input.addEventListener('change', applyMatch);
+    }
+
     function setupImageUploadPreview() {
         const fileInput = document.getElementById('imageFile');
         const productNameInput = document.getElementById('pdName');
@@ -770,6 +819,36 @@
             return null;
         }
 
+        bindAutocompleteToDatalist(
+            state.companyManualInput,
+            state.companyCodeInput,
+            'companyNameSuggestions',
+            () => {
+                updateCompanyPartialState(state);
+                updateFullRegisterState(state);
+            }
+        );
+
+        bindAutocompleteToDatalist(
+            state.typeManualInput,
+            state.typeCodeInput,
+            'typeNameSuggestions',
+            () => {
+                updateTypePartialState(state);
+                updateFullRegisterState(state);
+            }
+        );
+
+        bindAutocompleteToDatalist(
+            state.categoryManualInput,
+            state.categoryCodeInput,
+            'categoryNameSuggestions',
+            () => {
+                updateCategoryPartialState(state);
+                updateFullRegisterState(state);
+            }
+        );
+
         if (state.companyManualInput) {
             state.companyManualInput.addEventListener('input', () => {
                 updateCompanyPartialState(state);
@@ -895,7 +974,7 @@
         setButtonDisabled(companyPartialBtn, true);
 
         resetTypeControls(state);
-        populateTypeOptions(state, codeHierarchy, value);
+        populateTypeOptions(state, codeHierarchy);
         if (typeSelect) {
             typeSelect.disabled = false;
         }
@@ -946,7 +1025,7 @@
         setButtonDisabled(typePartialBtn, true);
 
         resetCategoryControls(state);
-        populateCategoryOptions(state, codeHierarchy, value);
+        populateCategoryOptions(state, codeHierarchy);
         if (state.categorySelect) {
             state.categorySelect.disabled = false;
         }
@@ -1042,18 +1121,7 @@
             return;
         }
 
-        const companyData = codeHierarchy[companyCode];
-        if (companyData && Array.isArray(companyData.types)) {
-            companyData.types.forEach((type) => {
-                if (!type || !type.code) {
-                    return;
-                }
-                const option = document.createElement('option');
-                option.value = type.code;
-                option.textContent = type.name || type.code;
-                state.typeSelect.appendChild(option);
-            });
-        }
+        populateTypeOptions(state, codeHierarchy);
 
         state.typeSelect.disabled = state.typeSelect.options.length <= 1;
 
@@ -1082,19 +1150,7 @@
             return;
         }
 
-        const companyData = codeHierarchy[companyCode];
-        const categories = companyData && companyData.categories ? companyData.categories[typeCode] : null;
-        if (Array.isArray(categories)) {
-            categories.forEach((category) => {
-                if (!category || !category.code) {
-                    return;
-                }
-                const option = document.createElement('option');
-                option.value = category.code;
-                option.textContent = category.name || category.code;
-                state.categorySelect.appendChild(option);
-            });
-        }
+        populateCategoryOptions(state, codeHierarchy);
 
         state.categorySelect.disabled = state.categorySelect.options.length <= 1;
 
@@ -1217,18 +1273,15 @@
         setButtonDisabled(state.categoryPartialBtn, true);
     }
 
-    function populateTypeOptions(state, codeHierarchy, companyCode) {
+    function populateTypeOptions(state, codeHierarchy) {
         const { typeSelect } = state;
         if (!typeSelect) {
             return;
         }
 
-        const companyData = codeHierarchy[companyCode];
-        if (!companyData || !Array.isArray(companyData.types)) {
-            return;
-        }
+        const types = codeHierarchy && Array.isArray(codeHierarchy.types) ? codeHierarchy.types : [];
+        types.forEach((type) => {
 
-        companyData.types.forEach((type) => {
             if (!type || !type.code) {
                 return;
             }
@@ -1239,22 +1292,13 @@
         });
     }
 
-    function populateCategoryOptions(state, codeHierarchy, typeCode) {
-        const { companySelect, categorySelect } = state;
-        if (!companySelect || !categorySelect) {
+    function populateCategoryOptions(state, codeHierarchy) {
+        const { categorySelect } = state;
+        if (!categorySelect) {
             return;
         }
 
-        const companyCode = companySelect.value;
-        if (!companyCode) {
-            return;
-        }
-
-        const companyData = codeHierarchy[companyCode];
-        const categories = companyData && companyData.categories ? companyData.categories[typeCode] : null;
-        if (!Array.isArray(categories)) {
-            return;
-        }
+        const categories = codeHierarchy && Array.isArray(codeHierarchy.categories) ? codeHierarchy.categories : [];
 
         categories.forEach((category) => {
             if (!category || !category.code) {
@@ -1657,15 +1701,17 @@
         const codeHierarchy = appState.codeHierarchy || {};
         const productState = appState.productFormState;
 
+        codeHierarchy.companies = Array.isArray(codeHierarchy.companies) ? codeHierarchy.companies : [];
+        codeHierarchy.types = Array.isArray(codeHierarchy.types) ? codeHierarchy.types : [];
+        codeHierarchy.categories = Array.isArray(codeHierarchy.categories) ? codeHierarchy.categories : [];
+
         if (level === 'company') {
             const companyCode = responseData && responseData.companyCode ? responseData.companyCode : request.companyCode;
             const displayName = request.displayName || (responseData && responseData.description) || companyCode;
 
-            const hierarchyEntry = codeHierarchy[companyCode] || { name: displayName, types: [], categories: {} };
-            hierarchyEntry.name = displayName;
-            hierarchyEntry.types = hierarchyEntry.types || [];
-            hierarchyEntry.categories = hierarchyEntry.categories || {};
-            codeHierarchy[companyCode] = hierarchyEntry;
+            if (!codeHierarchy.companies.some((item) => item.code === companyCode)) {
+                codeHierarchy.companies.push({ code: companyCode, name: displayName });
+            }
 
             ensureOption(state.companySelect, companyCode, displayName);
             state.companySelect.value = companyCode;
@@ -1682,21 +1728,16 @@
             const typeCode = responseData && responseData.typeCode ? responseData.typeCode : request.typeCode;
             const displayName = request.displayName || (responseData && responseData.description) || typeCode;
 
-            const hierarchyEntry = codeHierarchy[companyCode] || { name: companyCode, types: [], categories: {} };
-            hierarchyEntry.types = hierarchyEntry.types || [];
-            hierarchyEntry.categories = hierarchyEntry.categories || {};
-            if (!hierarchyEntry.types.some((item) => item.code === typeCode)) {
-                hierarchyEntry.types.push({ code: typeCode, name: displayName });
+            if (!codeHierarchy.types.some((item) => item.code === typeCode)) {
+                codeHierarchy.types.push({ code: typeCode, name: displayName });
             }
-            hierarchyEntry.categories[typeCode] = hierarchyEntry.categories[typeCode] || [];
-            codeHierarchy[companyCode] = hierarchyEntry;
 
             ensureOption(state.typeSelect, typeCode, displayName);
             state.typeSelect.disabled = false;
             state.typeSelect.value = typeCode;
             handleTypeChange(state, codeHierarchy);
 
-            if (productState && productState.companySelect && productState.companySelect.value === companyCode) {
+            if (productState && productState.typeSelect) {
                 ensureOption(productState.typeSelect, typeCode, displayName);
                 productState.typeSelect.disabled = false;
             }
@@ -1709,23 +1750,16 @@
             const categoryCode = responseData && responseData.categoryCode ? responseData.categoryCode : request.categoryCode;
             const displayName = request.displayName || (responseData && responseData.description) || categoryCode;
 
-            const hierarchyEntry = codeHierarchy[companyCode] || { name: companyCode, types: [], categories: {} };
-            hierarchyEntry.types = hierarchyEntry.types || [];
-            hierarchyEntry.categories = hierarchyEntry.categories || {};
-            const categoryList = hierarchyEntry.categories[typeCode] || [];
-            if (!categoryList.some((item) => item.code === categoryCode)) {
-                categoryList.push({ code: categoryCode, name: displayName });
+            if (!codeHierarchy.categories.some((item) => item.code === categoryCode)) {
+                codeHierarchy.categories.push({ code: categoryCode, name: displayName });
             }
-            hierarchyEntry.categories[typeCode] = categoryList;
-            codeHierarchy[companyCode] = hierarchyEntry;
 
             ensureOption(state.categorySelect, categoryCode, displayName);
             state.categorySelect.disabled = false;
             state.categorySelect.value = categoryCode;
             handleCategoryChange(state);
 
-            if (productState && productState.companySelect && productState.companySelect.value === companyCode
-                && productState.typeSelect && productState.typeSelect.value === typeCode) {
+            if (productState && productState.categorySelect) {
                 ensureOption(productState.categorySelect, categoryCode, displayName);
                 productState.categorySelect.disabled = false;
             }
