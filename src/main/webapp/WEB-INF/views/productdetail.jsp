@@ -62,130 +62,7 @@
 <div class="container mt-5">
     <c:choose>
         <c:when test="${empty product}">
-            <h2 class="mb-4">등록</h2>
-            <div class="btn-group mb-3">
-                <button type="button" class="btn btn-outline-primary active" id="productTabBtn">제품</button>
-                <button type="button" class="btn btn-outline-primary" id="codeTabBtn">제품코드</button>
-            </div>
-
-    <div id="codeForm" style="display:none;">
-                <form id="codeRegisterForm" autocomplete="off" onsubmit="return false;">
-                    <div class="row g-3 align-items-end mb-3">
-                        <div class="col-md">
-                            <label class="form-label" for="codeCompanyName">회사 이름</label>
-                            <div class="combo-field">
-                                <select id="codeCompanyName" class="form-select pe-5" data-placeholder="선택하세요"
-                                        data-selected-code="${param.companyCode}" data-group-code="PD_CP">
-                                    <option value="">선택하세요</option>
-                                    <option value="__manual__">직접입력</option>
-                                    <c:forEach var="company" items="${companyCodes}">
-                                        <option value="${company.code}">${company.codeLabel}</option>
-                                    </c:forEach>
-                                </select>
-                                <button type="button"
-                                        class="combo-toggle btn btn-outline-secondary position-absolute top-0 end-0 h-100 px-3 d-none"
-                                        aria-label="목록 열기">
-                                    <span aria-hidden="true">▾</span>
-                                    <span class="visually-hidden">목록 열기</span>
-                                </button>
-                                <div class="manual-input-wrapper d-none" id="codeCompanyManualWrapper">
-                                    <input type="text" id="codeCompanyNameInput" class="manual-input form-control"
-                                           placeholder="회사 이름을 입력하세요" autocomplete="off" disabled
-                                           list="companyNameSuggestions">
-                                </div>
-                                <datalist id="companyNameSuggestions">
-                                    <c:forEach var="company" items="${companyCodes}">
-                                        <option value="${company.codeLabel}" data-code="${company.code}"></option>
-                                    </c:forEach>
-                                </datalist>
-                            </div>
-                        </div>
-                        <div class="col-md">
-                            <label class="form-label" for="codeCompany">회사 코드</label>
-                            <input type="text" id="codeCompany" class="form-control" placeholder="회사 코드를 입력하세요" disabled>
-                        </div>
-                        <div class="col-auto">
-                            <button type="button" class="btn btn-secondary" id="companyPartialBtn" disabled>부분등록</button>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 align-items-end mb-3">
-                        <div class="col-md">
-                            <label class="form-label" for="codeTypeName">타입 이름</label>
-                            <div class="combo-field">
-                                <select id="codeTypeName" class="form-select pe-5" data-placeholder="선택하세요"
-                                        data-selected-code="${param.typeCode}" data-group-code="PD_TY" disabled>
-                                    <option value="">선택하세요</option>
-                                    <option value="__manual__">직접입력</option>
-                                </select>
-                                <button type="button"
-                                        class="combo-toggle btn btn-outline-secondary position-absolute top-0 end-0 h-100 px-3 d-none"
-                                        aria-label="목록 열기">
-                                    <span aria-hidden="true">▾</span>
-                                    <span class="visually-hidden">목록 열기</span>
-                                </button>
-                                <div class="manual-input-wrapper d-none" id="codeTypeManualWrapper">
-                                    <input type="text" id="codeTypeNameInput" class="manual-input form-control"
-                                           placeholder="타입 이름을 입력하세요" autocomplete="off" disabled
-                                           list="typeNameSuggestions">
-                                </div>
-                                <datalist id="typeNameSuggestions">
-                                    <c:forEach var="type" items="${typeCodes}">
-                                        <option value="${type.codeLabel}" data-code="${type.code}"></option>
-                                    </c:forEach>
-                                </datalist>
-                            </div>
-                        </div>
-                        <div class="col-md">
-                            <label class="form-label" for="codeType">타입 코드</label>
-                            <input type="text" id="codeType" class="form-control" placeholder="타입 코드를 입력하세요" disabled>
-                        </div>
-                        <div class="col-auto">
-                            <button type="button" class="btn btn-secondary" id="typePartialBtn" disabled>부분등록</button>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 align-items-end mb-3">
-                        <div class="col-md">
-                            <label class="form-label" for="codeCategoryName">카테고리 이름</label>
-                            <div class="combo-field">
-                                <select id="codeCategoryName" class="form-select pe-5" data-placeholder="선택하세요"
-                                        data-selected-code="${param.categoryCode}" data-group-code="PD_CT" disabled>
-                                    <option value="">선택하세요</option>
-                                    <option value="__manual__">직접입력</option>
-                                </select>
-                                <button type="button"
-                                        class="combo-toggle btn btn-outline-secondary position-absolute top-0 end-0 h-100 px-3 d-none"
-                                        aria-label="목록 열기">
-                                    <span aria-hidden="true">▾</span>
-                                    <span class="visually-hidden">목록 열기</span>
-                                </button>
-                                <div class="manual-input-wrapper d-none" id="codeCategoryManualWrapper">
-                                    <input type="text" id="codeCategoryNameInput" class="manual-input form-control"
-                                           placeholder="카테고리 이름을 입력하세요" autocomplete="off" disabled
-                                           list="categoryNameSuggestions">
-                                </div>
-                                <datalist id="categoryNameSuggestions">
-                                    <c:forEach var="category" items="${categoryCodes}">
-                                        <option value="${category.codeLabel}" data-code="${category.code}"></option>
-                                    </c:forEach>
-                                </datalist>
-                            </div>
-                        </div>
-                        <div class="col-md">
-                            <label class="form-label" for="codeCategory">카테고리 코드</label>
-                            <input type="text" id="codeCategory" class="form-control" placeholder="카테고리 코드를 입력하세요" disabled>
-                        </div>
-                        <div class="col-auto">
-                            <button type="button" class="btn btn-secondary" id="categoryPartialBtn" disabled>부분등록</button>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary" id="fullRegisterBtn" disabled>전체등록</button>
-                    </div>
-                </form>
-            </div>
+            <h2 class="mb-4">제품 등록</h2>
 
             <div id="productForm">
                 <form action="${pageContext.request.contextPath}/product/register" method="post" class="mt-3" enctype="multipart/form-data">
@@ -477,13 +354,10 @@
             codeHierarchy: parseCodeHierarchy()
         };
 
-        setupTabToggle();
         setupComboToggles();
 
-        appState.codeFormState = setupCodeForm(appState.codeHierarchy);
         appState.productFormState = setupProductForm(appState.codeHierarchy);
 
-        setupPartialRegistration(appState);
         setupImageUploadPreview();
         setupWarehouseTotalPreview();
         setupDetailWarehouseEditor();

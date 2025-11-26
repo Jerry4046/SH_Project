@@ -1,18 +1,17 @@
 package com.project.SH.service;
 
-import com.project.SH.domain.CategoryCode;
+import com.project.SH.domain.CodeItem;
+import com.project.SH.domain.CodeItemId;
 import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.Product;
 import com.project.SH.domain.ProductCode;
-import com.project.SH.domain.TypeCode;
 import com.project.SH.dto.NextItemCodeResponse;
-import com.project.SH.repository.CategoryCodeRepository;
-import com.project.SH.repository.CompanyCodeRepository;
+import com.project.SH.repository.CodeItemRepository;
 import com.project.SH.repository.ProductCodeRepository;
 import com.project.SH.repository.ProductRepository;
-import com.project.SH.repository.TypeCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,11 +23,12 @@ public class ProductCodeService implements ProductCodeServiceImpl {
 
     private static final String ROOT_CODE = "0000";
     private static final int ITEM_CODE_LENGTH = 4;
+    private static final String COMPANY_CODE_GROUP = "PD_CP";
+    private static final String TYPE_CODE_GROUP = "PD_TY";
+    private static final String CATEGORY_CODE_GROUP = "PD_CT";
 
     private final ProductCodeRepository productCodeRepository;
-    private final CompanyCodeRepository companyCodeRepository;
-    private final TypeCodeRepository typeCodeRepository;
-    private final CategoryCodeRepository categoryCodeRepository;
+    private final CodeItemRepository codeItemRepository;
     private final ProductRepository productRepository;
 
     @Override
@@ -37,125 +37,80 @@ public class ProductCodeService implements ProductCodeServiceImpl {
     }
 
     @Override
+    @Transactional
     public ProductCode createProductCode(String companyCode, String typeCode, String categoryCode, String description) {
         final String normalizedDescription = description != null ? description.trim() : null;
         final boolean isCompanyLevel = ROOT_CODE.equals(typeCode) && ROOT_CODE.equals(categoryCode);
         final boolean isTypeLevel = !ROOT_CODE.equals(typeCode) && ROOT_CODE.equals(categoryCode);
         final boolean isCategoryLevel = !ROOT_CODE.equals(typeCode) && !ROOT_CODE.equals(categoryCode);
 
-        ensureTypeCode(ROOT_CODE, null);
-        ensureCategoryCode(ROOT_CODE, null);
+        CodeItem company = requireCodeItem(COMPANY_CODE_GROUP, companyCode);
+        CodeItem type = isCompanyLevel || ROOT_CODE.equals(typeCode)
+                ? null
+                : requireCodeItem(TYPE_CODE_GROUP, typeCode);
+        CodeItem category = isCategoryLevel
+                ? requireCodeItem(CATEGORY_CODE_GROUP, categoryCode)
+                : null;
 
-        final String resolvedDescription;
-        if (isCompanyLevel) {
-            resolvedDescription = resolveName(normalizedDescription, companyCode);
-        } else if (isTypeLevel) {
-            resolvedDescription = resolveName(normalizedDescription, typeCode);
-        } else if (isCategoryLevel) {
-            resolvedDescription = resolveName(normalizedDescription, categoryCode);
-        } else {
-            resolvedDescription = normalizedDescription;
-        }
+        final String resolvedDescription = resolveDescription(normalizedDescription, company, type, category,
+                isCompanyLevel, isTypeLevel, isCategoryLevel);
 
-        if (isCompanyLevel) {
-            companyCodeRepository.findById(companyCode)
-                    .map(existing -> {
-                        if (normalizedDescription != null && !normalizedDescription.isBlank()
-                                && !normalizedDescription.equals(existing.getCompanyName())) {
-                            existing.setCompanyName(normalizedDescription);
-                            return companyCodeRepository.save(existing);
-                        }
-                        return existing;
-                    })
-                    .orElseGet(() -> companyCodeRepository.save(CompanyCode.builder()
-                            .companyCode(companyCode)
-                            .companyName(resolvedDescription)
-                            .build()));
-        } else {
-            companyCodeRepository.findById(companyCode)
-                    .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 회사 코드입니다."));
-        }
-
-        if (isTypeLevel) {
-            ensureTypeCode(typeCode, normalizedDescription);
-        } else if (!ROOT_CODE.equals(typeCode)) {
-            ensureTypeCode(typeCode, null);
-        }
-
-        if (isCategoryLevel) {
-            ensureCategoryCode(categoryCode, normalizedDescription);
-        }
-
-        return productCodeRepository
-                .findByCompanyCodeAndTypeCodeAndCategoryCode(companyCode, typeCode, categoryCode)
-                .map(existing -> updateDescriptionIfNeeded(existing, normalizedDescription))
-                .orElseGet(() -> productCodeRepository.save(ProductCode.builder()
-                        .companyCode(companyCode)
-                        .typeCode(typeCode)
-                        .categoryCode(categoryCode)
-                        .description(resolvedDescription)
-                        .build()));
+        return ProductCode.builder()
+                .companyCode(companyCode)
+                .typeCode(typeCode)
+                .categoryCode(categoryCode)
+                .description(resolvedDescription)
+                .build();
     }
 
-    private ProductCode updateDescriptionIfNeeded(ProductCode code, String description) {
-        if (description != null && !description.isBlank() && !description.equals(code.getDescription())) {
-            code.setDescription(description);
-            return productCodeRepository.save(code);
+
+    private String resolveDescription(String candidate, CodeItem company, CodeItem type, CodeItem category,
+                                      boolean isCompanyLevel, boolean isTypeLevel, boolean isCategoryLevel) {
+        if (candidate != null && !candidate.isBlank()) {
+            return candidate;
         }
-        return code;
-    }
-
-    private void ensureTypeCode(String typeCode, String description) {
-        final String resolvedName = resolveName(description, typeCode);
-        typeCodeRepository.findById(typeCode)
-                .map(existing -> {
-                    if (description != null && !description.isBlank() && !resolvedName.equals(existing.getTypeName())) {
-                        existing.setTypeName(resolvedName);
-                        return typeCodeRepository.save(existing);
-                    }
-                    return existing;
-                })
-                .orElseGet(() -> typeCodeRepository.save(TypeCode.builder()
-                        .typeCode(typeCode)
-                        .typeName(resolvedName)
-                        .build()));
-    }
-
-    private void ensureCategoryCode(String categoryCode, String description) {
-        final String resolvedName = resolveName(description, categoryCode);
-        categoryCodeRepository.findById(categoryCode)
-                .map(existing -> {
-                    if (description != null && !description.isBlank() && !resolvedName.equals(existing.getCategoryName())) {
-                        existing.setCategoryName(resolvedName);
-                        return categoryCodeRepository.save(existing);
-                    }
-                    return existing;
-                })
-                .orElseGet(() -> categoryCodeRepository.save(CategoryCode.builder()
-                        .categoryCode(categoryCode)
-                        .categoryName(resolvedName)
-                        .build()));
-    }
-
-    private String resolveName(String candidate, String fallback) {
-        return candidate != null && !candidate.isBlank() ? candidate : fallback;
+        if (isCategoryLevel && category != null) {
+            return category.getCodeLabel();
+        }
+        if (isTypeLevel && type != null) {
+            return type.getCodeLabel();
+        }
+        if (isCompanyLevel && company != null) {
+            return company.getCodeLabel();
+        }
+        if (category != null) {
+            return category.getCode();
+        }
+        if (type != null) {
+            return type.getCode();
+        }
+        return company != null ? company.getCode() : candidate;
     }
 
     @Override
     public List<CompanyCode> getCompanies() {
-        // DB가 반환한 회사 코드를 이름순으로 정렬해서 전달
-        // (값이 비어 보이는 문제를 줄이기 위해 명시적으로 정렬 사용)
-        return companyCodeRepository.findAll(org.springframework.data.domain.Sort.by("companyName"));
+        return codeItemRepository.search(COMPANY_CODE_GROUP, null, true)
+                .stream()
+                .map(item -> CompanyCode.builder()
+                        .companyCode(item.getCode())
+                        .companyName(item.getCodeLabel())
+                        .build())
+                .toList();
     }
 
     @Override
     public List<ProductCode> getTypesByCompanyCode(String companyCode) {
-        return productCodeRepository.findByCompanyCodeAndCategoryCode(companyCode, ROOT_CODE);
+        List<ProductCode> productCodes = productCodeRepository.findByCompanyCodeAndCategoryCode(companyCode, ROOT_CODE);
+        synchronizeDescriptions(productCodes, TYPE_CODE_GROUP);
+        return productCodes;
     }
 
     @Override
     public List<ProductCode> getCategoriesByCompanyCodeAndTypeCode(String companyCode, String typeCode) {
-        return productCodeRepository.findByCompanyCodeAndTypeCodeAndCategoryCodeNot(companyCode, typeCode, ROOT_CODE);
+        List<ProductCode> productCodes = productCodeRepository
+                .findByCompanyCodeAndTypeCodeAndCategoryCodeNot(companyCode, typeCode, ROOT_CODE);
+        synchronizeDescriptions(productCodes, CATEGORY_CODE_GROUP);
+        return productCodes;
     }
 
     @Override
@@ -170,11 +125,11 @@ public class ProductCodeService implements ProductCodeServiceImpl {
 
     @Override
     public Map<String, String> getTypeNameMap() {
-        List<ProductCode> types = productCodeRepository.findByCategoryCode(ROOT_CODE);
+        List<CodeItem> types = codeItemRepository.search(TYPE_CODE_GROUP, null, true);
         Map<String, String> map = new LinkedHashMap<>();
-        for (ProductCode t : types) {
-            if (!ROOT_CODE.equals(t.getTypeCode())) {
-                map.putIfAbsent(t.getTypeCode(), t.getDescription());
+        for (CodeItem t : types) {
+            if (!ROOT_CODE.equals(t.getCode())) {
+                map.putIfAbsent(t.getCode(), t.getCodeLabel());
             }
         }
         return map;
@@ -182,10 +137,10 @@ public class ProductCodeService implements ProductCodeServiceImpl {
 
     @Override
     public Map<String, String> getCategoryNameMap() {
-        List<ProductCode> categories = productCodeRepository.findByCategoryCodeNot(ROOT_CODE);
+        List<CodeItem> categories = codeItemRepository.search(CATEGORY_CODE_GROUP, null, true);
         Map<String, String> map = new LinkedHashMap<>();
-        for (ProductCode cat : categories) {
-            map.putIfAbsent(cat.getCategoryCode(), cat.getDescription());
+        for (CodeItem cat : categories) {
+            map.putIfAbsent(cat.getCode(), cat.getCodeLabel());
         }
         return map;
     }
@@ -277,5 +232,42 @@ public class ProductCodeService implements ProductCodeServiceImpl {
             throw new IllegalArgumentException(label + "는 필수입니다.");
         }
         return trimmed;
+    }
+
+
+    private CodeItem requireCodeItem(String groupCode, String code) {
+        final String resolvedCode = requireCode(code, "코드");
+        return codeItemRepository.findById(new CodeItemId(groupCode, resolvedCode))
+                .filter(CodeItem::isActive)
+                .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 코드입니다. 그룹: " + groupCode + ", 코드: " + resolvedCode));
+    }
+
+    private void synchronizeDescriptions(List<ProductCode> productCodes, String groupCode) {
+        if (productCodes == null || productCodes.isEmpty()) {
+            return;
+        }
+        Map<String, String> labelMap = buildLabelMap(groupCode);
+        for (ProductCode code : productCodes) {
+            if (code == null) {
+                continue;
+            }
+            final String key = CATEGORY_CODE_GROUP.equals(groupCode) ? code.getCategoryCode() : code.getTypeCode();
+            if (key == null) {
+                continue;
+            }
+            String label = labelMap.get(key);
+            if (label != null && (code.getDescription() == null || !code.getDescription().equals(label))) {
+                code.setDescription(label);
+            }
+        }
+    }
+
+    private Map<String, String> buildLabelMap(String groupCode) {
+        List<CodeItem> items = codeItemRepository.search(groupCode, null, true);
+        Map<String, String> map = new LinkedHashMap<>();
+        for (CodeItem item : items) {
+            map.put(item.getCode(), item.getCodeLabel());
+        }
+        return map;
     }
 }
