@@ -152,14 +152,14 @@ public class EcountApiService {
     }
 
     public JsonNode viewBasicProduct(String prodCd, String prodType) {
-        if (prodCd == null || prodCd.isBlank()) {
+        if (prodCd == null ) {
             throw new IllegalArgumentException("PROD_CD 값은 필수입니다.");
         }
 
         String sessionId = getSessionId();
 
         String url = "https://sboapi" + zone
-                + ".ecount.com/OAPI/V2/InventoryBasic/ViewBasicProduct"
+                + ".ecount.com/OAPI/V2/InventoryBasic/GetBasicProductsList"
                 + "?SESSION_ID=" + sessionId;
 
         Map<String, Object> body = new LinkedHashMap<>();
@@ -181,7 +181,7 @@ public class EcountApiService {
 
         JsonNode root = resp.getBody();
         if (root == null) {
-            throw new IllegalStateException("ViewBasicProduct response is empty");
+            throw new IllegalStateException("GetBasicProductsList response is empty");
         }
 
         return root;

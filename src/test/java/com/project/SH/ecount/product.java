@@ -22,7 +22,7 @@ class product {
     @Test
     @DisplayName("품목 코드로 기본 제품 정보를 조회한다")
     void viewBasicProduct() {
-        JsonNode response = ecountApiService.viewBasicProduct("P0001", null);
+        JsonNode response = ecountApiService.viewBasicProduct("", null);
 
         log.info("제품 조회 응답: {}", response.toPrettyString());
         assertNotNull(response, "제품 조회 응답이 null이면 안 됩니다.");
