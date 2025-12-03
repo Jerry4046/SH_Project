@@ -151,6 +151,42 @@ public class EcountApiService {
         return root;
     }
 
+    public JsonNode viewBasicProduct(String prodCd, String prodType) {
+        if (prodCd == null || prodCd.isBlank()) {
+            throw new IllegalArgumentException("PROD_CD 값은 필수입니다.");
+        }
+
+        String sessionId = getSessionId();
+
+        String url = "https://sboapi" + zone
+                + ".ecount.com/OAPI/V2/InventoryBasic/ViewBasicProduct"
+                + "?SESSION_ID=" + sessionId;
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("PROD_CD", prodCd.trim());
+        body.put("PROD_TYPE", prodType == null ? "" : prodType.trim());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        ResponseEntity<JsonNode> resp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                JsonNode.class
+        );
+
+        JsonNode root = resp.getBody();
+        if (root == null) {
+            throw new IllegalStateException("ViewBasicProduct response is empty");
+        }
+
+        return root;
+    }
+
     public JsonNode getPurchaseOrderList(
             String baseDateFrom,
             String baseDateTo,

@@ -23,6 +23,15 @@ public class EcountController {
         return ResponseEntity.ok(sessionId);
     }
 
+    @GetMapping("/products")
+    public ResponseEntity<JsonNode> getProduct(
+            @RequestParam("prodCd") String prodCd,
+            @RequestParam(value = "prodType", required = false) String prodType
+    ) {
+        JsonNode response = ecountApiService.viewBasicProduct(prodCd, prodType);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/purchase-orders")
     public ResponseEntity<JsonNode> getPurchaseOrders(@ModelAttribute PurchaseOrderSearchRequest request) {
         JsonNode response = ecountApiService.getPurchaseOrderList(
