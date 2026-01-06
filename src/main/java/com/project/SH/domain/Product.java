@@ -70,6 +70,10 @@ public class Product {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<Price> prices;
 
+    // 입수량별 변형 (ProductVariant) 테이블과 1:N 관계
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductVariant> variants;
+
     // 등록자 정보 (account_seq -> User)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_seq", insertable = false, updatable = false)

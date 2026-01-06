@@ -8,6 +8,8 @@ import com.project.SH.repository.ProductRepository;
 import com.project.SH.repository.ProductChangeHistoryRepository;
 import com.project.SH.repository.StockHistoryRepository;
 import com.project.SH.repository.StockRepository;
+import com.project.SH.repository.ProductVariantRepository;
+import com.project.SH.domain.ProductVariant;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class ProductService implements ProductServiceImpl {
     private final StockHistoryRepository stockHistoryRepository;
     private final ProductChangeHistoryRepository productChangeHistoryRepository;
     private final ImageStorageService imageStorageService;
+    private final ProductVariantRepository productVariantRepository;
 
 
     @Transactional
@@ -162,7 +165,7 @@ public class ProductService implements ProductServiceImpl {
 
     @Transactional
     public void updateProduct(String originalProductCode, String originalItemCode, Product updatedProduct,
-                              Integer piecesPerBox, Integer shQty, Integer hpQty, Double price,
+                              Integer piecesPerBox, Integer shQty, Integer hpQty, Integer totalQty, Double price,
                               Long accountSeq, String reason, boolean isAdmin) {
         final String normalizedProductCode = requireProductCode(originalProductCode);
         final boolean productCodeIncludesSequence = hasSequenceSuffix(normalizedProductCode);
@@ -267,8 +270,20 @@ public class ProductService implements ProductServiceImpl {
             int oldHpQty = stock.getHpQty() == null ? 0 : stock.getHpQty();
             int oldTotal = stock.getTotalQty() != null ? stock.getTotalQty() : oldShQty + oldHpQty;
 
-            int resolvedShQty = resolveWarehouseQuantity(shQty, oldShQty);
-            int resolvedHpQty = resolveWarehouseQuantity(hpQty, oldHpQty);
+            int resolvedShQty;
+            int resolvedHpQty;
+            if (totalQty != null && shQty == null && hpQty == null) {
+                // totalQty만 전달된 경우: SH창고에 전부 반영, HP창고는 기존 유지
+                resolvedShQty = totalQty - oldHpQty;
+                resolvedHpQty = oldHpQty;
+                if (resolvedShQty < 0) {
+                    resolvedShQty = 0;
+                    resolvedHpQty = totalQty;
+                }
+            } else {
+                resolvedShQty = resolveWarehouseQuantity(shQty, oldShQty);
+                resolvedHpQty = resolveWarehouseQuantity(hpQty, oldHpQty);
+            }
 
             boolean shChanged = resolvedShQty != oldShQty;
             boolean hpChanged = resolvedHpQty != oldHpQty;
@@ -405,5 +420,108 @@ public class ProductService implements ProductServiceImpl {
             return fallback;
         }
         return requested < 0 ? 0 : requested;
+    }
+
+    // ==================== ProductVariant 관련 메서드 ====================
+
+    /**
+     * 제품의 입수량별 변형 목록 조회
+     */
+    public List<ProductVariant> getVariantsByProductId(Long productId) {
+        return productVariantRepository.findByProductId(productId);
+    }
+
+    /**
+     * 입수량별 변형 추가
+     */
+    @Transactional
+    public ProductVariant addVariant(Long productId, Integer piecesPerBox, Integer boxQty, Integer looseQty) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        if (productVariantRepository.existsByProductIdAndPiecesPerBox(productId, piecesPerBox)) {
+            throw new IllegalStateException("이미 동일한 입수량(" + piecesPerBox + ")의 변형이 존재합니다.");
+        }
+
+        ProductVariant variant = ProductVariant.builder()
+                .product(product)
+                .piecesPerBox(piecesPerBox)
+                .boxQty(boxQty != null ? boxQty : 0)
+                .looseQty(looseQty != null ? looseQty : 0)
+                .build();
+        variant.recalculateSubTotal();
+
+        return productVariantRepository.save(variant);
+    }
+
+    /**
+     * 입수량별 변형 수정
+     */
+    @Transactional
+    public ProductVariant updateVariant(Long variantId, Integer boxQty, Integer looseQty) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new IllegalArgumentException("Variant not found: " + variantId));
+
+        variant.updateQuantities(
+                boxQty != null ? boxQty : variant.getBoxQty(),
+                looseQty != null ? looseQty : variant.getLooseQty()
+        );
+
+        return productVariantRepository.save(variant);
+    }
+
+    /**
+     * 입수량별 변형 삭제
+     */
+    @Transactional
+    public void deleteVariant(Long variantId) {
+        productVariantRepository.deleteById(variantId);
+    }
+
+    /**
+     * 변형 합계와 총재고 일치 여부 검증
+     * @return true: 일치, false: 불일치
+     */
+    public boolean validateVariantSum(Long productId) {
+        Integer variantSum = productVariantRepository.sumSubTotalByProductId(productId);
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null || product.getStock() == null) {
+            return variantSum == null || variantSum == 0;
+        }
+        Integer totalQty = product.getStock().getTotalQty();
+        return variantSum != null && variantSum.equals(totalQty);
+    }
+
+    /**
+     * 변형 합계와 총재고 일치 여부 검증 (불일치 시 예외 발생)
+     */
+    public void requireVariantSumMatch(Long productId) {
+        Integer variantSum = productVariantRepository.sumSubTotalByProductId(productId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        if (product.getStock() == null) {
+            if (variantSum != null && variantSum > 0) {
+                throw new IllegalStateException("재고 정보가 없지만 변형 합계가 " + variantSum + "입니다.");
+            }
+            return;
+        }
+
+        Integer totalQty = product.getStock().getTotalQty();
+        if (totalQty == null) totalQty = 0;
+        if (variantSum == null) variantSum = 0;
+
+        if (!variantSum.equals(totalQty)) {
+            throw new IllegalStateException(
+                    String.format("입수량별 재고 합계(%d)가 총재고(%d)와 일치하지 않습니다.", variantSum, totalQty)
+            );
+        }
+    }
+
+    /**
+     * 변형 합계 조회
+     */
+    public Integer getVariantSum(Long productId) {
+        return productVariantRepository.sumSubTotalByProductId(productId);
     }
 }

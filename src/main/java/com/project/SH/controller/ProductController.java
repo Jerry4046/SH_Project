@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.SH.domain.CompanyCode;
 import com.project.SH.domain.Product;
 import com.project.SH.domain.ProductCode;
+import com.project.SH.domain.ProductVariant;
 import com.project.SH.service.ImageStorageService;
 import com.project.SH.service.ProductCodeService;
 import com.project.SH.service.ProductService;
@@ -107,6 +108,7 @@ public class ProductController {
         List<Product> products = productService.getAllProducts();
         model.addAttribute("productList", products);
         model.addAttribute("productImageUrls", buildProductImageMap(products));
+        model.addAttribute("productVariantsMap", buildProductVariantsMap(products));
         log.info("상품 목록 조회 완료, 상품 수: {}", products.size());
         return "inventory";  // /WEB-INF/views/inventory.jsp
     }
@@ -170,6 +172,7 @@ public class ProductController {
                                 @RequestParam(required = false) Integer piecesPerBox,
                                 @RequestParam(required = false) Integer shQty,
                                 @RequestParam(required = false) Integer hpQty,
+                                @RequestParam(required = false) Integer totalQty,
                                 @RequestParam(required = false) Double price,
                                 @RequestParam String reason,
                                 @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -187,7 +190,7 @@ public class ProductController {
                 piecesPerBox, shQty, hpQty, price);
         try {
             productService.updateProduct(originalCode, originalItemCode, updatedProduct,
-                    piecesPerBox, shQty, hpQty, price, seq, reason, isAdmin);
+                    piecesPerBox, shQty, hpQty, totalQty, price, seq, reason, isAdmin);
             redirectAttributes.addFlashAttribute("message", "수정 완료");
             log.info("상품 수정 완료, 코드: {}", originalFullCode);
         } catch (Exception e) {
@@ -259,6 +262,25 @@ public class ProductController {
         }
 
         return hierarchy;
+    }
+
+    
+    private Map<Long, List<ProductVariant>> buildProductVariantsMap(List<Product> products) {
+        Map<Long, List<ProductVariant>> variantsMap = new HashMap<>();
+        for (Product product : products) {
+            if (product == null) {
+                continue;
+            }
+            Long productId = product.getProductId();
+            if (productId == null) {
+                continue;
+            }
+            List<ProductVariant> variants = productService.getVariantsByProductId(productId);
+            if (variants != null && !variants.isEmpty()) {
+                variantsMap.put(productId, variants);
+            }
+        }
+        return variantsMap;
     }
 
     private Map<Long, String> buildProductImageMap(List<Product> products) {

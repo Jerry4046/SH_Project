@@ -13,7 +13,7 @@ public interface ProductServiceImpl {
     Product getProductByCode(String productCode, String itemCode);
 
     void updateProduct(String originalProductCode, String originalItemCode, Product updatedProduct,
-                       Integer piecesPerBox, Integer shQty, Integer hpQty, Double price,
+                       Integer piecesPerBox, Integer shQty, Integer hpQty, Integer totalQty, Double price,
                        Long accountSeq, String reason, boolean isAdmin);
 
 }

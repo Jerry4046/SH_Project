@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -56,10 +56,8 @@
         }
 
         .detail-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            text-align: center;
+            vertical-align: middle;
         }
 
         .detail-view {
@@ -102,13 +100,65 @@
             cursor: pointer;
             position: relative;
         }
+
+
+        .variant-row {
+            background-color: #f8f9fa;
+        }
+
+        .variant-row td {
+            font-size: 0.9em;
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+        }
+
+        .variant-toggle {
+            cursor: pointer;
+            color: #0d6efd;
+        }
+
+        .variant-toggle:hover {
+            text-decoration: underline;
+        }
+
+        .variant-badge {
+            font-size: 0.75em;
+            padding: 0.2em 0.5em;
+            margin-left: 0.25rem;
+        }
+
+        .variant-sum-mismatch {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .variant-sum-match {
+            color: #198754;
+        }
+
+        .product-name {
+            display: inline-block;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+        .text-end {
+            text-align: right !important;
+        }
+
+        th.text-end .sort-button {
+            justify-content: flex-end;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
-<div class="container py-5">
+<div class="container-fluid py-5" style="max-width: 1540px;">
 
     <c:if test="${not empty error}">
         <div class="alert alert-danger auto-hide-alert">${error}</div>
@@ -245,31 +295,46 @@
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
                     </td>
-                    <td data-column="piecesPerBox" data-sort-value="${piecesPerBox}">
-                        <span class="value">${piecesPerBox} ea</span>
+                    <c:set var="variants" value="${productVariantsMap[product.productId]}" />
+                    <td class="text-end" data-column="piecesPerBox" data-sort-value="${piecesPerBox}">
+                        <c:choose>
+                            <c:when test="${not empty variants and fn:length(variants) > 0}">
+                                <span class="value variant-toggle" data-product-id="${product.productId}"
+                                      title="입수량별 변형 ${fn:length(variants)}개">
+                                    <c:forEach var="v" items="${variants}" varStatus="vs">
+                                        ${v.piecesPerBox}<c:if test="${!vs.last}">/</c:if>
+                                    </c:forEach>
+                                    <span class="badge bg-info variant-badge">${fn:length(variants)}</span>
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="value variant-toggle" data-product-id="${product.productId}" 
+                                      title="클릭하여 입수량 관리">${piecesPerBox} ea</span>
+                            </c:otherwise>
+                        </c:choose>
                         <input type="number" name="piecesPerBox" value="${piecesPerBox}" min="1"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
                     </td>
-                    <td data-column="boxCount" data-sort-value="${boxCount}">
+                    <td class="text-end" data-column="boxCount" data-sort-value="${boxCount}">
                         <span class="value"><fmt:formatNumber value="${boxCount}" pattern="#,##0" /></span>
                     </td>
-                    <td data-column="looseCount" data-sort-value="${looseQty}">
+                    <td class="text-end" data-column="looseCount" data-sort-value="${looseQty}">
                         <span class="value"><fmt:formatNumber value="${looseQty}" pattern="#,##0" /></span>
                     </td>
-                    <td data-column="totalQty" data-sort-value="${totalQty}" class="stock-cell ${stockClass}">
+                    <td class="text-end" data-column="totalQty" data-sort-value="${totalQty}" class="stock-cell ${stockClass}">
                         <span class="value"><fmt:formatNumber value="${totalQty}" pattern="#,##0" /> ea</span>
                         <input type="number" name="totalQty" value="${totalQty}"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
                     </td>
-                    <td data-column="price" data-sort-value="${priceValue}">
+                    <td class="text-end" data-column="price" data-sort-value="${priceValue}">
                         <span class="value"><fmt:formatNumber value="${priceValue}" pattern="#,##0" /></span>
                         <input type="number" step="0.1" name="price" value="${priceValue}"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
                                form="${formId}">
                     </td>
-                    <td data-column="minQty" data-sort-value="${minQty}">
+                    <td class="text-end" data-column="minQty" data-sort-value="${minQty}">
                         <span class="value"><fmt:formatNumber value="${minQty}" pattern="#,##0" /> ea</span>
                         <input type="number" name="minStockQuantity" value="${product.minStockQuantity}"
                                class="form-control form-control-sm edit-field" style="display:none" disabled
@@ -305,7 +370,75 @@
         </table>
     </div>
 
-   <div class="modal fade" id="productImageModal" tabindex="-1" aria-hidden="true"
+   
+    <div class="modal fade" id="variantModal" tabindex="-1" aria-hidden="true"
+         aria-labelledby="variantModalTitle">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="variantModalTitle">입수량별 재고 관리</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="variantProductId" value="">
+                    <input type="hidden" id="variantTotalQty" value="">
+                    <table class="table table-sm table-bordered mb-3">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width:100px;">입수량</th>
+                                <th class="text-center" style="width:100px;">BOX</th>
+                                <th class="text-center" style="width:100px;">낱개</th>
+                                <th class="text-center" style="width:100px;">소계</th>
+                                <th class="text-center" style="width:50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="variantModalBody"></tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="3" class="text-end">변형 합계</th>
+                                <th class="text-center" id="variantModalSum">0</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header py-2">
+                            <strong>새 입수량 추가</strong>
+                        </div>
+                        <div class="card-body py-2">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-3">
+                                    <label class="form-label small mb-1">입수량</label>
+                                    <input type="number" id="newPiecesPerBox" class="form-control form-control-sm" min="1" placeholder="예: 500">
+                                </div>
+                                <div class="col-3">
+                                    <label class="form-label small mb-1">BOX</label>
+                                    <input type="number" id="newBoxQty" class="form-control form-control-sm" min="0" value="0">
+                                </div>
+                                <div class="col-3">
+                                    <label class="form-label small mb-1">낱개</label>
+                                    <input type="number" id="newLooseQty" class="form-control form-control-sm" min="0" value="0">
+                                </div>
+                                <div class="col-3">
+                                    <button type="button" id="addVariantBtn" class="btn btn-outline-primary btn-sm w-100">
+                                        <span>+ 추가</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="variantValidation" class="alert mb-0 py-2" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="saveVariantsBtn" class="btn btn-primary">저장</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<div class="modal fade" id="productImageModal" tabindex="-1" aria-hidden="true"
          aria-labelledby="productImageModalTitle">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -394,6 +527,224 @@
             });
             cell.setAttribute('tabindex', '0');
         });
+
+        // 변형 모달 관련
+        const variantModalElement = document.getElementById('variantModal');
+        const variantModalBody = document.getElementById('variantModalBody');
+        const variantModalSum = document.getElementById('variantModalSum');
+        const variantValidation = document.getElementById('variantValidation');
+        const variantProductId = document.getElementById('variantProductId');
+        const variantTotalQty = document.getElementById('variantTotalQty');
+        const addVariantBtn = document.getElementById('addVariantBtn');
+        const saveVariantsBtn = document.getElementById('saveVariantsBtn');
+        const variantModalInstance = hasBootstrapModal && variantModalElement
+            ? new bootstrap.Modal(variantModalElement)
+            : null;
+        const contextPath = '${pageContext.request.contextPath}';
+
+        let currentVariants = [];
+        let deletedVariantIds = [];
+
+        function calculateSubTotal(piecesPerBox, boxQty, looseQty) {
+            return (parseInt(piecesPerBox) || 0) * (parseInt(boxQty) || 0) + (parseInt(looseQty) || 0);
+        }
+
+        function renderVariantRows() {
+            let html = '';
+            let sum = 0;
+            currentVariants.forEach((v, index) => {
+                const subTotal = calculateSubTotal(v.piecesPerBox, v.boxQty, v.looseQty);
+                sum += subTotal;
+                html += '<tr data-index="' + index + '">' +
+                    '<td class="text-center">' + v.piecesPerBox + ' ea</td>' +
+                    '<td><input type="number" class="form-control form-control-sm text-end variant-box" value="' + (v.boxQty || 0) + '" min="0" data-index="' + index + '"></td>' +
+                    '<td><input type="number" class="form-control form-control-sm text-end variant-loose" value="' + (v.looseQty || 0) + '" min="0" data-index="' + index + '"></td>' +
+                    '<td class="text-end variant-subtotal">' + subTotal.toLocaleString() + '</td>' +
+                    '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm delete-variant" data-index="' + index + '" title="삭제">🗑</button></td>' +
+                '</tr>';
+            });
+            variantModalBody.innerHTML = html || '<tr><td colspan="5" class="text-muted text-center">변형이 없습니다. 아래에서 추가하세요.</td></tr>';
+            variantModalSum.textContent = sum.toLocaleString();
+            updateValidation(sum);
+        }
+
+        function updateValidation(sum) {
+            const totalQty = parseInt(variantTotalQty.value) || 0;
+            if (currentVariants.length === 0) {
+                variantValidation.style.display = 'none';
+            } else if (sum === totalQty) {
+                variantValidation.className = 'alert alert-success mb-0 py-2';
+                variantValidation.innerHTML = '✓ 변형 합계(' + sum.toLocaleString() + ')와 총재고(' + totalQty.toLocaleString() + ') 일치';
+                variantValidation.style.display = 'block';
+            } else {
+                variantValidation.className = 'alert alert-danger mb-0 py-2';
+                variantValidation.innerHTML = '✗ 변형 합계(' + sum.toLocaleString() + ')와 총재고(' + totalQty.toLocaleString() + ') 불일치 (차이: ' + (sum - totalQty).toLocaleString() + ')';
+                variantValidation.style.display = 'block';
+            }
+        }
+
+        function recalculateSum() {
+            let sum = 0;
+            currentVariants.forEach((v, index) => {
+                const subTotal = calculateSubTotal(v.piecesPerBox, v.boxQty, v.looseQty);
+                sum += subTotal;
+                const row = variantModalBody.querySelector('tr[data-index="' + index + '"]');
+                if (row) {
+                    row.querySelector('.variant-subtotal').textContent = subTotal.toLocaleString();
+                }
+            });
+            variantModalSum.textContent = sum.toLocaleString();
+            updateValidation(sum);
+        }
+
+        variantModalBody.addEventListener('input', function(e) {
+            if (e.target.classList.contains('variant-box') || e.target.classList.contains('variant-loose')) {
+                const index = parseInt(e.target.dataset.index);
+                if (e.target.classList.contains('variant-box')) {
+                    currentVariants[index].boxQty = parseInt(e.target.value) || 0;
+                } else {
+                    currentVariants[index].looseQty = parseInt(e.target.value) || 0;
+                }
+                recalculateSum();
+            }
+        });
+
+        variantModalBody.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-variant')) {
+                const index = parseInt(e.target.dataset.index);
+                if (confirm('이 입수량(' + currentVariants[index].piecesPerBox + ' ea)을 삭제하시겠습니까?')) {
+                    const deleted = currentVariants.splice(index, 1)[0];
+                    if (deleted.variantId) {
+                        deletedVariantIds.push(deleted.variantId);
+                    }
+                    renderVariantRows();
+                }
+            }
+        });
+
+        addVariantBtn.addEventListener('click', function() {
+            const piecesPerBox = parseInt(document.getElementById('newPiecesPerBox').value);
+            const boxQty = parseInt(document.getElementById('newBoxQty').value) || 0;
+            const looseQty = parseInt(document.getElementById('newLooseQty').value) || 0;
+
+            if (!piecesPerBox || piecesPerBox <= 0) {
+                alert('입수량을 입력하세요.');
+                return;
+            }
+
+            if (currentVariants.some(v => v.piecesPerBox === piecesPerBox)) {
+                alert('이미 존재하는 입수량입니다.');
+                return;
+            }
+
+            currentVariants.push({
+                variantId: null,
+                piecesPerBox: piecesPerBox,
+                boxQty: boxQty,
+                looseQty: looseQty
+            });
+
+            document.getElementById('newPiecesPerBox').value = '';
+            document.getElementById('newBoxQty').value = '0';
+            document.getElementById('newLooseQty').value = '0';
+
+            renderVariantRows();
+        });
+
+        saveVariantsBtn.addEventListener('click', async function() {
+            const productId = variantProductId.value;
+            if (!productId) return;
+
+            let sum = 0;
+            currentVariants.forEach(v => {
+                sum += calculateSubTotal(v.piecesPerBox, v.boxQty, v.looseQty);
+            });
+
+            const totalQty = parseInt(variantTotalQty.value) || 0;
+            if (currentVariants.length > 0 && sum !== totalQty) {
+                alert('변형 합계(' + sum.toLocaleString() + ')와 총재고(' + totalQty.toLocaleString() + ')가 일치하지 않습니다.\n저장하려면 합계를 맞춰주세요.');
+                return;
+            }
+
+            try {
+                saveVariantsBtn.disabled = true;
+                saveVariantsBtn.textContent = '저장 중...';
+
+                // 삭제된 변형 처리
+                for (const variantId of deletedVariantIds) {
+                    await fetch(contextPath + '/api/products/' + productId + '/variants/' + variantId, {
+                        method: 'DELETE'
+                    });
+                }
+
+                for (const v of currentVariants) {
+                    const payload = {
+                        piecesPerBox: v.piecesPerBox,
+                        boxQty: v.boxQty,
+                        looseQty: v.looseQty
+                    };
+
+                    if (v.variantId) {
+                        await fetch(contextPath + '/api/products/' + productId + '/variants/' + v.variantId, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    } else {
+                        await fetch(contextPath + '/api/products/' + productId + '/variants', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    }
+                }
+
+                alert('저장되었습니다.');
+                variantModalInstance.hide();
+                location.reload();
+            } catch (error) {
+                console.error('저장 실패:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            } finally {
+                saveVariantsBtn.disabled = false;
+                saveVariantsBtn.textContent = '저장';
+            }
+        });
+
+        const variantToggles = document.querySelectorAll('.variant-toggle');
+        console.log('variant-toggle 요소 수:', variantToggles.length);
+        console.log('variantModalInstance:', variantModalInstance);
+        variantToggles.forEach(toggle => {
+            toggle.addEventListener('click', async event => {
+                event.preventDefault();
+                const productId = toggle.dataset.productId;
+                const totalQtyCell = toggle.closest('tr').querySelector('td[data-column="totalQty"]');
+                const totalQtyValue = totalQtyCell ? parseInt(totalQtyCell.dataset.sortValue) || 0 : 0;
+
+                if (!productId || !variantModalInstance) return;
+
+                variantProductId.value = productId;
+                deletedVariantIds = [];
+                variantTotalQty.value = totalQtyValue;
+
+                try {
+                    const response = await fetch(contextPath + '/api/products/' + productId + '/variants');
+                    currentVariants = await response.json();
+                    currentVariants = currentVariants.map(v => ({
+                        variantId: v.variantId,
+                        piecesPerBox: v.piecesPerBox,
+                        boxQty: v.boxQty || 0,
+                        looseQty: v.looseQty || 0
+                    }));
+
+                    renderVariantRows();
+                    variantModalInstance.show();
+                } catch (error) {
+                    console.error('변형 조회 실패:', error);
+                }
+            });
+        });
+
 
         if (!tableBody) {
             return;
